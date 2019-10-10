@@ -73,8 +73,8 @@ class ConstrainToInvRot(object):
         protein, then another to create the inverse rotamers.
         """
         restype = self.global_residue_type_set.get_representative_type_base_name(resn)
-        rotamer_set = \
-                rosetta.core.pack.rotamer_set.bb_independent_rotamers(restype, False)
+        rotamer_set, dummy_pose = \
+                bb_independent_rotamers_extra_chi(restype)
 
         xyzarray = []
         restrained_atoms = []
@@ -103,6 +103,7 @@ class ConstrainToInvRot(object):
             # so that's ultimately what we'll return.
             residue.apply_transform_Rx_plus_v(np_array_to_xyzM(rotation),np_array_to_xyzV(translation))
 
+
             # check to see new residue overlay
             # residue_new_xyz = []
             # for atom in residue.atoms():
@@ -114,6 +115,7 @@ class ConstrainToInvRot(object):
 
     def choose_rotamer(self):
 
+        rmsds = []
         for rotamer in self.rotamer_set:
             bb_array = []
             bb_indices = rotamer.all_bb_atoms()
@@ -134,7 +136,8 @@ class ConstrainToInvRot(object):
 
             rmsd = nearest_backbone_rmsd(rotamer,
                     self.pose.residue(nearest_residue), self.alignment_atoms)
-            print(rmsd)
+            rmsds.append(rmsd)
+        print(min(rmsds))
 
 
 cst_test = ConstrainToInvRot()

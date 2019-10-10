@@ -63,37 +63,58 @@ def bb_independent_rotamers_extra_chi(rot_restype):
     """
     firstres = rosetta.core.conformation.Residue(rot_restype, True)
     dummy_pose = rosetta.core.pose.Pose()
-    dummy_pose.append_residue_by_jump(firstres, 0)
-    
-    if rot_restype.is_polymer():
-        rosetta.core.pose.add_lower_terminus_type_to_pose_residue(dummy_pose,
-                1)
-        rosetta.core.pose.add_upper_terminus_type_to_pose_residue(dummy_pose,
-                1)
-    
-    
-    # Set up sfxn and dummy task
-    dummy_sfxn = rosetta.core.scoring.ScoreFunction()
-    dummy_sfxn(dummy_pose)
-    dummy_task = rosetta.core.pack.task.TaskFactory.create_packer_task(dummy_pose)
-
-    # options for dummy task
-    dummy_task.initialize_from_command_line()
-    dummy_task.initialize_extra_rotamer_flags_from_command_line()
-    dummy_task.show_residue_task(1)
-    dummy_task.nonconst_residue_task(1).restrict_to_repacking()
-    dummy_task.nonconst_residue_task(1).or_include_current(False)
-    dummy_task.nonconst_residue_task(1).or_fix_his_tautomer(True)
-    dummy_png = rosetta.core.pack.create_packer_graph(dummy_pose,\
-            dummy_sfxn, dummy_task)
-
-    rotset = rosetta.core.pack.rotamer_set.RotamerSetFactory.create_rotamer_set(dummy_pose)
-    rotset.set_resid(1)
-    rotset.build_rotamers(dummy_pose, dummy_sfxn, dummy_task, dummy_png)
+    global_residue_type_set = dummy_pose.residue_type_set_for_pose()
+    gly = global_residue_type_set.get_representative_type_base_name('GLY')
+    glyres = rosetta.core.conformation.Residue(gly, True)
+    dummy_pose.append_residue_by_jump(glyres, 0)
+    dummy_pose.append_residue_by_bond(firstres,
+            build_ideal_geometry=True)
+    dummy_pose.append_residue_by_bond(glyres, build_ideal_geometry=True)
 
     to_return = []
-    for i in range(1, rotset.num_rotamers() + 1):
-        print(i)
+    for psi in np.linspace(-180., 180., 40):
+        for phi in np.linspace(-180., 180., 40):
+
+            #if rot_restype.is_polymer():
+            #    rosetta.core.pose.add_lower_terminus_type_to_pose_residue(dummy_pose,
+            #            1)
+            #    rosetta.core.pose.add_upper_terminus_type_to_pose_residue(dummy_pose,
+            #            1)
+
+            dummy_pose.set_psi(2, psi)
+            dummy_pose.set_phi(2, phi)
+            # Set up sfxn and dummy task
+            dummy_sfxn = rosetta.core.scoring.ScoreFunction()
+            dummy_sfxn(dummy_pose)
+            dummy_task = rosetta.core.pack.task.TaskFactory.create_packer_task(dummy_pose)
+
+            # options for dummy task
+            dummy_task.initialize_from_command_line()
+            dummy_task.initialize_extra_rotamer_flags_from_command_line()
+            # dummy_task.show_residue_task(1)
+            dummy_task.nonconst_residue_task(2).restrict_to_repacking()
+            dummy_task.nonconst_residue_task(2).or_include_current(False)
+            dummy_task.nonconst_residue_task(2).or_fix_his_tautomer(True)
+            dummy_png = rosetta.core.pack.create_packer_graph(dummy_pose,\
+                    dummy_sfxn, dummy_task)
+
+            rotset = rosetta.core.pack.rotamer_set.RotamerSetFactory.create_rotamer_set(dummy_pose)
+            rotset.set_resid(2)
+            rotset.build_rotamers(dummy_pose, dummy_sfxn, dummy_task, dummy_png)
+
+            for i in range(1, rotset.num_rotamers() + 1):
+                rot = firstres.clone()
+                for j in range(1, firstres.nchi() + 1):
+                    rot.set_chi(j, rotset.rotamer(i).chi(j))
+                    dummy_pose.set_chi(j, 2, rotset.rotamer(i).chi(j))
+                    dummy_pose.dump_file('test_outputs/testout_phi' +
+                            str(phi) + '_psi' + str(psi) + '_' + str(i) + '.pdb')
+                to_return.append(rot)
+    return to_return, dummy_pose
+
+
+def apply_rotamer(pose, rotamer):
+    pose.set_torsion(rotamer.id, rotamer.value)
 
 
 def test_rotamer_gen(resn):
