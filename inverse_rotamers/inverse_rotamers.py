@@ -27,7 +27,7 @@ rotamers.
 """
 
 
-init("-ignore_unrecognized_res -ex1 -ex2")
+init("-ignore_unrecognized_res -extrachi_cutoff 0 -ex1 -ex2 -ex3 -ex4")
 
 
 def nearest_backbone_rmsd(rotamer, nearest_residue,
@@ -50,9 +50,9 @@ class ConstrainToInvRot(object):
 
     def __init__(self):
         self.alignment_atoms = ['N', 'CA', 'CB']
-        self.pdb_path = 'test_inputs/test.pdb'
+        self.pdb_path = 'test_inputs/8cho.pdb'
         # constraints = 'test_inputs/test_constraints.cst'
-        self.constraints = 'test_inputs/test_D_cst.cst'
+        self.constraints = 'test_inputs/8cho_cst_D.cst'
 
         self.pose = pose_from_pdb(self.pdb_path)
 
@@ -73,12 +73,14 @@ class ConstrainToInvRot(object):
         protein, then another to create the inverse rotamers.
         """
         restype = self.global_residue_type_set.get_representative_type_base_name(resn)
-        rotamer_set, dummy_pose = \
-                bb_independent_rotamers_extra_chi(restype)
+        print("creating rotamer set")
+        rotamer_set = bb_independent_rotamers_extra_chi(restype)
 
         xyzarray = []
         restrained_atoms = []
         for restraint in self.restraints:
+            print(restraint.atom_names)
+            print(restraint.coord)
             xyzarray.append(restraint.coord)
             restrained_atoms.append(restraint.atom_name)
 
@@ -134,6 +136,7 @@ class ConstrainToInvRot(object):
 
             #print(pose.residue(nearest_residue))
 
+            print(nearest_residue)
             rmsd = nearest_backbone_rmsd(rotamer,
                     self.pose.residue(nearest_residue), self.alignment_atoms)
             rmsds.append(rmsd)
