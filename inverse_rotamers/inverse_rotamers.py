@@ -79,8 +79,6 @@ class ConstrainToInvRot(object):
         xyzarray = []
         restrained_atoms = []
         for restraint in self.restraints:
-            print(restraint.atom_names)
-            print(restraint.coord)
             xyzarray.append(restraint.coord)
             restrained_atoms.append(restraint.atom_name)
 
@@ -115,9 +113,23 @@ class ConstrainToInvRot(object):
 
         self.rotamer_set = rotamer_set
 
+    def choosing_func(self,invrot_rmsds):
+        """
+        I can expand this function later to make it more sophisticated,
+        but for now it will just choose the inverse rotamer with the
+        lowest RMSD.
+        """
+        best_rmsd = None
+        for rmsd in invrot_rmsds:
+            if not best_rmsd or rmsd < best_rmsd:
+                best_rmsd = rmsd
+                best_invrot = invrot_rmsds[rmsd]
+        
+        return best_invrot, best_rmsd
+
     def choose_rotamer(self):
 
-        rmsds = []
+        invrot_rmsds = {}
         for rotamer in self.rotamer_set:
             bb_array = []
             bb_indices = rotamer.all_bb_atoms()
@@ -134,13 +146,12 @@ class ConstrainToInvRot(object):
                 rosetta.protocols.protein_interface_design.movers.\
                 find_nearest_residue_to_coord(self.pose, bb_centroid, 1)
 
-            #print(pose.residue(nearest_residue))
-
-            print(nearest_residue)
             rmsd = nearest_backbone_rmsd(rotamer,
                     self.pose.residue(nearest_residue), self.alignment_atoms)
-            rmsds.append(rmsd)
-        print(min(rmsds))
+            invrot_rmsds[rmsd] = (rotamer, nearest_residue)
+
+        chosen_rotamer, chosen_rmsd = self.choosing_func(invrot_rmsds)
+        print(chosen_rmsd)
 
 
 cst_test = ConstrainToInvRot()
