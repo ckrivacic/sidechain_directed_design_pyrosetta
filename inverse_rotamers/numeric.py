@@ -68,3 +68,19 @@ def euclidean_distance(xyz1, xyz2):
     """
     dist = [(a - b)**2 for a,b in zip(xyz1, xyz2)]
     return math.sqrt(sum(dist))
+
+
+def backbone_rmsd(rotamer, residue,
+        alignment_atoms):
+    """
+    Measure backbone RMSD between a rotamer and the nearest residue on
+    the design protein.
+    """
+
+    distances = np.array([])
+    for atom in alignment_atoms:
+        rot_xyz = xyzV_to_np_array(rotamer.xyz(atom))
+        near_xyz = xyzV_to_np_array(residue.xyz(atom))
+        distances = np.append(distances,euclidean_distance(rot_xyz,near_xyz))
+
+    return np.sqrt((distances**2).mean())

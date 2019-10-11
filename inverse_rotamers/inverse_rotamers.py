@@ -30,22 +30,6 @@ rotamers.
 init("-ignore_unrecognized_res -extrachi_cutoff 0 -ex1 -ex2 -ex3 -ex4")
 
 
-def nearest_backbone_rmsd(rotamer, nearest_residue,
-        alignment_atoms):
-    """
-    Measure backbone RMSD between a rotamer and the nearest residue on
-    the design protein.
-    """
-
-    distances = np.array([])
-    for atom in alignment_atoms:
-        rot_xyz = xyzV_to_np_array(rotamer.xyz(atom))
-        near_xyz = xyzV_to_np_array(nearest_residue.xyz(atom))
-        distances = np.append(distances,euclidean_distance(rot_xyz,near_xyz))
-
-    return np.sqrt((distances**2).mean())
-
-
 class ConstrainToInvRot(object):
 
     def __init__(self):
@@ -124,7 +108,7 @@ class ConstrainToInvRot(object):
             if not best_rmsd or rmsd < best_rmsd:
                 best_rmsd = rmsd
                 best_invrot = invrot_rmsds[rmsd]
-        
+
         return best_invrot, best_rmsd
 
     def choose_rotamer(self):
@@ -142,18 +126,40 @@ class ConstrainToInvRot(object):
             bb_centroid = np_array_to_xyzV([sum(x)/len(x) for x in
                 zip(*bb_array)])
 
-            nearest_residue =\
+            self.nearest_residue =\
                 rosetta.protocols.protein_interface_design.movers.\
                 find_nearest_residue_to_coord(self.pose, bb_centroid, 1)
 
-            rmsd = nearest_backbone_rmsd(rotamer,
-                    self.pose.residue(nearest_residue), self.alignment_atoms)
-            invrot_rmsds[rmsd] = (rotamer, nearest_residue)
+            rmsd = backbone_rmsd(rotamer,
+                    self.pose.residue(self.nearest_residue), self.alignment_atoms)
+            invrot_rmsds[rmsd] = (rotamer, self.nearest_residue)
 
-        chosen_rotamer, chosen_rmsd = self.choosing_func(invrot_rmsds)
-        print(chosen_rmsd)
+        self.inverse_rotamer, best_rmsd = self.choosing_func(invrot_rmsds)
+        print(best_rmsd)
+        print(self.inverse_rotamer)
+    
+    def make_constraints_from_inverse_rotamer(self):
+        """
+        Create constraints on the pose backbone to the nearest inverse
+        rotamer.
+        """
+        if not hasattr(self, 'inverse_rotamer'):
+            print("No rotamer chosen. Maybe something went "\
+            "wrong with ConstrainToInvRot.choose_rotamer.")
+            return
+        if not hasattr(self,'nearest_residue'):
+            print("Nearest residue not chosen. Maybe something "\
+            "went wrong with ConstrainToInvRot.choose_rotamer.")
+            return
+
+        cst_generator =\
+        rosetta.protocols.forge.constraints.InverseRotamersRCG(self.nearest_residue,
+                self.nearest_residue, [self.inverse_rotamer[0]])
+        print(cst_generator.get_name())
+
 
 
 cst_test = ConstrainToInvRot()
 rotamer_set = cst_test.create_inverse_rotamers('ASP')
 cst_test.choose_rotamer()
+cst_test.make_constraints_from_inverse_rotamer()
