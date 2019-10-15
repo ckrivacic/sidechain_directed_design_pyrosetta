@@ -152,11 +152,33 @@ class ConstrainToInvRot(object):
             "went wrong with ConstrainToInvRot.choose_rotamer.")
             return
 
+        inverse_rotamers = rosetta.std.list_std_shared_ptr_const_core_conformation_Residue_std_allocator_std_shared_ptr_const_core_conformation_Residue_t()
+        inverse_rotamers.push_back(self.inverse_rotamer[0])
+        """
         cst_generator =\
         rosetta.protocols.forge.constraints.InverseRotamersRCG(self.nearest_residue,
-                self.nearest_residue, [self.inverse_rotamer[0]])
-        print(cst_generator.get_name())
+                self.nearest_residue, inverse_rotamers)
+        print(self.pose.constraint_set())
+        cst_generator.generate_remodel_constraints(self.pose)
+        print(self.pose.constraint_set())
 
+        # csts =
+        # rosetta.protocols.toolbox.match_enzdes_util.constrain_pose_res_to_invrots()
+        """
+
+        sfxn = rosetta.core.scoring.constraints.BoundFunc(0, 0.05, 0.4,
+                "invrot")
+        seqpos = rosetta.utility.vector1_unsigned_long()
+        seqpos.append(self.inverse_rotamer[1])
+        #seqpos = [38]
+        ambiguous_constraint = \
+            rosetta.protocols.toolbox.match_enzdes_util.constrain_pose_res_to_invrots(inverse_rotamers, seqpos, self.pose, sfxn)
+
+
+        print(ambiguous_constraint)
+        csts = rosetta.utility.vector1_std_shared_ptr_const_core_scoring_constraints_Constraint_t()
+        csts.append(ambiguous_constraint)
+        self.pose.add_constraints(csts)
 
 
 cst_test = ConstrainToInvRot()
