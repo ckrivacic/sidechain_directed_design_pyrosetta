@@ -97,7 +97,7 @@ def bb_independent_rotamers_extra_chi(rot_restype):
         for j in range(1, firstres.nchi() + 1):
             rot.set_chi(j, rotset.rotamer(i).chi(j))
             dummy_pose.set_chi(j, 1, rotset.rotamer(i).chi(j))
-            dummy_pose.dump_file('test_outputs/testout_' + str(i) + '.pdb')
+            #dummy_pose.dump_file('test_outputs/testout_' + str(i) + '.pdb')
         to_return.append(rot)
     return to_return#, dummy_pose
 

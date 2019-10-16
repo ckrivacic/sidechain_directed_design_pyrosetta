@@ -36,7 +36,7 @@ class ConstrainToInvRot(object):
         self.alignment_atoms = ['N', 'CA', 'CB']
         self.pdb_path = 'test_inputs/8cho.pdb'
         # constraints = 'test_inputs/test_constraints.cst'
-        self.constraints = 'test_inputs/8cho_cst_D.cst'
+        self.constraints = 'test_inputs/8cho_cst_E.cst'
 
         self.pose = pose_from_pdb(self.pdb_path)
 
@@ -175,13 +175,26 @@ class ConstrainToInvRot(object):
             rosetta.protocols.toolbox.match_enzdes_util.constrain_pose_res_to_invrots(inverse_rotamers, seqpos, self.pose, sfxn)
 
 
-        print(ambiguous_constraint)
+        #print(ambiguous_constraint)
         csts = rosetta.utility.vector1_std_shared_ptr_const_core_scoring_constraints_Constraint_t()
         csts.append(ambiguous_constraint)
-        self.pose.add_constraints(csts)
+        sfxn = create_score_function("ref2015_cst")
+        #score_manager = rosetta.core.scoring.ScoreTypeManager()
+        #score_term = score_manager.score_type_from_name("coordinate_constraint")
+        #sfxn.set_weight(score_term, 1.0)
+        sfxn(self.pose)
+        #self.pose.add_constraints(csts)
+        self.pose.add_constraint(ambiguous_constraint)
+        #print(self.pose.constraint_set())
+
+    def minimize_pose(self):
+        minmover = rosetta.protocols.minimization_packing.MinMover()
+        minmover.apply(self.pose)
+        self.pose.dump_file('out.pdb')
 
 
 cst_test = ConstrainToInvRot()
-rotamer_set = cst_test.create_inverse_rotamers('ASP')
+rotamer_set = cst_test.create_inverse_rotamers('GLU')
 cst_test.choose_rotamer()
 cst_test.make_constraints_from_inverse_rotamer()
+cst_test.minimize_pose()
