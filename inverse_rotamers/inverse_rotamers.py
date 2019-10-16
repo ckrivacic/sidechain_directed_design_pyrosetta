@@ -178,23 +178,73 @@ class ConstrainToInvRot(object):
         #print(ambiguous_constraint)
         csts = rosetta.utility.vector1_std_shared_ptr_const_core_scoring_constraints_Constraint_t()
         csts.append(ambiguous_constraint)
-        sfxn = create_score_function("ref2015_cst")
+        self.sfxn = create_score_function("ref2015_cst")
         #score_manager = rosetta.core.scoring.ScoreTypeManager()
         #score_term = score_manager.score_type_from_name("coordinate_constraint")
         #sfxn.set_weight(score_term, 1.0)
-        sfxn(self.pose)
+        self.sfxn(self.pose)
         #self.pose.add_constraints(csts)
         self.pose.add_constraint(ambiguous_constraint)
         #print(self.pose.constraint_set())
 
-    def minimize_pose(self):
-        minmover = rosetta.protocols.minimization_packing.MinMover()
-        minmover.apply(self.pose)
-        self.pose.dump_file('out.pdb')
+def minimize_pose(pose, residues_bb_movable, residues_sc_movable):
+    mm = rosetta.core.kinematics.MoveMap()
+    mm.set_chi(False)
+    mm.set_bb(False)
+
+    for i in residues_bb_movable:
+        mm.set_bb(i, True)
+        mm.set_chi(i, True)
+
+    for i in residues_sc_movable:
+        mm.set_chi(i, True)
+
+    min_opts = rosetta.core.optimization.MinimizerOptions(
+            "lbfgs_armijo_nonmonotone", 0.01, True )
+
+
+    minmover = rosetta.protocols.minimization_packing.MinMover()
+    minmover.movemap(mm)
+    minmover.min_options(min_opts)
+    minmover.score_function(self.sfxn)
+
+    minmover.apply(pose)
+    
+    pose.dump_file('out.pdb')
+
+
+def fast_relax(pose, residues_bb_movable, residues_sc_movable):
+    '''Fast relax the pose'''
+    mm = rosetta.core.kinematics.MoveMap()
+    mm.set_chi(False)
+    mm.set_bb(False)
+
+    for i in residues_bb_movable:
+        mm.set_bb(i, True)
+        mm.set_chi(i, True)
+    
+    for i in residues_sc_movable:
+        mm.set_chi(i, True)
+
+    fast_relax_rounds = 5
+    sfxn = create_score_function("ref2015_cst")
+    score_manager = rosetta.core.scoring.ScoreTypeManager()
+    score_term = score_manager.score_type_from_name("coordinate_constraint")
+    sfxn.set_weight(score_term, 200000.0)
+    fast_relax = rosetta.protocols.relax.FastRelax(sfxn, fast_relax_rounds)
+    fast_relax.set_movemap(mm) 
+    
+    fast_relax.apply(pose)
+    pose.dump_file('out.pdb')
+ 
 
 
 cst_test = ConstrainToInvRot()
 rotamer_set = cst_test.create_inverse_rotamers('GLU')
 cst_test.choose_rotamer()
 cst_test.make_constraints_from_inverse_rotamer()
-cst_test.minimize_pose()
+
+bb_movable = [32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45,
+        46, 47]
+
+fast_relax(cst_test.pose,bb_movable, [])
