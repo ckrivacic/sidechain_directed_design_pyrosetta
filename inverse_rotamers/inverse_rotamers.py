@@ -213,8 +213,7 @@ def minimize_pose(pose, residues_bb_movable, residues_sc_movable):
     pose.dump_file('out.pdb')
 
 
-def fast_relax(pose, residues_bb_movable, residues_sc_movable):
-    '''Fast relax the pose'''
+def setup_movemap(residues_bb_movable, residues_sc_movable):
     mm = rosetta.core.kinematics.MoveMap()
     mm.set_chi(False)
     mm.set_bb(False)
@@ -225,18 +224,38 @@ def fast_relax(pose, residues_bb_movable, residues_sc_movable):
     
     for i in residues_sc_movable:
         mm.set_chi(i, True)
+    
+    return mm
 
-    fast_relax_rounds = 5
+
+def setup_restrained_sfxn(restraint_types, weights):
     sfxn = create_score_function("ref2015_cst")
     score_manager = rosetta.core.scoring.ScoreTypeManager()
-    score_term = score_manager.score_type_from_name("coordinate_constraint")
-    sfxn.set_weight(score_term, 200000.0)
+    for i in range(0, len(restraint_types)):
+        score_term = score_manager.score_type_from_name(restraint_types[i])
+        sfxn.set_weight(score_term, weights[i])
+
+    return sfxn
+
+
+def fast_relax(pose, residues_bb_movable, residues_sc_movable):
+    '''Fast relax the pose'''
+    mm = setup_movemap(residues_bb_movable, residues_sc_movable)
+    sfxn = setup_restrained_sfxn(['coordinate_constraint'],[2.0])
+
+    fast_relax_rounds = 5
     fast_relax = rosetta.protocols.relax.FastRelax(sfxn, fast_relax_rounds)
     fast_relax.set_movemap(mm) 
     
     fast_relax.apply(pose)
     pose.dump_file('out.pdb')
- 
+
+
+def fast_design(pose, residues_bb_movable, residues_sc_movable,
+        resfile):
+    '''Run fast design on the pose'''
+    mm = setup_movemap(residues_bb_movable, residues_sc_movable)
+    sfxn = setup_restrained_sfxn(['coordinate_constraint'],[2.0])
 
 
 cst_test = ConstrainToInvRot()
