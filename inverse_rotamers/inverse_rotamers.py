@@ -251,11 +251,26 @@ def fast_relax(pose, residues_bb_movable, residues_sc_movable):
     pose.dump_file('out.pdb')
 
 
+def setup_task_operation(pose):
+    task_design = rosetta.core.pack.task.TaskFactory.create_packer_task(pose)
+    task_design.initialize_extra_rotamer_flags_from_command_line()
+
+    #task_design.restrict_to_residues(residue_selector_output)
+
+
 def fast_design(pose, residues_bb_movable, residues_sc_movable,
-        resfile):
+        resfile=None):
     '''Run fast design on the pose'''
     mm = setup_movemap(residues_bb_movable, residues_sc_movable)
     sfxn = setup_restrained_sfxn(['coordinate_constraint'],[2.0])
+
+    if resfile:
+        #resfile = 
+
+    fastdesign = rosetta.protocols.denovo_design.movers.FastDesign()
+    fastdesign.set_movemap(mm)
+    fastdesign.set_scorefxn(sfxn)
+    fastdesign.set_up_default_task_factory()
 
 
 cst_test = ConstrainToInvRot()
