@@ -5,6 +5,7 @@ from utils import *
 from parsers import parse_restraints
 from numeric import *
 from test_utils import plot_3d
+from itertools import compress
 
 
 """
@@ -251,9 +252,73 @@ def fast_relax(pose, residues_bb_movable, residues_sc_movable):
     pose.dump_file('out.pdb')
 
 
-def setup_task_operation(pose):
-    task_design = rosetta.core.pack.task.TaskFactory.create_packer_task(pose)
-    task_design.initialize_extra_rotamer_flags_from_command_line()
+def setup_task_factory(pose, designable_residue_selector,
+        repackable_residue_selector,
+        extra_rotamers=True, limit_aro_chi2=True, layered_design=True,
+        designable_aa_types=None):
+
+    def list_to_str(l):
+        return ','.join(list(str(i) for i in l))
+
+    task_factory = rosetta.core.pack.task.TaskFactory()
+
+    if len(designable_residue_selector) > 0:
+        for i in range(len(designable_residues)):
+            racaa = rosetta.core.pack.task.operation.RestrictAbsentCanonicalAARLT()
+
+        if designable_aa_types is None or\
+                len(list(compress(xrange(len(designable_residue_selector)),\
+                    designable_residue_selector))) != len(designable_aa_types):
+            racaa.aas_to_keep('GAPVILMFYWSTKRDENQ')  # No Cys or His
+        else:
+            racaa.aas_to_keep(designable_aa_types[i])
+
+        designable_operation = rosetta.core.pack.task.operation.OperateOnResidueSubset(
+                racaa, designable_selector)
+        task_factory.push_back(designable_operation)
+
+    if len(repackable_residue_selector) > 0:
+        repackable_operation = rosetta.core.pack.task.operation.OperateOnResidueSubset(
+                rosetta.core.pack.task.operation.RestrictToRepackingRLT(),
+                repackable_selector)
+        task_factory.push_back(repackable_operation)
+    
+    natro_residues = [i for i in range(1, pose.size() + 1) if not
+            (designable_residue_selector[i] or repackable_selector[i])]
+    if len(natro_residues) > 0:
+        natro_selector =\
+            rosetta.core.select.residue_selector.ResidueIndexSelector(list_to_str(natro_residues))
+        natro_operation = rosetta.core.pack.task.operation.OperateOnResidueSubset(
+                rosetta.core.pack.task.operation.PreventRepackingRLT(),
+                natro_selector)
+        task_factory.push_back(natro_operation)
+
+    if extra_rotamers:
+        ers = rosetta.core.pack.task.operation.ExtraRotamersGeneric()
+        ers.ex1(True)
+        ers.ex2(True)
+        ers.extrachi_cutoff(18)
+        task_factory.push_back(ers)
+
+    if limit_aro_chi2:
+        lac = rosetta.protocols.task_operations.LimitAroChi2Operation()
+        task_factory.push_back(lac)
+
+    if layered_design:
+        ld = rosetta.protocols.rosetta_scripts.XmlObjects.static_get_task_operation(
+            '''<LayerDesign name="layer_all" layer="core_boundary_surface_Nterm_Cterm" use_sidechain_neighbors="True">
+    		<Nterm>
+    			<all append="DEGHKNQRST" />
+    			<all exclude="CAFILMPVWY" />
+    		</Nterm>
+    		<Cterm>
+    			<all append="DEGHKNQRST" />
+    			<all exclude="CAFILMPVWY" />
+    		</Cterm>
+        </LayerDesign>''')
+        task_factory.push_back(ld)
+
+    return task_factory
 
     #task_design.restrict_to_residues(residue_selector_output)
 
