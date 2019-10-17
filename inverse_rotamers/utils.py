@@ -53,6 +53,10 @@ def simple_align(mobile, target):
     return apply_transformation(t, mobile)
 
 
+def list_to_str(l):
+    return ','.join(list(str(i) for i in l))
+
+
 def bb_independent_rotamers_extra_chi(rot_restype):
     """
     The bb_independent_rotamers function in Rosetta ignores -ex1 and
