@@ -239,9 +239,6 @@ def setup_movemap_from_resselectors(designable_selector, repackable_selector):
     mm.set_bb(False)
 
     for i in range(1, len(repackable_selector) + 1):
-        print(i)
-        print(repackable_selector[i])
-        print(designable_selector[i])
         if designable_selector[i] and repackable_selector[i]:
             mm.set_bb(i+1, True)
             mm.set_chi(i+1, True)
@@ -277,12 +274,16 @@ def fast_relax(pose, residues_bb_movable, residues_sc_movable):
 
 def setup_task_factory(pose, designable_residue_selector,
         repackable_residue_selector,
+        motif_dict=None,
         extra_rotamers=True, limit_aro_chi2=True, layered_design=True,
         designable_aa_types=None):
     """
     Adapted from XingJie Pan's code at
     git@github.com:Kortemme-Lab/local_protein_sequence_design.git:
     local_protein_sequence_design/basic.py
+
+    motif_dict should have the resnum as the key for the single-letter restype,
+    ex. {38:'E'}
     """
 
     def list_to_str(l):
@@ -291,8 +292,7 @@ def setup_task_factory(pose, designable_residue_selector,
     task_factory = rosetta.core.pack.task.TaskFactory()
 
     if len(designable_residue_selector) > 0:
-        for i in range(len(designable_residue_selector)):
-            racaa = rosetta.core.pack.task.operation.RestrictAbsentCanonicalAASRLT()
+        racaa = rosetta.core.pack.task.operation.RestrictAbsentCanonicalAASRLT()
 
         if designable_aa_types is None or\
                 len(list(compress(xrange(len(designable_residue_selector)),\
@@ -305,14 +305,27 @@ def setup_task_factory(pose, designable_residue_selector,
                 racaa, designable_residue_selector)
         task_factory.push_back(designable_operation)
 
+    if motif_dict:
+        for resnum in motif_dict:
+            selector = rosetta.core.select.residue_selector.ResidueIndexSelector(str(resnum))
+            print(selector)
+            racaa = rosetta.core.pack.task.operation.RestrictAbsentCanonicalAASRLT()
+            racaa.aas_to_keep(motif_dict[resnum])
+
+            motif_operation = rosetta.core.pack.task.operation.OperateOnResidueSubset(
+                    racaa, selector
+                    )
+            task_factory.push_back(motif_operation)
+
     if len(repackable_residue_selector) > 0:
         repackable_operation = rosetta.core.pack.task.operation.OperateOnResidueSubset(
                 rosetta.core.pack.task.operation.RestrictToRepackingRLT(),
                 repackable_residue_selector)
         task_factory.push_back(repackable_operation)
     
-    natro_residues = [i for i in range(1, pose.size() + 1) if not
-            (designable_residue_selector[i] or repackable_residue_selector[i])]
+    natro_residues = [i for i in range(1, pose.size() + 1) if (not
+            (designable_residue_selector[i] or repackable_residue_selector[i])
+            and i not in motif_dict)]
     if len(natro_residues) > 0:
         natro_selector =\
             rosetta.core.select.residue_selector.ResidueIndexSelector(list_to_str(natro_residues))
@@ -366,8 +379,10 @@ def fast_design(pose, designable_selector, repackable_selector,
     fastdesign.set_task_factory(task_factory)
     fastdesign.apply(pose)
 
+    pose.dump_file('out.pdb')
 
-def choose_designable_residues(pose, focus_residues):
+
+def choose_designable_residues(pose, focus_residues, include_focus=False):
     """
     Chooses a shell (for now, might make more sophisticated later) of residues
     to design around the motif residue.
@@ -377,7 +392,8 @@ def choose_designable_residues(pose, focus_residues):
             rosetta.core.select.residue_selector.ResidueIndexSelector(list_to_str(focus_residues))
     designable_selector =\
             rosetta.core.select.residue_selector.NeighborhoodResidueSelector(
-                    focus_residue_selector, 8.0
+                    focus_residue_selector, 8.0,
+                    include_focus_in_subset=include_focus
             )
     designable_not_selector =\
             rosetta.core.select.residue_selector.NotResidueSelector(
@@ -385,7 +401,8 @@ def choose_designable_residues(pose, focus_residues):
                     )
     packable_selector =\
             rosetta.core.select.residue_selector.NeighborhoodResidueSelector(
-                    focus_residue_selector, 12.0
+                    focus_residue_selector, 12.0,
+                    include_focus_in_subset=include_focus
             )
     repack_only_selector =\
             rosetta.core.select.residue_selector.AndResidueSelector(
@@ -407,7 +424,6 @@ bb_movable = [32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45,
 
 designable, repackable = choose_designable_residues(cst_test.pose, [38])
 task_factory = setup_task_factory(cst_test.pose, designable, repackable,
-        layered_design=False)
+        motif_dict={38:'E'},layered_design=False)
 
-fast_design(cst_test.pose, designable, repackable,
-        task_factory=task_factory)
+fast_design(cst_test.pose, designable, repackable, task_factory=task_factory)
