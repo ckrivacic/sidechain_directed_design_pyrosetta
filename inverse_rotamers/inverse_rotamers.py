@@ -238,7 +238,10 @@ def setup_movemap_from_resselectors(designable_selector, repackable_selector):
     mm.set_chi(False)
     mm.set_bb(False)
 
-    for i in range(0, len(repackable_selector)):
+    for i in range(1, len(repackable_selector) + 1):
+        print(i)
+        print(repackable_selector[i])
+        print(designable_selector[i])
         if designable_selector[i] and repackable_selector[i]:
             mm.set_bb(i+1, True)
             mm.set_chi(i+1, True)
@@ -359,8 +362,8 @@ def fast_design(pose, designable_selector, repackable_selector,
     fastdesign = rosetta.protocols.denovo_design.movers.FastDesign()
     fastdesign.set_movemap(mm)
     fastdesign.set_scorefxn(sfxn)
-    fastdesign.setup_task_factory(task_factory)
     fastdesign.set_up_default_task_factory()
+    fastdesign.set_task_factory(task_factory)
     fastdesign.apply(pose)
 
 
@@ -406,5 +409,5 @@ designable, repackable = choose_designable_residues(cst_test.pose, [38])
 task_factory = setup_task_factory(cst_test.pose, designable, repackable,
         layered_design=False)
 
-fast_relax(cst_test.pose,bb_movable, designable, repackable,
+fast_design(cst_test.pose, designable, repackable,
         task_factory=task_factory)
