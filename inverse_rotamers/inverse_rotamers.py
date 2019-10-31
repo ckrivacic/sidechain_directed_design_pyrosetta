@@ -186,6 +186,7 @@ class ConstrainToInvRot(object):
         self.sfxn(self.pose)
         #self.pose.add_constraints(csts)
         self.pose.add_constraint(ambiguous_constraint)
+
         #print(self.pose.constraint_set())
 
 def minimize_pose(pose, residues_bb_movable, residues_sc_movable):
@@ -239,7 +240,7 @@ def setup_movemap_from_resselectors(designable_selector, repackable_selector):
     mm.set_bb(False)
 
     for i in range(1, len(repackable_selector) + 1):
-        if designable_selector[i] and repackable_selector[i]:
+        if designable_selector[i] or repackable_selector[i]:
             mm.set_bb(i+1, True)
             mm.set_chi(i+1, True)
     
@@ -369,7 +370,7 @@ def fast_design(pose, designable_selector, repackable_selector,
     '''Run fast design on the pose'''
     mm = setup_movemap_from_resselectors(designable_selector,
             repackable_selector)
-    sfxn = setup_restrained_sfxn(['coordinate_constraint'],[2.0])
+    sfxn = setup_restrained_sfxn(['coordinate_constraint'],[2000.0])
 
 
     fastdesign = rosetta.protocols.denovo_design.movers.FastDesign()
@@ -419,11 +420,13 @@ rotamer_set = cst_test.create_inverse_rotamers('GLU')
 cst_test.choose_rotamer()
 cst_test.make_constraints_from_inverse_rotamer()
 
-bb_movable = [32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45,
-        46, 47]
+# bb_movable = [32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45,
+#         46, 47]
 
 designable, repackable = choose_designable_residues(cst_test.pose, [38])
 task_factory = setup_task_factory(cst_test.pose, designable, repackable,
         motif_dict={38:'E'},layered_design=False)
+
+print(cst_test.pose.constraint_set())
 
 fast_design(cst_test.pose, designable, repackable, task_factory=task_factory)
