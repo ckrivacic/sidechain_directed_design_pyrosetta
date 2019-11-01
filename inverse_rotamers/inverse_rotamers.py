@@ -241,8 +241,8 @@ def setup_movemap_from_resselectors(designable_selector, repackable_selector):
 
     for i in range(1, len(repackable_selector) + 1):
         if designable_selector[i] or repackable_selector[i]:
-            mm.set_bb(i+1, True)
-            mm.set_chi(i+1, True)
+            mm.set_bb(i, True)
+            mm.set_chi(i, True)
     
     # for i in residues_sc_movable:
     #    mm.set_chi(i, True)
