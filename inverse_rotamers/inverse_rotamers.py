@@ -383,6 +383,36 @@ def fast_design(pose, designable_selector, repackable_selector,
     pose.dump_file('out.pdb')
 
 
+def generate_loops(pose, focus_residue):
+    '''Function to get a loops object for LoopModeler. For now, simply
+    do focus residue +/- 3 residues, but we can make this more
+    sophisticated later (the constructor for Loops can also take a
+    residue selector).'''
+    loop = rosetta.protocols.loops.Loop(focus_residue - 3, focus_residue + 3)
+    loop.set_cut(focus_residue)
+    loops = rosetta.protocols.loops.Loops()
+    loops.add_loop(loop)
+    return loops
+
+
+def model_loops(pose, designable_selector, repackable_selector,
+        focus_residue,
+        movemap=None, task_factory=None):
+    '''Run loop modeler on the pose (default to NGK)'''
+    mm = setup_movemap_from_resselectors(designable_selector,
+            repackable_selector)
+    sfxn = setup_restrained_sfxn(['coordinate_constraint'],[10])
+
+    loopmodeler = rosetta.protocols.loop_modeler.LoopModeler()
+    loopmodeler.setup_kic_config()
+    loops = generate_loops(pose, focus_residue)
+
+    loopmodeler.set_loops(loops)
+
+    loopmodeler.apply(pose)
+    pose.dump_file('out.pdb')
+
+
 def choose_designable_residues(pose, focus_residues, include_focus=False):
     """
     Chooses a shell (for now, might make more sophisticated later) of residues
@@ -429,4 +459,5 @@ task_factory = setup_task_factory(cst_test.pose, designable, repackable,
 
 print(cst_test.pose.constraint_set())
 
-fast_design(cst_test.pose, designable, repackable, task_factory=task_factory)
+#fast_design(cst_test.pose, designable, repackable, task_factory=task_factory)
+model_loops(cst_test.pose, designable, repackable, 38, task_factory=task_factory)
