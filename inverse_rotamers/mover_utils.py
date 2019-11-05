@@ -13,10 +13,10 @@ def setup_movemap(residues_bb_movable, residues_sc_movable):
     for i in residues_bb_movable:
         mm.set_bb(i, True)
         mm.set_chi(i, True)
-    
+
     for i in residues_sc_movable:
         mm.set_chi(i, True)
-    
+
     return mm
 
 
@@ -33,10 +33,10 @@ def setup_movemap_from_resselectors(designable_selector, repackable_selector):
         if designable_selector[i] or repackable_selector[i]:
             mm.set_bb(i, True)
             mm.set_chi(i, True)
-    
+
     # for i in residues_sc_movable:
     #    mm.set_chi(i, True)
-    
+
     return mm
 
 
@@ -100,7 +100,7 @@ def setup_task_factory(pose, designable_residue_selector,
                 rosetta.core.pack.task.operation.RestrictToRepackingRLT(),
                 repackable_residue_selector)
         task_factory.push_back(repackable_operation)
-    
+
     natro_residues = [i for i in range(1, pose.size() + 1) if (not
             (designable_residue_selector[i] or repackable_residue_selector[i])
             and i not in motif_dict)]
