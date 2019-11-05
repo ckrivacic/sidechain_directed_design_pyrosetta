@@ -409,6 +409,9 @@ def model_loops(pose, designable_selector, repackable_selector,
 
     loopmodeler.set_loops(loops)
 
+    if task_factory:
+        loopmodeler.set_task_factory(task_factory)
+
     loopmodeler.apply(pose)
     pose.dump_file('out.pdb')
 
