@@ -183,7 +183,7 @@ def generate_loops_from_res_selector(pose, designable_selector, focus_residue,
         prev = designable_selector[i]
 
     """
-    Code to add terminal loops.
+    Add terminal loops.
     """
     if start:
         end = len(designable_selector)
@@ -198,7 +198,8 @@ def generate_loops_from_res_selector(pose, designable_selector, focus_residue,
     """
     Add loop main loop surrounding focus residue. Done separately to ensure
     focus residue gets added, and we can have different logic for focus
-    residue.
+    residue (can have bigger loop or loop size depend on how far the bb should
+    move).
     """
     loopstart = focus_residue - resbuffer
     loopend = focus_residue + resbuffer
