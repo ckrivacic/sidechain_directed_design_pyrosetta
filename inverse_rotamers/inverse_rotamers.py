@@ -260,6 +260,8 @@ def model_loops(pose, designable_selector, repackable_selector,
     loops = generate_loops_from_res_selector(pose, designable_selector, focus_residue)
 
     loopmodeler.set_loops(loops)
+    #loopmodeler.set_cen_scorefxn(sfxn)
+    loopmodeler.set_fa_scorefxn(sfxn)
 
     if task_factory:
         loopmodeler.set_task_factory(task_factory)
