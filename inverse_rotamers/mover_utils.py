@@ -1,5 +1,6 @@
 from pyrosetta import *
 from utils import list_to_str
+import random
 """
 Functions to help set up movers.
 """
@@ -142,7 +143,7 @@ def setup_task_factory(pose, designable_residue_selector,
     #task_design.restrict_to_residues(residue_selector_output)
 
 
-def generate_loops(pose, focus_residue):
+def generate_loops_simple(pose, focus_residue):
     '''Function to get a loops object for LoopModeler. For now, simply
     do focus residue +/- 3 residues, but we can make this more
     sophisticated later (the constructor for Loops can also take a
@@ -152,6 +153,65 @@ def generate_loops(pose, focus_residue):
     loops = rosetta.protocols.loops.Loops()
     loops.add_loop(loop)
     return loops
+
+
+def generate_loops_from_res_selector(pose, designable_selector, focus_residue,
+        resbuffer=2, randomize_cutpoints=True):
+    """
+    Generate loops from designable residues selector. For each stretch of 3 or
+    more designable residues, generate a loop object for it.
+
+    This is adopted from the constructor for the Loops class in Rosetta, except
+    that here I make sure that all loops are >= 3 residues long.
+    """
+    loops = rosetta.protocols.loops.Loops()
+
+    prev = False
+    for i in range(1, len(designable_selector) + 1):
+        if designable_selector[i] and not prev:
+            start = i
+        elif not designable_selector[i] and prev:
+            assert(start != 0)
+            if i - start >= 3 and not (start < focus_residue < i):
+                if randomize_cutpoints:
+                    loops.add_loop(rosetta.protocols.loops.Loop(start, i-1,
+                        random.randint(start+1, i-1)))
+                else:
+                    loops.add_loop(rosetta.protocols.loops.Loop(start, i-1,
+                        int((i-start)/2)))
+            start = 0
+        prev = designable_selector[i]
+
+    """
+    Code to add terminal loops.
+    """
+    if start:
+        end = len(designable_selector)
+        if end - start >= 2 and not (start < focus_residue < end):
+            if randomize_cutpoints:
+                loops.add_loop(rosetta.protocols.loops.Loop(start, end,
+                    random.randint(start + 1, end)))
+            else:
+                loops.add_loop(rosetta.protocols.loops.Loop(start, end, int((end -
+                    start + 1)/2)))
+
+    """
+    Add loop main loop surrounding focus residue. Done separately to ensure
+    focus residue gets added, and we can have different logic for focus
+    residue.
+    """
+    loopstart = focus_residue - resbuffer
+    loopend = focus_residue + resbuffer
+    if randomize_cutpoints:
+        loops.add_loop(rosetta.protocols.loops.Loop(loopstart,
+            loopend, random.randint(loopstart+1, loopend)))
+    else:
+        loops.add_loop(rosetta.protocols.loops.Loop(loopstart,
+            loopend,focus_residue))
+
+    print(loops)
+    return loops
+
 
 
 def choose_designable_residues(pose, focus_residues, include_focus=False):

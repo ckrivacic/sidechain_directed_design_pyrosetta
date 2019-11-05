@@ -257,7 +257,7 @@ def model_loops(pose, designable_selector, repackable_selector,
 
     loopmodeler = rosetta.protocols.loop_modeler.LoopModeler()
     loopmodeler.setup_kic_config()
-    loops = generate_loops(pose, focus_residue)
+    loops = generate_loops_from_res_selector(pose, designable_selector, focus_residue)
 
     loopmodeler.set_loops(loops)
 
@@ -281,7 +281,8 @@ designable, repackable = choose_designable_residues(cst_test.pose, [38])
 task_factory = setup_task_factory(cst_test.pose, designable, repackable,
         motif_dict={38:'E'},layered_design=False)
 
-print(cst_test.pose.constraint_set())
-
+#print(cst_test.pose.constraint_set())
+#print(designable)
+#loops = generate_loops_from_res_selector(cst_test.pose, designable, 38)
 #fast_design(cst_test.pose, designable, repackable, task_factory=task_factory)
 model_loops(cst_test.pose, designable, repackable, 38, task_factory=task_factory)
