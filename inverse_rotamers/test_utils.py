@@ -1,4 +1,5 @@
 from numeric import xyz_from_3d_array
+from pyrosetta import *
 
 def plot_3d(mobile,target,mobile_moved):
     from mpl_toolkits import mplot3d
@@ -11,3 +12,9 @@ def plot_3d(mobile,target,mobile_moved):
     ax.scatter(*xyz_from_3d_array(mobile_moved),c='red')
     plt.show()
 
+
+def dump_invrot(inverse_rotamer, filename):
+    dummy_pose = rosetta.core.pose.Pose()
+    dummy_pose.append_residue_by_jump(inverse_rotamer.clone(), 1)
+
+    dummy_pose.dump_file(filename)

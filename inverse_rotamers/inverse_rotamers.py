@@ -4,7 +4,7 @@ import numpy as np
 from utils import *
 from parsers import parse_restraints
 from numeric import *
-from test_utils import plot_3d
+from test_utils import *
 from itertools import compress
 from mover_utils import *
 
@@ -29,7 +29,7 @@ rotamers.
 """
 
 
-init("-ignore_unrecognized_res -extrachi_cutoff 0 -ex1 -ex2 -ex3 -ex4")
+init("-ignore_unrecognized_res -extrachi_cutoff 0 -ex1 -ex2 -ex3 -ex4 -out:overwrite")
 
 
 class ConstrainToInvRot(object):
@@ -106,16 +106,21 @@ class ConstrainToInvRot(object):
         lowest RMSD.
         """
         best_rmsd = None
+        i = 0
         for rmsd in invrot_rmsds:
+            dump_invrot(invrot_rmsds[rmsd][0], 'inverse_rotamers/invrot_' + str(i) + '.pdb')
             if not best_rmsd or rmsd < best_rmsd:
                 best_rmsd = rmsd
                 best_invrot = invrot_rmsds[rmsd]
+            i += 1
 
+        dump_invrot(best_invrot[0],'inverse_rotamers/best.pdb')
         return best_invrot, best_rmsd
 
     def choose_rotamer(self):
 
         invrot_rmsds = {}
+        i = 0
         for rotamer in self.rotamer_set:
             bb_array = []
             bb_indices = rotamer.all_bb_atoms()
@@ -248,12 +253,12 @@ def fast_design(pose, designable_selector, repackable_selector,
     pose.dump_file('out.pdb')
 
 def model_loops(pose, designable_selector, repackable_selector,
-        focus_residue,
-        movemap=None, task_factory=None):
+        focus_residue, movemap=None, task_factory=None, 
+        fast=False):
     '''Run loop modeler on the pose (default to NGK)'''
     mm = setup_movemap_from_resselectors(designable_selector,
             repackable_selector)
-    sfxn = setup_restrained_sfxn(['coordinate_constraint'],[10])
+    sfxn = setup_restrained_sfxn(['coordinate_constraint'],[10000])
 
     loopmodeler = rosetta.protocols.loop_modeler.LoopModeler()
     loopmodeler.setup_kic_config()
@@ -262,6 +267,10 @@ def model_loops(pose, designable_selector, repackable_selector,
     loopmodeler.set_loops(loops)
     #loopmodeler.set_cen_scorefxn(sfxn)
     loopmodeler.set_fa_scorefxn(sfxn)
+
+    if fast:
+        loopmodeler.centroid_stage().mark_as_test_run()
+        loopmodeler.fullatom_stage().mark_as_test_run()
 
     if task_factory:
         loopmodeler.set_task_factory(task_factory)
@@ -276,9 +285,6 @@ rotamer_set = cst_test.create_inverse_rotamers('GLU')
 cst_test.choose_rotamer()
 cst_test.make_constraints_from_inverse_rotamer()
 
-# bb_movable = [32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45,
-#         46, 47]
-
 designable, repackable = choose_designable_residues(cst_test.pose, [38])
 task_factory = setup_task_factory(cst_test.pose, designable, repackable,
         motif_dict={38:'E'},layered_design=False)
@@ -287,4 +293,5 @@ task_factory = setup_task_factory(cst_test.pose, designable, repackable,
 #print(designable)
 #loops = generate_loops_from_res_selector(cst_test.pose, designable, 38)
 #fast_design(cst_test.pose, designable, repackable, task_factory=task_factory)
-model_loops(cst_test.pose, designable, repackable, 38, task_factory=task_factory)
+model_loops(cst_test.pose, designable, repackable, 38,
+        task_factory=task_factory, fast=True)
