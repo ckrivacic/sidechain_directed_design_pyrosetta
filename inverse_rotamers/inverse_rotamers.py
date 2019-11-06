@@ -265,8 +265,10 @@ def fast_design(pose, designable_selector, repackable_selector,
 
 def model_loops(pose, designable_selector, repackable_selector,
         focus_residue, movemap=None, task_factory=None, 
-        fast=False):
-    '''Run loop modeler on the pose (default to NGK)'''
+        mover='ngk', fast=False):
+    '''Run loop modeler on the pose (default to NGK)
+    Available movers: 
+        - NGK'''
     mm = setup_movemap_from_resselectors(designable_selector,
             repackable_selector)
     sfxn = setup_restrained_sfxn(['coordinate_constraint'],[1.0])
