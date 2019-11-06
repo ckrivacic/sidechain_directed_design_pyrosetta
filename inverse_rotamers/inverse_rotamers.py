@@ -93,8 +93,6 @@ class ConstrainToInvRot(object):
             rotation, translation = \
                     get_transformation(residue_restrained_xyz, xyzarray,
                             average=residue_average)
-            print(rotation)
-            print(translation)
 
             # The following transformation should be saved in rotamer_set,
             # so that's ultimately what we'll return.
@@ -271,7 +269,7 @@ def model_loops(pose, designable_selector, repackable_selector,
     '''Run loop modeler on the pose (default to NGK)'''
     mm = setup_movemap_from_resselectors(designable_selector,
             repackable_selector)
-    sfxn = setup_restrained_sfxn(['coordinate_constraint'],[10000])
+    sfxn = setup_restrained_sfxn(['coordinate_constraint'],[1.0])
 
     loopmodeler = rosetta.protocols.loop_modeler.LoopModeler()
     loopmodeler.setup_kic_config()
@@ -306,5 +304,5 @@ task_factory = setup_task_factory(cst_test.pose, designable, repackable,
 #print(designable)
 #loops = generate_loops_from_res_selector(cst_test.pose, designable, 38)
 #fast_design(cst_test.pose, designable, repackable, task_factory=task_factory)
-#model_loops(cst_test.pose, designable, repackable, 38,
-        #task_factory=task_factory, fast=True)
+model_loops(cst_test.pose, designable, repackable, 38,
+        task_factory=task_factory, fast=False)
