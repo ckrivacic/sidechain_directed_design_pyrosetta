@@ -29,7 +29,7 @@ rotamers.
 """
 
 
-init("-ignore_unrecognized_res -extrachi_cutoff 0 -ex1 -ex2 -ex3 -ex4 -out:overwrite")
+init("-ignore_unrecognized_res -extrachi_cutoff 0 -ex1 -ex2 -out:overwrite")
 
 
 class ConstrainToInvRot(object):
@@ -70,7 +70,10 @@ class ConstrainToInvRot(object):
 
         xyzarray = np.array(xyzarray)
 
+        #i = 0
         for residue in rotamer_set:
+            # dump_invrot(residue, 'nontransformed_invrots/invrot_' + str(i) +
+            #         '.pdb')
             # Just to look @ before and after of full residue
             # full_res_initial = []
             # for atom in residue.atoms():
@@ -78,16 +81,26 @@ class ConstrainToInvRot(object):
             # full_res_initial = np.array(full_res_initial)
 
             residue_restrained_xyz = []
+            residue_all_xyz = []
             for atom in restrained_atoms:
                 residue_restrained_xyz.append(np.array(residue.xyz(atom)))
             residue_restrained_xyz = np.array(residue_restrained_xyz)
+            for index in range(1, residue.natoms() + 1):
+                residue_all_xyz.append(np.array(residue.xyz(index)))
+            residue_all_xyz = np.array(residue_all_xyz)
+            residue_average = [sum(x)/len(x) for x in zip(*residue_all_xyz)]
 
             rotation, translation = \
-                    get_transformation(residue_restrained_xyz,xyzarray)
+                    get_transformation(residue_restrained_xyz, xyzarray,
+                            average=residue_average)
+            print(rotation)
+            print(translation)
 
             # The following transformation should be saved in rotamer_set,
             # so that's ultimately what we'll return.
             residue.apply_transform_Rx_plus_v(np_array_to_xyzM(rotation),np_array_to_xyzV(translation))
+            # dump_invrot(residue, 'transformed_invrots/trans_invrot_' + str(i) + '.pdb')
+            # i += 1
 
 
             # check to see new residue overlay
@@ -106,13 +119,13 @@ class ConstrainToInvRot(object):
         lowest RMSD.
         """
         best_rmsd = None
-        i = 0
+        # i = 0
         for rmsd in invrot_rmsds:
-            dump_invrot(invrot_rmsds[rmsd][0], 'inverse_rotamers/invrot_' + str(i) + '.pdb')
+            # dump_invrot(invrot_rmsds[rmsd][0], 'inverse_rotamers/invrot_' + str(i) + '.pdb')
             if not best_rmsd or rmsd < best_rmsd:
                 best_rmsd = rmsd
                 best_invrot = invrot_rmsds[rmsd]
-            i += 1
+            # i += 1
 
         dump_invrot(best_invrot[0],'inverse_rotamers/best.pdb')
         return best_invrot, best_rmsd
@@ -293,5 +306,5 @@ task_factory = setup_task_factory(cst_test.pose, designable, repackable,
 #print(designable)
 #loops = generate_loops_from_res_selector(cst_test.pose, designable, 38)
 #fast_design(cst_test.pose, designable, repackable, task_factory=task_factory)
-model_loops(cst_test.pose, designable, repackable, 38,
-        task_factory=task_factory, fast=True)
+#model_loops(cst_test.pose, designable, repackable, 38,
+        #task_factory=task_factory, fast=True)

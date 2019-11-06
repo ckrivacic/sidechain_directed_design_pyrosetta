@@ -14,18 +14,24 @@ class Transformation(object):
 # start with that, then we'll write the functions to figure out which
 # atoms go where.
 def get_transformation(template_coordinate_set,
-        target_coordinate_set):
+        target_coordinate_set, average=None):
 
     """Function that returns rotation and translation vectors to align
-    two vectors of equal dimensions"""
+    two vectors of equal dimensions. Can give this function an average to use
+    for calculating rotation matrix."""
 
     # coordinate sets assumed to be of the form
     # [[x1,y1,z1],[x2,y2,z2],...[xn,yn,zn]]
     template_average = [sum(x)/len(x) for x in
             zip(*template_coordinate_set)]
+    if average:
+        rotation_average = average
+    else:
+        rotation_average = template_average
+
     target_average = [sum(x)/len(x) for x in zip(*target_coordinate_set)]
 
-    template_zeroed = template_coordinate_set - template_average
+    template_zeroed = template_coordinate_set - rotation_average
     target_zeroed = target_coordinate_set - target_average
     matrix = np.dot(template_zeroed.T,target_zeroed)
 
