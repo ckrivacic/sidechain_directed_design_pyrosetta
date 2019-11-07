@@ -29,14 +29,16 @@ rotamers.
 """
 
 
-init("-ignore_unrecognized_res -extrachi_cutoff 0 -ex1 -ex2 -out:overwrite")
+init("-ignore_unrecognized_res -extrachi_cutoff 0 -ex1 -ex2 -out:overwrite " +\
+        "-lh:db_path=/home/ckrivacic/rosetta/database/loophash_db/ " +\
+        "-lh:loopsizes 6 -out:level 400")
 
 
 class ConstrainToInvRot(object):
 
     def __init__(self):
         self.alignment_atoms = ['N', 'CA', 'CB']
-        self.pdb_path = 'test_inputs/8cho.pdb'
+        self.pdb_path = 'test_inputs/8cho_clean_relaxed.pdb'
         # constraints = 'test_inputs/test_constraints.cst'
         self.constraints = 'test_inputs/8cho_cst_E.cst'
 
@@ -232,9 +234,13 @@ def minimize_pose(pose, residues_bb_movable, residues_sc_movable):
     pose.dump_file('out.pdb')
 
 
-def fast_relax(pose, residues_bb_movable, residues_sc_movable):
+def fast_relax(pose, residues_bb_movable, residues_sc_movable, selectors=True):
     '''Fast relax the pose'''
-    mm = setup_movemap(residues_bb_movable, residues_sc_movable)
+    if selectors==False:
+        mm = setup_movemap(residues_bb_movable, residues_sc_movable)
+    else:
+        mm = setup_movemap_from_resselectors(residues_bb_movable,
+                residues_sc_movable)
     sfxn = setup_restrained_sfxn(['coordinate_constraint'],[2.0])
 
     fast_relax_rounds = 5
@@ -251,7 +257,7 @@ def fast_design(pose, designable_selector, repackable_selector,
     '''Run fast design on the pose'''
     mm = setup_movemap_from_resselectors(designable_selector,
             repackable_selector)
-    sfxn = setup_restrained_sfxn(['coordinate_constraint'],[2000.0])
+    sfxn = setup_restrained_sfxn(['coordinate_constraint'],[1])
 
 
     fastdesign = rosetta.protocols.denovo_design.movers.FastDesign()
@@ -265,17 +271,27 @@ def fast_design(pose, designable_selector, repackable_selector,
 
 def model_loops(pose, designable_selector, repackable_selector,
         focus_residue, movemap=None, task_factory=None, 
-        mover='ngk', fast=False):
+        mover='ngk', fast=False, resbuffer=3):
     '''Run loop modeler on the pose (default to NGK)
     Available movers: 
-        - NGK'''
+        - NGK
+        - Loophash KIC'''
     mm = setup_movemap_from_resselectors(designable_selector,
             repackable_selector)
     sfxn = setup_restrained_sfxn(['coordinate_constraint'],[1.0])
 
     loopmodeler = rosetta.protocols.loop_modeler.LoopModeler()
-    loopmodeler.setup_kic_config()
-    loops = generate_loops_from_res_selector(pose, designable_selector, focus_residue)
+    if mover=='ngk':
+        loopmodeler.setup_kic_config()
+        loops = generate_loops_from_res_selector(pose, designable_selector,
+                focus_residue, resbuffer=resbuffer)
+    elif mover=='lhk':
+        '''A note on LHK: You need to mutate focus residues to their motif
+        residue before running.'''
+        assert(resbuffer >= 4)
+        loopmodeler.setup_loophash_kic_config(True, str(focus_residue))
+        loops = generate_loops_simple(pose, focus_residue, resbuffer)
+
 
     loopmodeler.set_loops(loops)
     #loopmodeler.set_cen_scorefxn(sfxn)
@@ -300,11 +316,17 @@ cst_test.make_constraints_from_inverse_rotamer()
 
 designable, repackable = choose_designable_residues(cst_test.pose, [38])
 task_factory = setup_task_factory(cst_test.pose, designable, repackable,
-        motif_dict={38:'E'},layered_design=False)
+        motif_dict={38:'E'},layered_design=False, prepare_focus=True)
 
+bb_movable = [i for i in range(1,cst_test.pose.size() + 1)]
+sc_movable = []
+#fast_relax(cst_test.pose, bb_movable, sc_movable, selectors=False)
 #print(cst_test.pose.constraint_set())
 #print(designable)
 #loops = generate_loops_from_res_selector(cst_test.pose, designable, 38)
 #fast_design(cst_test.pose, designable, repackable, task_factory=task_factory)
+
 model_loops(cst_test.pose, designable, repackable, 38,
-        task_factory=task_factory, fast=False)
+        #task_factory=task_factory, 
+        fast=False, mover='lhk', resbuffer=4)
+

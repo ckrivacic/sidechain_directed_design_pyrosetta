@@ -55,7 +55,7 @@ def setup_task_factory(pose, designable_residue_selector,
         repackable_residue_selector,
         motif_dict=None,
         extra_rotamers=True, limit_aro_chi2=True, layered_design=True,
-        designable_aa_types=None):
+        designable_aa_types=None, prepare_focus=False):
     """
     Adapted from XingJie Pan's code at
     git@github.com:Kortemme-Lab/local_protein_sequence_design.git:
@@ -63,6 +63,9 @@ def setup_task_factory(pose, designable_residue_selector,
 
     motif_dict should have the resnum as the key for the single-letter restype,
     ex. {38:'E'}
+
+    If you want to set up a task factory to only design the 'focus' residue,
+    pass it a motif dict and prepare_focus=True
     """
 
     def list_to_str(l):
@@ -70,7 +73,7 @@ def setup_task_factory(pose, designable_residue_selector,
 
     task_factory = rosetta.core.pack.task.TaskFactory()
 
-    if len(designable_residue_selector) > 0:
+    if len(designable_residue_selector) > 0 and not prepare_focus:
         racaa = rosetta.core.pack.task.operation.RestrictAbsentCanonicalAASRLT()
 
         if designable_aa_types is None or\
@@ -96,10 +99,17 @@ def setup_task_factory(pose, designable_residue_selector,
                     )
             task_factory.push_back(motif_operation)
 
-    if len(repackable_residue_selector) > 0:
+    if len(repackable_residue_selector) > 0: # This is always going to be true
+        # given a res selector; should alter this logic at some point
         repackable_operation = rosetta.core.pack.task.operation.OperateOnResidueSubset(
                 rosetta.core.pack.task.operation.RestrictToRepackingRLT(),
                 repackable_residue_selector)
+        task_factory.push_back(repackable_operation)
+    if prepare_focus and len(designable_residue_selector) > 0:
+        repackable_operation = rosetta.core.pack.task.operation.OperateOnResidueSubset(
+                rosetta.core.pack.task.operation.RestrictToRepackingRLT(),
+                designable_residue_selector
+                )
         task_factory.push_back(repackable_operation)
 
     natro_residues = [i for i in range(1, pose.size() + 1) if (not
@@ -143,12 +153,13 @@ def setup_task_factory(pose, designable_residue_selector,
     #task_design.restrict_to_residues(residue_selector_output)
 
 
-def generate_loops_simple(pose, focus_residue):
+def generate_loops_simple(pose, focus_residue, resbuffer=3):
     '''Function to get a loops object for LoopModeler. For now, simply
     do focus residue +/- 3 residues, but we can make this more
     sophisticated later (the constructor for Loops can also take a
     residue selector).'''
-    loop = rosetta.protocols.loops.Loop(focus_residue - 3, focus_residue + 3)
+    loop = rosetta.protocols.loops.Loop(focus_residue - resbuffer,
+            focus_residue + resbuffer)
     loop.set_cut(focus_residue)
     loops = rosetta.protocols.loops.Loops()
     loops.add_loop(loop)
@@ -156,7 +167,7 @@ def generate_loops_simple(pose, focus_residue):
 
 
 def generate_loops_from_res_selector(pose, designable_selector, focus_residue,
-        resbuffer=2, randomize_cutpoints=True):
+        resbuffer=3, randomize_cutpoints=True):
     """
     Generate loops from designable residues selector. For each stretch of 3 or
     more designable residues, generate a loop object for it.
