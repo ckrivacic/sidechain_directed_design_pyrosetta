@@ -38,7 +38,7 @@ class ConstrainToInvRot(object):
 
     def __init__(self):
         self.alignment_atoms = ['N', 'CA', 'CB']
-        self.pdb_path = 'test_inputs/8cho_clean_relaxed.pdb'
+        self.pdb_path = 'test_inputs/test.pdb'
         # constraints = 'test_inputs/test_constraints.cst'
         self.constraints = 'test_inputs/8cho_cst_E.cst'
 
