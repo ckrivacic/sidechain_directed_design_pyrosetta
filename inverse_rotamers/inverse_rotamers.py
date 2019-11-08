@@ -31,18 +31,18 @@ rotamers.
 
 init("-ignore_unrecognized_res -extrachi_cutoff 0 -ex1 -ex2 -out:overwrite " +\
         "-lh:db_path=/home/ckrivacic/rosetta/database/loophash_db/ " +\
-        "-lh:loopsizes 6 -out:level 400")
+        "-lh:loopsizes 6")
 
 
 class ConstrainToInvRot(object):
 
     def __init__(self):
         self.alignment_atoms = ['N', 'CA', 'CB']
-        self.pdb_path = 'test_inputs/test.pdb'
+        self.pdb_path = 'test_inputs/8cho_clean_relaxed.pdb'
         # constraints = 'test_inputs/test_constraints.cst'
         self.constraints = 'test_inputs/8cho_cst_E.cst'
 
-        self.pose = pose_from_pdb(self.pdb_path)
+        self.pose = rosetta.core.import_pose.get_pdb_and_cleanup(self.pdb_path)
 
         dummy_pose = rosetta.core.pose.Pose()
         self.global_residue_type_set = dummy_pose.residue_type_set_for_pose()
@@ -186,25 +186,34 @@ class ConstrainToInvRot(object):
         # rosetta.protocols.toolbox.match_enzdes_util.constrain_pose_res_to_invrots()
         """
 
-        sfxn = rosetta.core.scoring.constraints.BoundFunc(0, 0.05, 0.4,
-                "invrot")
-        seqpos = rosetta.utility.vector1_unsigned_long()
-        seqpos.append(self.inverse_rotamer[1])
-        #seqpos = [38]
-        ambiguous_constraint = \
-            rosetta.protocols.toolbox.match_enzdes_util.constrain_pose_res_to_invrots(inverse_rotamers, seqpos, self.pose, sfxn)
+        #sfxn = rosetta.core.scoring.constraints.BoundFunc(0, 0.05, 0.4,
+        #        "invrot")
+        #seqpos = rosetta.utility.vector1_unsigned_long()
+        #seqpos.append(self.inverse_rotamer[1])
+
+        constraints = make_constraints_from_inverse_rotamer(self.inverse_rotamer[0],
+                self.inverse_rotamer[1], self.pose, atoms=self.alignment_atoms)
+        for constraint in constraints:
+            print(constraint)
+        #ambiguous_constraint = \
+        #    rosetta.protocols.toolbox.match_enzdes_util.constrain_pose_res_to_invrots(inverse_rotamers, seqpos, self.pose, sfxn)
 
 
         #print(ambiguous_constraint)
         csts = rosetta.utility.vector1_std_shared_ptr_const_core_scoring_constraints_Constraint_t()
-        csts.append(ambiguous_constraint)
-        self.sfxn = create_score_function("ref2015_cst")
+        #csts.append(ambiguous_constraint)
+        #self.sfxn = create_score_function("ref2015_cst")
         #score_manager = rosetta.core.scoring.ScoreTypeManager()
         #score_term = score_manager.score_type_from_name("coordinate_constraint")
         #sfxn.set_weight(score_term, 1.0)
-        self.sfxn(self.pose)
+        #self.sfxn(self.pose)
         #self.pose.add_constraints(csts)
-        self.pose.add_constraint(ambiguous_constraint)
+        #self.pose.add_constraint(ambiguous_constraint)
+        T = rosetta.basic.PyTracer()
+        #for constraint in ambiguous_constraint.member_constraints():
+        #    for thing in constraint.member_constraints():
+        #        thing.show_def(T, self.pose)
+            #constraint.show_def(T, self.pose)
 
         #print(self.pose.constraint_set())
 
@@ -269,6 +278,25 @@ def fast_design(pose, designable_selector, repackable_selector,
 
     pose.dump_file('out.pdb')
 
+
+def lhk_xml(task_factory):
+    lhk = rosetta.protocols.rosetta_scripts.XmlObjects.static_get_mover(
+    '''<LoopModeler name="modeler"
+      config="loophash_kic"
+      loops_file="loops"
+      loophash_perturb_sequence="yes"
+      loophash_seqposes_no_mutate="38"
+      fast="yes"
+    />
+    '''
+    )
+    #sfxn = setup_restrained_sfxn(['coordinate_constraint'],[1.0])
+    #lhk.set_fa_scorefxn(sfxn)
+    #lhk.set_task_factory(task_factory)
+
+    return lhk
+
+
 def model_loops(pose, designable_selector, repackable_selector,
         focus_residue, movemap=None, task_factory=None, 
         mover='ngk', fast=False, resbuffer=3):
@@ -326,7 +354,10 @@ sc_movable = []
 #loops = generate_loops_from_res_selector(cst_test.pose, designable, 38)
 #fast_design(cst_test.pose, designable, repackable, task_factory=task_factory)
 
+'''
 model_loops(cst_test.pose, designable, repackable, 38,
         #task_factory=task_factory, 
         fast=False, mover='lhk', resbuffer=4)
-
+'''
+lhk = lhk_xml(task_factory)
+lhk.apply(cst_test.pose)

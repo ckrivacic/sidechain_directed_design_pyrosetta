@@ -182,6 +182,24 @@ def test_rotamer_gen(resn):
     restype = global_residue_type_set.get_representative_type_base_name(resn)
     bb_independent_rotamers_extra_chi(restype)
 
+
+def make_constraints_from_inverse_rotamer(inverse_rotamer, resid, pose,
+        atoms=['N','C','CA']):
+    func = rosetta.core.scoring.constraints.BoundFunc(0, 0.05, 0.4,
+            "invrot")
+    coordinate_constraints = []
+    for atom in atoms:
+        xyzV = inverse_rotamer.xyz(atom)
+        fixed_pt = pose.atom_tree().root().atom_id()
+        atomno = pose.residue(resid).atom_index(atom)
+        atom_id = rosetta.core.id.AtomID(atomno, resid)
+        coordinate_constraint = \
+        rosetta.core.scoring.constraints.CoordinateConstraint(
+                atom_id, fixed_pt, xyzV, func
+                )
+        coordinate_constraints.append(coordinate_constraint)
+
+    return coordinate_constraints
+
 #init('-extrachi_cutoff 0 -ex1 -ex2')
 #test_rotamer_gen("ASP")
-
