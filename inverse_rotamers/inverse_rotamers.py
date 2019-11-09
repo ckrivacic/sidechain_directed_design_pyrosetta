@@ -37,7 +37,7 @@ init("-ignore_unrecognized_res -extrachi_cutoff 0 -ex1 -ex2 -out:overwrite " +\
 class ConstrainToInvRot(object):
 
     def __init__(self):
-        self.alignment_atoms = ['N', 'CA', 'CB']
+        self.alignment_atoms = ['N', 'CA', 'C']
         self.pdb_path = 'test_inputs/8cho.pdb'
         # constraints = 'test_inputs/test_constraints.cst'
         self.constraints = 'test_inputs/8cho_cst_E.cst'
