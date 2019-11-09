@@ -38,7 +38,7 @@ class ConstrainToInvRot(object):
 
     def __init__(self):
         self.alignment_atoms = ['N', 'CA', 'CB']
-        self.pdb_path = 'test_inputs/8cho_clean_relaxed.pdb'
+        self.pdb_path = 'test_inputs/8cho.pdb'
         # constraints = 'test_inputs/test_constraints.cst'
         self.constraints = 'test_inputs/8cho_cst_E.cst'
 
@@ -194,13 +194,13 @@ class ConstrainToInvRot(object):
         constraints = make_constraints_from_inverse_rotamer(self.inverse_rotamer[0],
                 self.inverse_rotamer[1], self.pose, atoms=self.alignment_atoms)
         for constraint in constraints:
-            print(constraint)
+            self.pose.add_constraint(constraint)
         #ambiguous_constraint = \
         #    rosetta.protocols.toolbox.match_enzdes_util.constrain_pose_res_to_invrots(inverse_rotamers, seqpos, self.pose, sfxn)
 
 
         #print(ambiguous_constraint)
-        csts = rosetta.utility.vector1_std_shared_ptr_const_core_scoring_constraints_Constraint_t()
+        #csts = rosetta.utility.vector1_std_shared_ptr_const_core_scoring_constraints_Constraint_t()
         #csts.append(ambiguous_constraint)
         #self.sfxn = create_score_function("ref2015_cst")
         #score_manager = rosetta.core.scoring.ScoreTypeManager()
@@ -215,7 +215,9 @@ class ConstrainToInvRot(object):
         #        thing.show_def(T, self.pose)
             #constraint.show_def(T, self.pose)
 
-        #print(self.pose.constraint_set())
+        print('-----')
+        print(self.pose.constraint_set())
+        print('-----')
 
 def minimize_pose(pose, residues_bb_movable, residues_sc_movable):
     mm = rosetta.core.kinematics.MoveMap()
@@ -306,7 +308,7 @@ def model_loops(pose, designable_selector, repackable_selector,
         - Loophash KIC'''
     mm = setup_movemap_from_resselectors(designable_selector,
             repackable_selector)
-    sfxn = setup_restrained_sfxn(['coordinate_constraint'],[1.0])
+    sfxn = setup_restrained_sfxn(['coordinate_constraint'],[1000.0])
 
     loopmodeler = rosetta.protocols.loop_modeler.LoopModeler()
     if mover=='ngk':
@@ -354,10 +356,10 @@ sc_movable = []
 #loops = generate_loops_from_res_selector(cst_test.pose, designable, 38)
 #fast_design(cst_test.pose, designable, repackable, task_factory=task_factory)
 
-'''
+
 model_loops(cst_test.pose, designable, repackable, 38,
-        #task_factory=task_factory, 
-        fast=False, mover='lhk', resbuffer=4)
-'''
-lhk = lhk_xml(task_factory)
-lhk.apply(cst_test.pose)
+        task_factory=task_factory, 
+        fast=True, mover='lhk', resbuffer=4)
+
+#lhk = lhk_xml(task_factory)
+#lhk.apply(cst_test.pose)
