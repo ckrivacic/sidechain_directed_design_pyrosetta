@@ -201,5 +201,14 @@ def make_constraints_from_inverse_rotamer(inverse_rotamer, resid, pose,
 
     return coordinate_constraints
 
+
+def res_selector_to_size_list(resselector):
+    size_list = []
+    for i, boolean in enumerate(resselector):
+        if boolean == True:
+            size_list.append(i + 1)
+
+    return size_list
+
 #init('-extrachi_cutoff 0 -ex1 -ex2')
 #test_rotamer_gen("ASP")

@@ -53,4 +53,20 @@ def create_constraints(pdbid, res_dict):
                     print(constraints_list)
 
 
-create_constraints('8cho',{'38A':['N','CA','CB']})
+def align_poses_and_constrain(mpose, tpose, res_dict, shell=None):
+    '''
+    Align 2 poses and create constraints for a target residue and atom list.
+    res_dict should have the following structure:
+    {resnum+chain:[atom_list]}
+    ex:
+    {'38A':['N','CA','CB'],'56A':['N','CA','CB']}
+    '''
+    aligner = rosetta.protocols.stepwise.modeler.align.StepWisePoseAligner(tpose)
+
+    if shell:
+        selector =\
+        rosetta.core.select.residue_selector.NeighborhoodResidueSelector(focus_residue_selector,
+                10.0, include_focus_in_subset=True)
+    
+
+#create_constraints('8cho',{'38A':['N','CA','CB']})
