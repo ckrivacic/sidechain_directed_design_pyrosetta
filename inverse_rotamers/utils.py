@@ -206,7 +206,7 @@ def res_selector_to_size_list(resselector):
     size_list = []
     for i, boolean in enumerate(resselector):
         if boolean == True:
-            size_list.append(i + 1)
+            size_list.append(int(i + 1))
 
     return size_list
 

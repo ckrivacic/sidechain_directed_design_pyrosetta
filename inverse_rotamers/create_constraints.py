@@ -10,6 +10,9 @@ Downloads from https://files.rcsb.org/download/PDBID.pdb
 '''
 
 import sys, os, wget
+from utils import *
+from pyrosetta import *
+from numeric import *
 #from klab import docopt
 
 
@@ -57,16 +60,56 @@ def align_poses_and_constrain(mpose, tpose, res_dict, shell=None):
     '''
     Align 2 poses and create constraints for a target residue and atom list.
     res_dict should have the following structure:
-    {resnum+chain:[atom_list]}
+    {resnum:[atom_list]}
     ex:
-    {'38A':['N','CA','CB'],'56A':['N','CA','CB']}
+    {'38':['N','CA','CB'],'56A':['N','CA','CB']}
     '''
-    aligner = rosetta.protocols.stepwise.modeler.align.StepWisePoseAligner(tpose)
+    #aligner = rosetta.protocols.stepwise.modeler.align.StepWisePoseAligner(mpose)
+    focus_residues = ''
+    for key in res_dict:
+        focus_residues += key
 
+    aligner =\
+            rosetta.protocols.stepwise.modeler.align.StepWisePoseAligner(tpose)
     if shell:
+        focus_residue_selector =\
+                rosetta.core.select.residue_selector.ResidueIndexSelector(focus_residues)
         selector =\
-        rosetta.core.select.residue_selector.NeighborhoodResidueSelector(focus_residue_selector,
+                rosetta.core.select.residue_selector.NeighborhoodResidueSelector(focus_residue_selector,
                 10.0, include_focus_in_subset=True)
+
+        mresidues = intlist_to_vector1_size(res_selector_to_size_list(selector.apply(mpose)))
+        tresidues = intlist_to_vector1_size(res_selector_to_size_list(selector.apply(tpose)))
+    else:
+        mresidues = intlist_to_vector1_size([n for n in range(pose.size()+1)])
+
+    partition_res = rosetta.protocols.stepwise.modeler.\
+            figure_out_root_partition_res(tpose, tresidues)
+    if len(partition_res) == 0:
+        print('no partition res found')
+        partition_res.append(tpose.fold_tree().root())
+        
+    #aligner.set_root_partition_res(intlist_to_vector1_size(tresidues))
+    print("partition residues:", partition_res)
+
+    aligner.set_root_partition_res(partition_res)
+
+    full_sequence = rosetta.core.pose.full_model_info.const_full_model_info(tpose).full_sequence()
+    print(full_sequence)
+    print(rosetta.core.pose.rna.remove_bracketed(full_sequence))
+    print('------------')
+
+    aligner.apply(mpose)
+
+
     
 
 #create_constraints('8cho',{'38A':['N','CA','CB']})
+init()
+chemical_manager = rosetta.utility.SingletonBase_core_chemical_ChemicalManager_t
+#chemical_manager = rosetta.core.chemical.ChemicalManager()
+rsd_set = chemical_manager.get_instance().residue_type_set('fa_standard')
+tpose = rosetta.core.import_pose.get_pdb_with_full_model_info('8cho.pdb',rsd_set)
+mpose = rosetta.core.import_pose.get_pdb_with_full_model_info('1qjg.pdb',rsd_set)
+mpose = mpose.split_by_chain(1)
+align_poses_and_constrain(mpose, tpose, {'38':['N','CA','CB']}, shell=10)

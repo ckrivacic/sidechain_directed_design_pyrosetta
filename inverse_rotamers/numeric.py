@@ -10,6 +10,12 @@ def xyzV_to_np_array(xyz):
 def np_array_to_xyzV(a):
     return rosetta.numeric.xyzVector_double_t(a[0], a[1], a[2])
 
+def intlist_to_vector1_size(a):
+    vector = rosetta.utility.vector1_unsigned_long()
+    for item in a:
+        vector.append(item)
+    return vector
+
 def xyzM_to_np_array(M):
     return np.array([[M.xx, M.xy, M.xz],
                      [M.yx, M.yy, M.yz],
