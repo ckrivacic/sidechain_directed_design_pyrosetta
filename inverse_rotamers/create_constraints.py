@@ -76,12 +76,13 @@ def align_poses_and_constrain(mpose, tpose, res_dict, shell=None):
                 rosetta.core.select.residue_selector.ResidueIndexSelector(focus_residues)
         selector =\
                 rosetta.core.select.residue_selector.NeighborhoodResidueSelector(focus_residue_selector,
-                10.0, include_focus_in_subset=True)
+                10.0, include_focus_in_subset=False)
 
         mresidues = intlist_to_vector1_size(res_selector_to_size_list(selector.apply(mpose)))
         tresidues = intlist_to_vector1_size(res_selector_to_size_list(selector.apply(tpose)))
     else:
-        mresidues = intlist_to_vector1_size([n for n in range(pose.size()+1)])
+        mresidues = intlist_to_vector1_size([n for n in range(1, mpose.size()+1)])
+        tresidues = intlist_to_vector1_size([n for n in range(1, tpose.size()+1)])
 
     partition_res = rosetta.protocols.stepwise.modeler.\
             figure_out_root_partition_res(tpose, tresidues)
@@ -113,3 +114,6 @@ tpose = rosetta.core.import_pose.get_pdb_with_full_model_info('8cho.pdb',rsd_set
 mpose = rosetta.core.import_pose.get_pdb_with_full_model_info('1qjg.pdb',rsd_set)
 mpose = mpose.split_by_chain(1)
 align_poses_and_constrain(mpose, tpose, {'38':['N','CA','CB']}, shell=10)
+#tpose = rosetta.core.import_pose.get_pdb_with_full_model_info('1jvm.pdb',rsd_set)
+#mpose = rosetta.core.import_pose.get_pdb_with_full_model_info('3hpl.pdb',rsd_set)
+#align_poses_and_constrain(mpose, tpose, {'71':['N','CA','CB']}, shell=None)

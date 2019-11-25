@@ -9,6 +9,27 @@ class Transformation(object):
         self.translation = translation
 
 
+def get_superimpose_transformation(P1, P2):
+    '''Get the superimpose transformation that transfoms a list of
+    points P1 to another list of points P2.
+    From XingJie Pan'''
+    if len(P1) != len(P2):
+        raise Exception("Sets to be superimposed must have same number of points.")
+
+    com1 = np.mean(P1, axis=0)
+    com2 = np.mean(P2, axis=0)
+
+    R = np.dot(np.transpose(np.array(P1) - com1), np.array(P2) - com2)
+    V, S, W = np.linalg.svd(R)
+
+    if (np.linalg.det(V) * np.linalg.det(W)) < 0.0:
+        V[:, -1] = -V[:, -1]
+
+    M = np.transpose(np.array(np.dot(V, W)))
+
+    return M, com2 - np.dot(M, com1)
+
+
 # I will need a function to calculate the rotation and translation
 # vectors to align my inverse rotamers to target coordinates. Let's
 # start with that, then we'll write the functions to figure out which
@@ -16,14 +37,23 @@ class Transformation(object):
 def get_transformation(template_coordinate_set,
         target_coordinate_set, average=None):
 
-    """Function that returns rotation and translation vectors to align
+    """
+    DEPRECIATED; XingJie's function above works w/o the 'average' variable.
+
+    Function that returns rotation and translation vectors to align
     two vectors of equal dimensions. Can give this function an average to use
-    for calculating rotation matrix."""
+    for calculating rotation matrix. 
+    The purpose of the "average" variable is to rotate the object around a
+    center that is outside the coordinate sets. For instance if aligning a part
+    of a mobile residue onto part of a template residue, 'average' should be the center
+    of the mobile residue."""
 
     # coordinate sets assumed to be of the form
     # [[x1,y1,z1],[x2,y2,z2],...[xn,yn,zn]]
     template_average = [sum(x)/len(x) for x in
             zip(*template_coordinate_set)]
+    # May need a different average to calculate rotation if aligning a subset
+    # of something.
     if average:
         rotation_average = average
     else:
@@ -36,6 +66,8 @@ def get_transformation(template_coordinate_set,
     matrix = np.dot(template_zeroed.T,target_zeroed)
 
     U, s, Vh = np.linalg.svd(matrix)
+    if (np.linalg.det(U) * np.linalg.det(Vh)) < 0.0:
+        U[:,-1] = -U[:,-1]
     Id = np.array([[1,0,0],
                   [0,1,0],
                   [0,0,np.sign(np.linalg.det(matrix))]])

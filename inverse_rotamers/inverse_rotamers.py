@@ -72,16 +72,7 @@ class ConstrainToInvRot(object):
 
         xyzarray = np.array(xyzarray)
 
-        #i = 0
         for residue in rotamer_set:
-            # dump_invrot(residue, 'nontransformed_invrots/invrot_' + str(i) +
-            #         '.pdb')
-            # Just to look @ before and after of full residue
-            # full_res_initial = []
-            # for atom in residue.atoms():
-            #    full_res_initial.append(np.array(atom.xyz()))
-            # full_res_initial = np.array(full_res_initial)
-
             residue_restrained_xyz = []
             residue_all_xyz = []
             for atom in restrained_atoms:
@@ -92,23 +83,14 @@ class ConstrainToInvRot(object):
             residue_all_xyz = np.array(residue_all_xyz)
             residue_average = [sum(x)/len(x) for x in zip(*residue_all_xyz)]
 
+
             rotation, translation = \
-                    get_transformation(residue_restrained_xyz, xyzarray,
-                            average=residue_average)
+                    get_superimpose_transformation(residue_restrained_xyz, xyzarray)
 
             # The following transformation should be saved in rotamer_set,
             # so that's ultimately what we'll return.
-            residue.apply_transform_Rx_plus_v(np_array_to_xyzM(rotation),np_array_to_xyzV(translation))
-            # dump_invrot(residue, 'transformed_invrots/trans_invrot_' + str(i) + '.pdb')
-            # i += 1
-
-
-            # check to see new residue overlay
-            # residue_new_xyz = []
-            # for atom in residue.atoms():
-            #    residue_new_xyz.append(np.array(atom.xyz()))
-            # residue_new_xyz = np.array(residue_new_xyz)
-            # plot_3d(full_res_initial,xyzarray,residue_new_xyz)
+            residue.apply_transform_Rx_plus_v(np_array_to_xyzM(rotation),\
+                    np_array_to_xyzV(translation))
 
         self.rotamer_set = rotamer_set
 
