@@ -58,6 +58,8 @@ def create_constraints(pdbid, res_dict):
 
 def align_poses_and_constrain(mpose, tpose, res_dict, shell=None):
     '''
+    Ok, not working. Guess I need to write my own func.
+
     Align 2 poses and create constraints for a target residue and atom list.
     res_dict should have the following structure:
     {resnum:[atom_list]}
