@@ -1,4 +1,5 @@
 import numpy as np
+from numeric import *
 from pyrosetta import *
 
 class Transformation(object):
@@ -240,7 +241,7 @@ def res_selector_to_size_list(resselector):
         if boolean == True:
             size_list.append(int(i + 1))
 
-    return size_list
+    return intlist_to_vector1_size(size_list)
 
 #init('-extrachi_cutoff 0 -ex1 -ex2')
 #test_rotamer_gen("ASP")

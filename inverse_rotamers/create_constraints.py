@@ -80,8 +80,8 @@ def align_poses_and_constrain(mpose, tpose, res_dict, shell=None):
                 rosetta.core.select.residue_selector.NeighborhoodResidueSelector(focus_residue_selector,
                 10.0, include_focus_in_subset=False)
 
-        mresidues = intlist_to_vector1_size(res_selector_to_size_list(selector.apply(mpose)))
-        tresidues = intlist_to_vector1_size(res_selector_to_size_list(selector.apply(tpose)))
+        mresidues = res_selector_to_size_list(selector.apply(mpose))
+        tresidues = res_selector_to_size_list(selector.apply(tpose))
     else:
         mresidues = intlist_to_vector1_size([n for n in range(1, mpose.size()+1)])
         tresidues = intlist_to_vector1_size([n for n in range(1, tpose.size()+1)])
