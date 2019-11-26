@@ -2,6 +2,7 @@ import numpy as np
 from pyrosetta import *
 from Bio import pairwise2
 from utils import *
+from create_constraints import *
 
 
 class Alignment(object):
@@ -178,3 +179,5 @@ mpose = pose_from_pdb('1qjg.pdb')
 align = Alignment(tpose, mpose)
 align.create_shell(10,[38])
 align.match_align()
+cst = constraints_from_pose(align.mobile, {38:['N','C','CA']})
+print(cst)

@@ -16,6 +16,33 @@ from numeric import *
 #from klab import docopt
 
 
+def constraints_from_pose(reference_pose, res_dict):
+    """
+    Make constraints from a pose given the resnum and list of atoms.
+    res_dict should have the following structure:
+    {resnum:[atom_list]}
+    ex:
+    {38:['N','C','CA']}
+    Note: This is intended to return the constraints, which should then be
+    applied to a DIFFERENT pose.
+    """
+    func = rosetta.core.scoring.constraints.BoundFunc(0, 0.05, 0.4, "coordcst")
+    coordinate_constraints = []
+    for resi in res_dict:
+        for atom in res_dict[resi]:
+            xyzV = reference_pose.residue(resi).xyz(atom) 
+            fixed_pt = reference_pose.atom_tree().root().atom_id()
+            atomno = reference_pose.residue(resi).atom_index(atom)
+            atom_id = rosetta.core.id.AtomID(atomno, resi)
+            coordinate_constraint = \
+                    rosetta.core.scoring.constraints.CoordinateConstraint(\
+                    atom_id, fixed_pt, xyzV, func
+                    )
+            coordinate_constraints.append(coordinate_constraint)
+    
+    return coordinate_constraints
+
+
 def create_constraints(pdbid, res_dict):
     '''
     Make constraints from a pdb given a resnum, chain and list of atoms.
@@ -108,14 +135,14 @@ def align_poses_and_constrain(mpose, tpose, res_dict, shell=None):
     
 
 #create_constraints('8cho',{'38A':['N','CA','CB']})
-init()
-chemical_manager = rosetta.utility.SingletonBase_core_chemical_ChemicalManager_t
+#init()
+#chemical_manager = rosetta.utility.SingletonBase_core_chemical_ChemicalManager_t
 #chemical_manager = rosetta.core.chemical.ChemicalManager()
-rsd_set = chemical_manager.get_instance().residue_type_set('fa_standard')
-tpose = rosetta.core.import_pose.get_pdb_with_full_model_info('8cho.pdb',rsd_set)
-mpose = rosetta.core.import_pose.get_pdb_with_full_model_info('1qjg.pdb',rsd_set)
-mpose = mpose.split_by_chain(1)
-align_poses_and_constrain(mpose, tpose, {'38':['N','CA','CB']}, shell=10)
+#rsd_set = chemical_manager.get_instance().residue_type_set('fa_standard')
+#tpose = rosetta.core.import_pose.get_pdb_with_full_model_info('8cho.pdb',rsd_set)
+#mpose = rosetta.core.import_pose.get_pdb_with_full_model_info('1qjg.pdb',rsd_set)
+#mpose = mpose.split_by_chain(1)
+#align_poses_and_constrain(mpose, tpose, {'38':['N','CA','CB']}, shell=10)
 #tpose = rosetta.core.import_pose.get_pdb_with_full_model_info('1jvm.pdb',rsd_set)
 #mpose = rosetta.core.import_pose.get_pdb_with_full_model_info('3hpl.pdb',rsd_set)
 #align_poses_and_constrain(mpose, tpose, {'71':['N','CA','CB']}, shell=None)
