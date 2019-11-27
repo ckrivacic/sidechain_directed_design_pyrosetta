@@ -320,7 +320,7 @@ def model_loops(pose, designable_selector, repackable_selector,
     pose.dump_file('out.pdb')
 
 
-
+'''
 cst_test = ConstrainToInvRot()
 rotamer_set = cst_test.create_inverse_rotamers('GLU')
 cst_test.choose_rotamer()
@@ -345,3 +345,4 @@ model_loops(cst_test.pose, designable, repackable, 38,
 
 #lhk = lhk_xml(task_factory)
 #lhk.apply(cst_test.pose)
+'''

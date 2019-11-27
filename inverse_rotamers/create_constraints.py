@@ -14,6 +14,7 @@ from utils import *
 from pyrosetta import *
 from numeric import *
 from align import Alignment
+from inverse_rotamers import *
 #from klab import docopt
 
 
@@ -57,7 +58,28 @@ def constrain_mutant_to_wt(mutant_pose, wt_pose, focus_residues):
         aligner.target.add_constraint(cst)
 
 
+def pose_from_rcsb(pdbid):
+    if not os.path.exists(pdbid + '.pdb'):
+        url = 'https://files.rcsb.org/download/' + pdbid + '.pdb'
+        wget.download(url, pdbid + '.pdb')
+
+    return pose_from_file(pdbid + '.pdb')
+
+
+def prepare_pdbid_for_modeling(wt_pdbid, mut_pdbid, focus_resnum, focus_restype):
+    wt_pose = pose_from_rcsb(wt_pdbid)
+    mut_pose = pose_from_rcsb(mut_pdbid)
+    designable, repackable = choose_designable_residues(mut_pose,
+            [focus_resnum])
+    task_factory = setup_task_factory(mut_pose, designable, repackable,
+            motif_dict={focus_resnum:focus_restype}, layered_design=False,
+            prepare_focus=True)
+    constrain_mutant_to_wt(mut_pose, wt_pose, [focus_resnum])
+    return mut_pose, designable, repackable, task_factory
+
+
 init()
-mutant_pose = pose_from_pdb('1qjg.pdb')
-wt_pose = pose_from_pdb('8cho.pdb')
-constrain_mutant_to_wt(mutant_pose, wt_pose, [38])
+pose, designable, repackable, task_factory = prepare_pdbid_for_modeling('4s0w','1cv1',111,'V')
+model_loops(pose, designable, repackable, 111, task_factory=task_factory,
+        fast=True, mover='ngk', resbuffer=4)
+pose.dump_file('out.pdb')
