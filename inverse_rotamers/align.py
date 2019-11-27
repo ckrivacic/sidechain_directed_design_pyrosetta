@@ -2,7 +2,6 @@ import numpy as np
 from pyrosetta import *
 from Bio import pairwise2
 from utils import *
-from create_constraints import *
 
 
 class Alignment(object):
@@ -171,13 +170,3 @@ def get_superimpose_transformation(P1, P2):
 
 def sequence_align(seq1, seq2):
     return pairwise2.align.localxs(seq1, seq2, -0.1, -0.1)
-
-
-init()
-tpose = pose_from_pdb('8cho.pdb')
-mpose = pose_from_pdb('1qjg.pdb')
-align = Alignment(tpose, mpose)
-align.create_shell(10,[38])
-align.match_align()
-cst = constraints_from_pose(align.mobile, {38:['N','C','CA']})
-print(cst)
