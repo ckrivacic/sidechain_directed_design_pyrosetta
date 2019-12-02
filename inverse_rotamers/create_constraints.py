@@ -15,6 +15,7 @@ from pyrosetta import *
 from numeric import *
 from align import Alignment
 from inverse_rotamers import *
+import time
 #from klab import docopt
 
 
@@ -80,6 +81,9 @@ def prepare_pdbid_for_modeling(wt_pdbid, mut_pdbid, focus_resnum, focus_restype)
 
 init()
 pose, designable, repackable, task_factory = prepare_pdbid_for_modeling('4s0w','1cv1',111,'V')
+start_time = time.time()
 model_loops(pose, designable, repackable, 111, task_factory=task_factory,
         fast=True, mover='ngk', resbuffer=4)
+end_time = time.time() - start_time
+print('total time elapsed: ',end_time)
 pose.dump_file('out.pdb')

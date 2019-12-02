@@ -288,6 +288,13 @@ def model_loops(pose, designable_selector, repackable_selector,
     Available movers: 
         - NGK
         - Loophash KIC'''
+    '''
+    Note for testing loop modeling parameters:
+    To change temp/number of cycles/etc., get the centroid stage and
+    fullatom stage LoopProtocol objects via loopmodeler.centroid_stage()
+    and loopmodeler.fullatom_stage(). Can set temp and ramping from
+    there.
+    '''
     mm = setup_movemap_from_resselectors(designable_selector,
             repackable_selector)
     sfxn = setup_restrained_sfxn(['coordinate_constraint'],[1000.0])
