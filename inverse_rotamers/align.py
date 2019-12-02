@@ -15,6 +15,7 @@ class Alignment(object):
         self.set_target_sequence()
         self.set_mobile_sequence()
         self.atoms = ['N','C','CA','O']
+        self.bb_rmsd = None
 
     def set_atoms(self, atoms):
         self.atoms = atoms
@@ -88,16 +89,12 @@ class Alignment(object):
             else:
                 target_align_residues.append(next(t_iter))
                 mobile_align_residues.append(next(m_iter))
-        superimpose_poses_by_residues(self.target, target_align_residues,\
+        superimpose_poses_by_residues(self.mobile, mobile_align_residues,\
+                self.target, target_align_residues)
+
+        self.bb_rmsd = calc_backbone_RMSD(self.target, target_align_residues,
                 self.mobile, mobile_align_residues)
 
-
-class Transformation(object):
-    """Class for storing rotation & transformation information"""
-
-    def __init__(self,rotation,translation):
-        self.rotation = rotation
-        self.translation = translation
 
 
 def get_backbone_points(pose, residues):

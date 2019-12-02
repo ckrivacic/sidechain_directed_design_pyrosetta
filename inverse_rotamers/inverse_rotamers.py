@@ -156,50 +156,11 @@ class ConstrainToInvRot(object):
 
         inverse_rotamers = rosetta.std.list_std_shared_ptr_const_core_conformation_Residue_std_allocator_std_shared_ptr_const_core_conformation_Residue_t()
         inverse_rotamers.push_back(self.inverse_rotamer[0])
-        """
-        cst_generator =\
-        rosetta.protocols.forge.constraints.InverseRotamersRCG(self.nearest_residue,
-                self.nearest_residue, inverse_rotamers)
-        print(self.pose.constraint_set())
-        cst_generator.generate_remodel_constraints(self.pose)
-        print(self.pose.constraint_set())
-
-        # csts =
-        # rosetta.protocols.toolbox.match_enzdes_util.constrain_pose_res_to_invrots()
-        """
-
-        #sfxn = rosetta.core.scoring.constraints.BoundFunc(0, 0.05, 0.4,
-        #        "invrot")
-        #seqpos = rosetta.utility.vector1_unsigned_long()
-        #seqpos.append(self.inverse_rotamer[1])
 
         constraints = make_constraints_from_inverse_rotamer(self.inverse_rotamer[0],
                 self.inverse_rotamer[1], self.pose, atoms=self.alignment_atoms)
         for constraint in constraints:
             self.pose.add_constraint(constraint)
-        #ambiguous_constraint = \
-        #    rosetta.protocols.toolbox.match_enzdes_util.constrain_pose_res_to_invrots(inverse_rotamers, seqpos, self.pose, sfxn)
-
-
-        #print(ambiguous_constraint)
-        #csts = rosetta.utility.vector1_std_shared_ptr_const_core_scoring_constraints_Constraint_t()
-        #csts.append(ambiguous_constraint)
-        #self.sfxn = create_score_function("ref2015_cst")
-        #score_manager = rosetta.core.scoring.ScoreTypeManager()
-        #score_term = score_manager.score_type_from_name("coordinate_constraint")
-        #sfxn.set_weight(score_term, 1.0)
-        #self.sfxn(self.pose)
-        #self.pose.add_constraints(csts)
-        #self.pose.add_constraint(ambiguous_constraint)
-        T = rosetta.basic.PyTracer()
-        #for constraint in ambiguous_constraint.member_constraints():
-        #    for thing in constraint.member_constraints():
-        #        thing.show_def(T, self.pose)
-            #constraint.show_def(T, self.pose)
-
-        print('-----')
-        print(self.pose.constraint_set())
-        print('-----')
 
 def minimize_pose(pose, residues_bb_movable, residues_sc_movable):
     mm = rosetta.core.kinematics.MoveMap()
@@ -281,7 +242,7 @@ def lhk_xml(task_factory):
     return lhk
 
 
-def model_loops(pose, designable_selector, repackable_selector,
+def get_loop_modeler(pose, designable_selector, repackable_selector,
         focus_residue, movemap=None, task_factory=None, 
         mover='ngk', fast=False, resbuffer=3):
     '''Run loop modeler on the pose (default to NGK)
@@ -292,7 +253,7 @@ def model_loops(pose, designable_selector, repackable_selector,
     Note for testing loop modeling parameters:
     To change temp/number of cycles/etc., get the centroid stage and
     fullatom stage LoopProtocol objects via loopmodeler.centroid_stage()
-    and loopmodeler.fullatom_stage(). Can set temp and ramping from
+    and loopmodeler.fullatom_stage(). Can set temp and cycles from
     there.
     '''
     mm = setup_movemap_from_resselectors(designable_selector,
@@ -323,8 +284,9 @@ def model_loops(pose, designable_selector, repackable_selector,
     if task_factory:
         loopmodeler.set_task_factory(task_factory)
 
-    loopmodeler.apply(pose)
-    pose.dump_file('out.pdb')
+    #loopmodeler.apply(pose)
+    #pose.dump_file('out.pdb')
+    return loopmodeler
 
 
 '''

@@ -78,12 +78,12 @@ def prepare_pdbid_for_modeling(wt_pdbid, mut_pdbid, focus_resnum, focus_restype)
     constrain_mutant_to_wt(mut_pose, wt_pose, [focus_resnum])
     return mut_pose, designable, repackable, task_factory
 
-
-init()
-pose, designable, repackable, task_factory = prepare_pdbid_for_modeling('4s0w','1cv1',111,'V')
-start_time = time.time()
-model_loops(pose, designable, repackable, 111, task_factory=task_factory,
-        fast=True, mover='ngk', resbuffer=4)
-end_time = time.time() - start_time
-print('total time elapsed: ',end_time)
-pose.dump_file('out.pdb')
+if __name__=='main':
+    init()
+    pose, designable, repackable, task_factory = prepare_pdbid_for_modeling('4s0w','1cv1',111,'V')
+    start_time = time.time()
+    loopmodeler = get_loop_modeler(pose, designable, repackable, 111, task_factory=task_factory,
+            fast=True, mover='ngk', resbuffer=4)
+    end_time = time.time() - start_time
+    print('total time elapsed: ',end_time)
+    pose.dump_file('out.pdb')
