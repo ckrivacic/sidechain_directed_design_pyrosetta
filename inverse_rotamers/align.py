@@ -65,6 +65,8 @@ class Alignment(object):
         """
         Figure out which residue numbers to align based on sequence alignment.
         """
+        oneletter =\
+                ['A','R','N','D','B','C','E','Q','G','H','I','L','K','M','F','P','S','T','W','Y','V']
         alignments = pairwise2.align.localxs(self.target_sequence,\
                 self.mobile_sequence, -0.1, -0.1)
         #for alignment in alignments:
@@ -79,9 +81,9 @@ class Alignment(object):
         for i in range(len(tseq)):
             t = tseq[i]
             m = mseq[i]
-            if t == '-':
+            if t == '-' or t not in oneletter:
                 next(m_iter)
-            elif m == '-':
+            elif m == '-' or m not in oneletter:
                 next(t_iter)
             elif match_only and t != m:
                 next(t_iter)

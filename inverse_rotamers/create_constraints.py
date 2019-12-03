@@ -59,21 +59,28 @@ def constrain_mutant_to_wt(mutant_pose, wt_pose, focus_residues):
         aligner.target.add_constraint(cst)
 
 
-def pose_from_rcsb(pdbid):
+def pose_from_rcsb(pdbid, prefix=None):
     if not os.path.exists(pdbid + '.pdb'):
         url = 'https://files.rcsb.org/download/' + pdbid + '.pdb'
-        wget.download(url, pdbid + '.pdb')
+        if prefix:
+            path = prefix + '/' + pdbid + '.pdb'
+        else:
+            path = pdbid + '.pdb'
+        wget.download(url, path)
+    pose = rosetta.core.import_pose.get_pdb_and_cleanup(path)
 
-    return pose_from_file(pdbid + '.pdb')
+    return pose
 
 
-def prepare_pdbid_for_modeling(wt_pdbid, mut_pdbid, focus_resnum, focus_restype):
-    wt_pose = pose_from_rcsb(wt_pdbid)
-    mut_pose = pose_from_rcsb(mut_pdbid)
+def prepare_pdbid_for_modeling(wt_pdbid, mut_pdbid, motif_dict,
+        focus_resnum, prefix=None):
+    wt_pose = pose_from_rcsb(wt_pdbid prefix=prefix)
+    mut_pose = pose_from_rcsb(mut_pdbid, prefix=prefix)
+    focus_list = [key for key in motif_dict]
     designable, repackable = choose_designable_residues(mut_pose,
-            [focus_resnum])
+            focus_list)
     task_factory = setup_task_factory(mut_pose, designable, repackable,
-            motif_dict={focus_resnum:focus_restype}, layered_design=False,
+            motif_dict=motif_dict, layered_design=False,
             prepare_focus=True)
     constrain_mutant_to_wt(mut_pose, wt_pose, [focus_resnum])
     return mut_pose, designable, repackable, task_factory
