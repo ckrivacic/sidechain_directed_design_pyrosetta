@@ -61,13 +61,14 @@ def constrain_mutant_to_wt(mutant_pose, wt_pose, focus_residues):
 
 def pose_from_rcsb(pdbid, prefix=None):
     if prefix:
-        path = prefix + '/' + pdbid + '.pdb'
+        path = prefix + '/' + pdbid
     else:
-        path = pdbid + '.pdb'
+        path = pdbid
     if not os.path.exists(path):
         url = 'https://files.rcsb.org/download/' + pdbid + '.pdb'
-        wget.download(url, path)
-    pose = rosetta.core.import_pose.get_pdb_and_cleanup(path)
+        wget.download(url, path + '.pdb')
+    pyrosetta.toolbox.cleanATOM(path + '.pdb')
+    pose = rosetta.core.import_pose.get_pdb_and_cleanup(path + '.clean.pdb')
 
     return pose
 

@@ -43,7 +43,7 @@ if __name__=='__main__':
                             row['mutant_dict'][0], focus_residue,
                             prefix='t4_inputs')
             loopmodeler = get_loop_modeler(mut_pose, designable, repackable,
-                    focus_residue, task_factory=task_factory, fast=False,
+                    focus_residue, task_factory=task_factory, fast=True,
                     mover='ngk', resbuffer=4)
             start_time = time.time()
             loopmodeler.apply(mut_pose)
