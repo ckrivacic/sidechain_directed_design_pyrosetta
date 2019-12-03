@@ -158,16 +158,17 @@ def generate_loops_simple(pose, focus_residue, resbuffer=3):
     do focus residue +/- 3 residues, but we can make this more
     sophisticated later (the constructor for Loops can also take a
     residue selector).'''
-    loop = rosetta.protocols.loops.Loop(focus_residue - resbuffer,
-            focus_residue + resbuffer)
+    loop = rosetta.protocols.loops.Loop(max(focus_residue - resbuffer, 1),
+            min(focus_residue + resbuffer, pose.size()))
     loop.set_cut(focus_residue)
     loops = rosetta.protocols.loops.Loops()
     loops.add_loop(loop)
+    print(loops)
     return loops
 
 
 def generate_loops_from_res_selector(pose, designable_selector, focus_residue,
-        resbuffer=3, randomize_cutpoints=True):
+        resbuffer=3, randomize_cutpoints=False):
     """
     Generate loops from designable residues selector. For each stretch of 3 or
     more designable residues, generate a loop object for it.
@@ -189,7 +190,7 @@ def generate_loops_from_res_selector(pose, designable_selector, focus_residue,
                         random.randint(start+1, i-1)))
                 else:
                     loops.add_loop(rosetta.protocols.loops.Loop(start, i-1,
-                        int((i-start)/2)))
+                        int(start + (i-start)/2)))
             start = 0
         prev = designable_selector[i]
 
@@ -198,12 +199,13 @@ def generate_loops_from_res_selector(pose, designable_selector, focus_residue,
     """
     if start:
         end = len(designable_selector)
-        if end - start >= 2 and not (start < focus_residue < end):
+        if end - start >= 4 and not (start < focus_residue < end):
             if randomize_cutpoints:
                 loops.add_loop(rosetta.protocols.loops.Loop(start, end,
                     random.randint(start + 1, end)))
             else:
-                loops.add_loop(rosetta.protocols.loops.Loop(start, end, int((end -
+                loops.add_loop(rosetta.protocols.loops.Loop(start, end,
+                    int(start + (end -
                     start + 1)/2)))
 
     """
@@ -212,8 +214,9 @@ def generate_loops_from_res_selector(pose, designable_selector, focus_residue,
     residue (can have bigger loop or loop size depend on how far the bb should
     move).
     """
-    loopstart = focus_residue - resbuffer
-    loopend = focus_residue + resbuffer
+    loopstart = max(focus_residue - resbuffer, 2)
+    loopend = min(focus_residue + resbuffer, len(designable_selector))
+    print('LOOPEND')
     if randomize_cutpoints:
         loops.add_loop(rosetta.protocols.loops.Loop(loopstart,
             loopend, random.randint(loopstart+1, loopend)))

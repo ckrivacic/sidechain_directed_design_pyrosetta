@@ -60,12 +60,12 @@ def constrain_mutant_to_wt(mutant_pose, wt_pose, focus_residues):
 
 
 def pose_from_rcsb(pdbid, prefix=None):
-    if not os.path.exists(pdbid + '.pdb'):
+    if prefix:
+        path = prefix + '/' + pdbid + '.pdb'
+    else:
+        path = pdbid + '.pdb'
+    if not os.path.exists(path):
         url = 'https://files.rcsb.org/download/' + pdbid + '.pdb'
-        if prefix:
-            path = prefix + '/' + pdbid + '.pdb'
-        else:
-            path = pdbid + '.pdb'
         wget.download(url, path)
     pose = rosetta.core.import_pose.get_pdb_and_cleanup(path)
 
@@ -74,7 +74,15 @@ def pose_from_rcsb(pdbid, prefix=None):
 
 def prepare_pdbid_for_modeling(wt_pdbid, mut_pdbid, motif_dict,
         focus_resnum, prefix=None):
-    wt_pose = pose_from_rcsb(wt_pdbid prefix=prefix)
+    '''
+    Given 2 pdbs and a motif dict, prepare them for modeling (get designable
+    residues and task factory).
+    Motif dict should have the following structure:
+    {int(resnum):one_letter_resname}
+    Ex:
+    {4:'E',5:'V'}
+    '''
+    wt_pose = pose_from_rcsb(wt_pdbid, prefix=prefix)
     mut_pose = pose_from_rcsb(mut_pdbid, prefix=prefix)
     focus_list = [key for key in motif_dict]
     designable, repackable = choose_designable_residues(mut_pose,

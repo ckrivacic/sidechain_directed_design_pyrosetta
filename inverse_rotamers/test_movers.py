@@ -19,7 +19,7 @@ def import_t4_dataframe(path):
             wt = wt.upper()
             mut = mut.upper()
             resnum = int(resnum)
-            resdict[resnum] = mut
+            resdict[resnum] = wt
         df.at[i, 'mutant_dict'] = [resdict]
     return df
 
@@ -29,7 +29,11 @@ if __name__=='__main__':
     wt_pdb = '3fa0'
     df = import_t4_dataframe('t4_inputs/t4_lysozyme.csv')
     pattern = re.compile('\w\d{1,3}\w')
+    print(df)
     for i, row in df.iterrows():
+        if len(row['mutant']) > 1:
+            print(row['pdbid'])
+            continue
         mut_pdb = row['pdbid']
         print('MUT PDB-+-----------------------------', mut_pdb)
         for focus_residue in row['mutant_dict'][0]:
@@ -38,6 +42,15 @@ if __name__=='__main__':
                     prepare_pdbid_for_modeling(wt_pdb, mut_pdb,\
                             row['mutant_dict'][0], focus_residue,
                             prefix='t4_inputs')
+            loopmodeler = get_loop_modeler(mut_pose, designable, repackable,
+                    focus_residue, task_factory=task_factory, fast=False,
+                    mover='ngk', resbuffer=4)
+            start_time = time.time()
+            loopmodeler.apply(mut_pose)
+            elapsed = time.time() - start_time
+            print('ELAPSED TIME = ',elapsed)
+            mut_pose.dump_file('t4_outputs/ngk_' + mut_pdb + '_resi_' +\
+                    str(focus_residue) + '.pdb')
 
 
     '''
