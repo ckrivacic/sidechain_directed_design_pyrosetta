@@ -55,8 +55,9 @@ def constrain_mutant_to_wt(mutant_pose, wt_pose, focus_residues):
         alignment_dict[focus_residue] = ['N','C','CA']
     csts = constraints_from_pose(aligner.mobile, alignment_dict)
     for cst in csts:
-        print(cst)
         aligner.target.add_constraint(cst)
+
+    return aligner.bb_rmsd
 
 
 def pose_from_rcsb(pdbid, prefix=None):
@@ -91,8 +92,8 @@ def prepare_pdbid_for_modeling(wt_pdbid, mut_pdbid, motif_dict,
     task_factory = setup_task_factory(mut_pose, designable, repackable,
             motif_dict=motif_dict, layered_design=False,
             prepare_focus=True)
-    constrain_mutant_to_wt(mut_pose, wt_pose, [focus_resnum])
-    return mut_pose, designable, repackable, task_factory
+    bb_rmsd = constrain_mutant_to_wt(mut_pose, wt_pose, [focus_resnum])
+    return mut_pose, designable, repackable, task_factory, bb_rmsd
 
 if __name__=='main':
     init()

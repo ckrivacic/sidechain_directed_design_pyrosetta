@@ -25,11 +25,14 @@ def import_t4_dataframe(path):
 
 
 if __name__=='__main__':
+    '''
+    Going to need to get all focus residues on their own line, so we can calc
+    bb rmsd separately.
+    '''
     init('-ignore_unrecognized_res')
     wt_pdb = '3fa0'
     df = import_t4_dataframe('t4_inputs/t4_lysozyme.csv')
     pattern = re.compile('\w\d{1,3}\w')
-    print(df)
     for i, row in df.iterrows():
         if len(row['mutant']) > 1:
             print(row['pdbid'])
@@ -38,7 +41,7 @@ if __name__=='__main__':
         print('MUT PDB-+-----------------------------', mut_pdb)
         for focus_residue in row['mutant_dict'][0]:
             print('FOCUS RESIDUE-----------------', focus_residue)
-            mut_pose, designable, repackable, task_factory =\
+            mut_pose, designable, repackable, task_factory, bb_rmsd =\
                     prepare_pdbid_for_modeling(wt_pdb, mut_pdb,\
                             row['mutant_dict'][0], focus_residue,
                             prefix='t4_inputs')
