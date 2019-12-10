@@ -76,10 +76,11 @@ def pose_from_rcsb(pdbid, prefix=None):
     return pose
 
 
-def pose_from_pdbred(pdbid, prefix):
+def pose_from_pdbredo(pdbid, prefix):
     path = os.path.join(prefix, pdbid[1:3], pdbid,\
             pdbid + '_final_tot.pdb')
-    toolbox.cleanATOM(path)
+    if not os.path.exists(path[:-4] + '.clean.pdb'):
+        toolbox.cleanATOM(path)
     pose = rosetta.core.import_pose.get_pdb_and_cleanup(path[:-4] \
             + '.clean.pdb')
 
@@ -94,8 +95,10 @@ def prepare_pdbid_for_modeling(wt_pdbid, mut_pdbid, motif_dict,
     Ex:
     {4:'E',5:'V'}
     '''
-    wt_pose = pose_from_rcsb(wt_pdbid, prefix=prefix)
-    mut_pose = pose_from_rcsb(mut_pdbid, prefix=prefix)
+    wt_pose = pose_from_pdbredo(wt_pdbid,
+            prefix='/netapp/home/krivacic/pdb_redo')
+    mut_pose = pose_from_pdbredo(mut_pdbid,
+            prefix='/netapp/home/krivacic/pdb_redo')
     focus_list = [key for key in motif_dict]
     designable, repackable = choose_designable_residues(mut_pose,
             focus_list)

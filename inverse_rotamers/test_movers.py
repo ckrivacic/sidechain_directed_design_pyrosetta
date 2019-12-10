@@ -1,3 +1,7 @@
+#$ -S /netapp/home/krivacic/.python36/bin/python3
+#$ -l mem_free=4G
+#$ -cwd
+
 from create_constraints import prepare_pdbid_for_modeling
 from utils import distance_rosetta
 from inverse_rotamers import *
@@ -38,8 +42,9 @@ if __name__=='__main__':
     Going to need to get all focus residues on their own line, so we can calc
     bb rmsd separately.
     '''
-    task_num = 1 # make sure to subtract 1 from SGE TASK ID for the real thing
-    num_models = 10
+    #task_num = 1 # make sure to subtract 1 from SGE TASK ID for the real thing
+    task_num = int(os.environ['SGE_TASK_ID'])
+    num_models = 20
     row_num = task_num//num_models
     init('-ignore_unrecognized_res')
     #wt_pdb = '3fa0'
