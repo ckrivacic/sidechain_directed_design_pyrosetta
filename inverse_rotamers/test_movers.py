@@ -1,7 +1,7 @@
 from create_constraints import prepare_pdbid_for_modeling
 from utils import distance_rosetta
 from inverse_rotamers import *
-import time, sys, re, os
+import time, sys, re, os, pickle
 import pandas as pd
 
 
@@ -90,9 +90,9 @@ if __name__=='__main__':
             focus_res, aligner.mobile, row['wt_res'])
 
         if not os.path.exists(outdir + '/ngk_fast/'):
-            os.mkdir(outdir + '/ngk_fast/')
+            os.mkdir(outdir + '/ngk/')
 
-        aligner.target.dump_scored_pdb(outdir + '/ngk_fast/' + mut_pdbid +
+        aligner.target.dump_scored_pdb(outdir + '/ngk/' + mut_pdbid +
                 '_' + str(task_num) + '_ngk.pdb', default_sfxn)
         
         relaxer = fast_relax(aligner.target, designable, repackable,
@@ -104,9 +104,13 @@ if __name__=='__main__':
         out_dict['post_dist_relaxed'] = distance_rosetta(aligner.target,
             focus_res, aligner.mobile, row['wt_res'])
 
-        aligner.target.dump_scored_pdb(outdir + '/ngk_fast/' + mut_pdbid +
+        aligner.target.dump_scored_pdb(outdir + '/ngk/' + mut_pdbid +
                 '_' + str(task_num) + '_relaxed.pdb', default_sfxn)
+        print(default_sfxn(aligner.target))
         print(out_dict)
+        with open(outdir + '/results_task_' + str(task_num), 'wb') as f:
+            pickle.dump(out_dict, f)
+
 
     elif mover == 'fastdesign':
         fastdesign = fast_design(aligner.target, designable, repackable,
@@ -141,6 +145,11 @@ if __name__=='__main__':
         aligner.target.dump_scored_pdb(outdir + '/fastdesign/' +
                 mut_pdbid + '_' + str(task_num) + '_fastdesign_relaxed.pdb',
                 default_sfxn)
+        out_dict['final_score'] = default_sfxn(aligner.target)
+        print(default_sfxn(aligner.target))
+        print(out_dict)
+        with open(outdir + '/results_task_' + str(task_num), 'wb') as f:
+            pickle.dump(out_dict, f)
     '''
     for i, row in df.iterrows():
         if len(row['mutant']) > 1:
