@@ -4,11 +4,11 @@ from matplotlib import pyplot as plt
 
 
 if __name__=='__main__':
-    #by = 'final_score'
+    by = 'final_score'
     #by = 'post_dist_relaxed'
     #by = 'post_dist'
     #by = 'post_rmsd'
-    by = 'post_rmsd_relaxed'
+    #by = 'post_rmsd_relaxed'
 
     true = sys.argv[1]
     false = sys.argv[2]
@@ -65,8 +65,8 @@ if __name__=='__main__':
         if ymax > ymax_all:
             ymax_all = ymax
 
-    maximum = max(xmax, ymax)
-    minimum = min(xmin, ymin)
+    maximum = max(xmax_all, ymax_all)
+    minimum = min(xmin_all, ymin_all)
     
     ax.plot([minimum, maximum], [minimum, maximum], 'k-')
     plt.legend(loc=2)
