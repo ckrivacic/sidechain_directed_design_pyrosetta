@@ -81,8 +81,10 @@ def pose_from_pdbredo(pdbid, prefix):
             pdbid + '_final_tot.pdb')
     if not os.path.exists(path[:-4] + '.clean.pdb'):
         toolbox.cleanATOM(path)
+    print(path[:-4] + '.clean.pdb')
     pose = rosetta.core.import_pose.get_pdb_and_cleanup(path[:-4] \
             + '.clean.pdb')
+    return pose
 
 
 def prepare_pdbid_for_modeling(wt_pdbid, mut_pdbid, motif_dict,

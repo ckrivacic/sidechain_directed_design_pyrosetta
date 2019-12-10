@@ -1,11 +1,13 @@
 #$ -S /netapp/home/krivacic/.python36/bin/python3
 #$ -l mem_free=4G
 #$ -cwd
-
+import sys
+sys.path.insert(1,
+        '/netapp/home/krivacic/intelligent_design/sidechain_directed_design_pyrosetta/inverse_rotamers/')
 from create_constraints import prepare_pdbid_for_modeling
 from utils import distance_rosetta
 from inverse_rotamers import *
-import time, sys, re, os, pickle
+import time, re, os, pickle
 import pandas as pd
 
 
