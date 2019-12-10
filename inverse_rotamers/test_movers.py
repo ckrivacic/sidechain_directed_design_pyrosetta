@@ -54,7 +54,7 @@ if __name__=='__main__':
     #pattern = re.compile('\w\d{1,3}\w')
     row = df.loc[row_num]
 
-    outdir = mover + str(row['constrain'])
+    outdir = mover + '_fast_true_' + str(row['constrain'])
     if not os.path.exists(outdir):
         os.mkdir(outdir)
 
@@ -83,7 +83,7 @@ if __name__=='__main__':
 
     if mover == 'ngk':
         loopmodeler = get_loop_modeler(aligner.target, designable, repackable,
-                focus_res, task_factory=task_factory, fast=False,
+                focus_res, task_factory=task_factory, fast=True,
                 mover='ngk', resbuffer=4)
         start_time = time.time()
         loopmodeler.apply(aligner.target)
@@ -96,7 +96,7 @@ if __name__=='__main__':
         out_dict['post_dist'] = distance_rosetta(aligner.target,
             focus_res, aligner.mobile, row['wt_res'])
 
-        if not os.path.exists(outdir + '/ngk_fast/'):
+        if not os.path.exists(outdir + '/ngk/'):
             os.mkdir(outdir + '/ngk/')
 
         aligner.target.dump_scored_pdb(outdir + '/ngk/' + mut_pdbid +
