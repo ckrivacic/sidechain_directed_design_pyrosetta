@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 
 
 if __name__=='__main__':
-    by = 'post_dist_relaxed'
+    by = 'final_score'
 
     true = sys.argv[1]
     false = sys.argv[2]
@@ -45,6 +45,9 @@ if __name__=='__main__':
         x, y = data
         ax.scatter(x, y, label=group)
     
-    ax.plot([0.25, 2.25] , [0.25, 2.25], 'k-')
+    #ax.plot([0.25, 1.5] , [0.25, 1.5], 'k-')
+    ax.plot([-600, 80], [-600, 80], 'k-')
     plt.legend(loc=2)
+    plt.xlabel('No constraints')
+    plt.ylabel('N, C, CA constraints')
     plt.show()
