@@ -46,25 +46,13 @@ def constraints_from_pose(reference_pose, res_dict):
     return coordinate_constraints
 
 
-def distance(pose1, res1_pdb, res1_chain, pose2, res2_pdb, res2_chain):
-    xyz1 = pose1.residue(pose1.pdb_info().pdb2pose(res1_chain, res1_pdb)).xyz('CA')
-    xyz2 = pose2.residue(pose2.pdb_info().pdb2pose(res2_chain, res2_pdb)).xyz('CA')
-    return euclidean_distance(xyz1, xyz2)
-
-
-def distance_rosetta(pose1, res1, pose2, res2):
-    xyz1 = pose1.residue(res1).xyz('CA')
-    xyz2 = pose2.residue(res2).xyz('CA')
-    return euclidean_distance(xyz1, xyz2)
-
-
 def constrain_mutant_to_wt(mutant_pose, wt_pose, mut_focus_residues,
         wt_focus_residues, constrain=True):
     aligner = Alignment(mutant_pose, wt_pose)
     aligner.create_shell(10, mut_focus_residues, mobile_focus_list=wt_focus_residues)
     aligner.match_align()
     alignment_dict = {}
-    for focus_residue in focus_residues:
+    for focus_residue in mut_focus_residues:
         alignment_dict[focus_residue] = ['N','C','CA']
     if constrain:
         csts = constraints_from_pose(aligner.mobile, alignment_dict)

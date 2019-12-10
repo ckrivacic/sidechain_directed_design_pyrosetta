@@ -195,14 +195,15 @@ def fast_relax(pose, residues_bb_movable, residues_sc_movable, selectors=True):
     else:
         mm = setup_movemap_from_resselectors(residues_bb_movable,
                 residues_sc_movable)
-    sfxn = setup_restrained_sfxn(['coordinate_constraint'],[2.0])
+    #sfxn = setup_restrained_sfxn(['coordinate_constraint'],[2.0])
+    sfxn = create_score_function('ref2015')
 
     fast_relax_rounds = 5
     fast_relax = rosetta.protocols.relax.FastRelax(sfxn, fast_relax_rounds)
     fast_relax.set_movemap(mm) 
     
-    fast_relax.apply(pose)
-    pose.dump_file('out.pdb')
+    #fast_relax.apply(pose)
+    return fast_relax
 
 
 
@@ -218,10 +219,11 @@ def fast_design(pose, designable_selector, repackable_selector,
     fastdesign.set_movemap(mm)
     fastdesign.set_scorefxn(sfxn)
     fastdesign.set_up_default_task_factory()
-    fastdesign.set_task_factory(task_factory)
-    fastdesign.apply(pose)
+    if task_factory:
+        fastdesign.set_task_factory(task_factory)
 
-    pose.dump_file('out.pdb')
+    return fastdesign
+
 
 
 def lhk_xml(task_factory):
@@ -258,7 +260,7 @@ def get_loop_modeler(pose, designable_selector, repackable_selector,
     '''
     mm = setup_movemap_from_resselectors(designable_selector,
             repackable_selector)
-    sfxn = setup_restrained_sfxn(['coordinate_constraint'],[1000.0])
+    sfxn = setup_restrained_sfxn(['coordinate_constraint'],[1.0])
 
     loopmodeler = rosetta.protocols.loop_modeler.LoopModeler()
     if mover=='ngk':

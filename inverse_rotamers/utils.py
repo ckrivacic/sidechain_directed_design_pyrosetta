@@ -243,5 +243,17 @@ def res_selector_to_size_list(resselector):
 
     return intlist_to_vector1_size(size_list)
 
+
+def distance_pdb(pose1, res1_pdb, res1_chain, pose2, res2_pdb, res2_chain):
+    xyz1 = pose1.residue(pose1.pdb_info().pdb2pose(res1_chain, res1_pdb)).xyz('CA')
+    xyz2 = pose2.residue(pose2.pdb_info().pdb2pose(res2_chain, res2_pdb)).xyz('CA')
+    return euclidean_distance(xyz1, xyz2)
+
+
+def distance_rosetta(pose1, res1, pose2, res2):
+    xyz1 = pose1.residue(res1).xyz('CA')
+    xyz2 = pose2.residue(res2).xyz('CA')
+    return euclidean_distance(xyz1, xyz2)
+
 #init('-extrachi_cutoff 0 -ex1 -ex2')
 #test_rotamer_gen("ASP")
