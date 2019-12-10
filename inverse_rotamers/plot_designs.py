@@ -4,7 +4,11 @@ from matplotlib import pyplot as plt
 
 
 if __name__=='__main__':
-    by = 'final_score'
+    #by = 'final_score'
+    #by = 'post_dist_relaxed'
+    #by = 'post_dist'
+    #by = 'post_rmsd'
+    by = 'post_rmsd_relaxed'
 
     true = sys.argv[1]
     false = sys.argv[2]
@@ -41,12 +45,30 @@ if __name__=='__main__':
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1)
 
+    xmin_all = 9999.9
+    xmax_all = -99999999.0
+    ymax_all = -99999999.0
+    ymin_all = 9999.9
     for data, group in zip(to_plot, groups):
         x, y = data
+        xmin = min(x)
+        ymin = min(y)
+        xmax = max(x)
+        ymax = max(y)
         ax.scatter(x, y, label=group)
+        if xmin < xmin_all:
+            xmin_all = xmin
+        if ymin < ymin_all:
+            ymin_all = ymin
+        if xmax > xmax_all:
+            xmax_all = xmax
+        if ymax > ymax_all:
+            ymax_all = ymax
+
+    maximum = max(xmax, ymax)
+    minimum = min(xmin, ymin)
     
-    #ax.plot([0.25, 1.5] , [0.25, 1.5], 'k-')
-    ax.plot([-600, 80], [-600, 80], 'k-')
+    ax.plot([minimum, maximum], [minimum, maximum], 'k-')
     plt.legend(loc=2)
     plt.xlabel('No constraints')
     plt.ylabel('N, C, CA constraints')
