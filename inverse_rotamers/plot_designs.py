@@ -39,6 +39,12 @@ if __name__=='__main__':
                 y = df[(df['constrain'] == True) & (df['wt'] == wt) &
                         (df['mutant'] == mut)][by]
                 if len(x) > 0 and len(y) > 0:
+                    if len(x) != len(y):
+                        diff = abs(len(x) - len(y))
+                        if len(x) > len(y):
+                            x = x[:len(x) - diff]
+                        elif len(y) > len(x):
+                            y = y[:len(y) - diff]
 
                     to_plot.append((x, y))
                     groups.append(mut + ' to ' + wt)
@@ -71,8 +77,8 @@ if __name__=='__main__':
         minimum = min(xmin_all, ymin_all)
         
         ax.plot([minimum, maximum], [minimum, maximum], 'k-')
-        plt.legend(loc=2)
+        plt.legend(loc=1)
         plt.xlabel('No constraints')
         plt.ylabel('N, C, CA constraints')
-        plt.savefig('plots/ngk_' + by)
+        plt.savefig('funnel_test/plots/fastdesign/fastdesign_' + by)
         plt.show()

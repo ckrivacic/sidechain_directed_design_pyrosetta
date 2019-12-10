@@ -9,11 +9,15 @@ if __name__=='__main__':
     #by = 'post_dist'
     #by = 'post_rmsd'
     #by = 'post_rmsd_relaxed'
-    cols = ['post_dist_relaxed','post_rmsd_relaxed']
 
     true = sys.argv[1]
     false = sys.argv[2]
     outdir = sys.argv[3]
+    relaxed = sys.argv[4]
+    if relaxed == 'y':
+        cols = ['post_dist_relaxed','post_rmsd_relaxed']
+    elif relaxed == 'n':
+        cols = ['post_dist', 'post_rmsd']
 
     #difference = 139
 
@@ -35,6 +39,7 @@ if __name__=='__main__':
             for mut in df['mutant'].unique():
                 to_plot = []
                 groups = []
+                zorders = []
                 for bul in [True, False]:
                     x = df[(df['constrain'] == bul) & (df['wt'] == wt) &
                             (df['mutant'] == mut)][by]
@@ -45,38 +50,21 @@ if __name__=='__main__':
                         to_plot.append((x, y))
                         constrained = ' constrained' if bul else ' unconstrained'
                         groups.append(mut + ' to ' + wt + constrained)
+                        zorder = 2 if bul else 1
+                        zorders.append(zorder)
 
                 # Create plot
                 if len(to_plot) > 0:
                     fig = plt.figure()
                     ax = fig.add_subplot(1, 1, 1)
 
-                    xmin_all = 9999.9
-                    xmax_all = -99999999.0
-                    ymax_all = -99999999.0
-                    ymin_all = 9999.9
-                    for data, group in zip(to_plot, groups):
+                    for data, group, order in zip(to_plot, groups, zorders):
                         x, y = data
-                        xmin = min(x)
-                        ymin = min(y)
-                        xmax = max(x)
-                        ymax = max(y)
-                        ax.scatter(x, y, label=group)
-                        if xmin < xmin_all:
-                            xmin_all = xmin
-                        if ymin < ymin_all:
-                            ymin_all = ymin
-                        if xmax > xmax_all:
-                            xmax_all = xmax
-                        if ymax > ymax_all:
-                            ymax_all = ymax
-
-                    maximum = max(xmax_all, ymax_all)
-                    minimum = min(xmin_all, ymin_all)
+                        ax.scatter(x, y, label=group, zorder=order)
                     
                     plt.legend(loc=1)
                     plt.xlabel(by)
                     plt.ylabel('Total score')
-                    plt.show()
-                    plt.savefig(outdir + '/ngk_' + by + '_' + groups[0] +
+                    plt.savefig(outdir + '/fastdesign_' + by + '_' + groups[0] +
                             '_' + groups[1] + '.png')
+                    plt.show()
