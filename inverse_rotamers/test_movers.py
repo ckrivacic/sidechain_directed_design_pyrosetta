@@ -24,15 +24,37 @@ def import_t4_dataframe(path):
     return df
 
 
+def import_benchmark_dataframe(path):
+    df = pd.read_csv(path)
+    return df
+
 if __name__=='__main__':
+    df = import_benchmark_dataframe(sys.argv[1])
+    print(df)
     '''
     Going to need to get all focus residues on their own line, so we can calc
     bb rmsd separately.
     '''
+    task_num = 1
     init('-ignore_unrecognized_res')
     wt_pdb = '3fa0'
-    df = import_t4_dataframe('t4_inputs/t4_lysozyme.csv')
-    pattern = re.compile('\w\d{1,3}\w')
+    #df = import_t4_dataframe('t4_inputs/t4_lysozyme.csv')
+    #pattern = re.compile('\w\d{1,3}\w')
+    row = df.loc[task_num]
+    wt_pdbid = row['wt']
+    mut_pdbid = row['mutant']
+    out_dict = row.to_dict()
+    focus_res = int(row['mut_res'])
+    motif_dict = {focus_res:row['wt_restype']}
+    designable, repackable, task_factory, aligner = \
+            prepare_pdbid_for_modeling(wt_pdbid, mut_pdbid, motif_dict,
+                    focus_res, int(row['wt_res']), constrain=row['constrain'])
+
+    out_dict['pre_rmsd'] = aligner.bb_rmsd
+    out_dict['pre_dist'] = distance_rosetta(aligner.target, focus_res,
+            aligner.mobile, row['wt_res'])
+    print(out_dict)
+    '''
     for i, row in df.iterrows():
         if len(row['mutant']) > 1:
             print(row['pdbid'])
@@ -54,15 +76,4 @@ if __name__=='__main__':
             print('ELAPSED TIME = ',elapsed)
             mut_pose.dump_file('t4_outputs/ngk_' + mut_pdb + '_resi_' +\
                     str(focus_residue) + '.pdb')
-
-
-    '''
-    pose, designable, repackable, task_factory = prepare_pdbid_for_modeling('4s0w','1cv1',111,'V')
-    start_time = time.time()
-    loopmodeler = get_loop_modeler(pose, designable, repackable, 111, task_factory=task_factory,
-            fast=True, mover='ngk', resbuffer=4)
-    loopmodeler.apply(pose)
-    end_time = time.time() - start_time
-    print('total time elapsed: ',end_time)
-    pose.dump_file('out.pdb')
     '''

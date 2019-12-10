@@ -46,18 +46,32 @@ def constraints_from_pose(reference_pose, res_dict):
     return coordinate_constraints
 
 
-def constrain_mutant_to_wt(mutant_pose, wt_pose, focus_residues):
+def distance(pose1, res1_pdb, res1_chain, pose2, res2_pdb, res2_chain):
+    xyz1 = pose1.residue(pose1.pdb_info().pdb2pose(res1_chain, res1_pdb)).xyz('CA')
+    xyz2 = pose2.residue(pose2.pdb_info().pdb2pose(res2_chain, res2_pdb)).xyz('CA')
+    return euclidean_distance(xyz1, xyz2)
+
+
+def distance_rosetta(pose1, res1, pose2, res2):
+    xyz1 = pose1.residue(res1).xyz('CA')
+    xyz2 = pose2.residue(res2).xyz('CA')
+    return euclidean_distance(xyz1, xyz2)
+
+
+def constrain_mutant_to_wt(mutant_pose, wt_pose, mut_focus_residues,
+        wt_focus_residues, constrain=True):
     aligner = Alignment(mutant_pose, wt_pose)
-    aligner.create_shell(10, focus_residues)
+    aligner.create_shell(10, mut_focus_residues, mobile_focus_list=wt_focus_residues)
     aligner.match_align()
     alignment_dict = {}
     for focus_residue in focus_residues:
         alignment_dict[focus_residue] = ['N','C','CA']
-    csts = constraints_from_pose(aligner.mobile, alignment_dict)
-    for cst in csts:
-        aligner.target.add_constraint(cst)
+    if constrain:
+        csts = constraints_from_pose(aligner.mobile, alignment_dict)
+        for cst in csts:
+            aligner.target.add_constraint(cst)
 
-    return aligner.bb_rmsd
+    return aligner
 
 
 def pose_from_rcsb(pdbid, prefix=None):
@@ -74,8 +88,16 @@ def pose_from_rcsb(pdbid, prefix=None):
     return pose
 
 
+def pose_from_pdbred(pdbid, prefix):
+    path = os.path.join(prefix, pdbid[1:3], pdbid,\
+            pdbid + '_final_tot.pdb')
+    toolbox.cleanATOM(path)
+    pose = rosetta.core.import_pose.get_pdb_and_cleanup(path[:-4] \
+            + '.clean.pdb')
+
+
 def prepare_pdbid_for_modeling(wt_pdbid, mut_pdbid, motif_dict,
-        focus_resnum, prefix=None):
+        mut_focus, wt_focus, prefix=None, constrain=True):
     '''
     Given 2 pdbs and a motif dict, prepare them for modeling (get designable
     residues and task factory).
@@ -92,8 +114,9 @@ def prepare_pdbid_for_modeling(wt_pdbid, mut_pdbid, motif_dict,
     task_factory = setup_task_factory(mut_pose, designable, repackable,
             motif_dict=motif_dict, layered_design=False,
             prepare_focus=True)
-    bb_rmsd = constrain_mutant_to_wt(mut_pose, wt_pose, [focus_resnum])
-    return mut_pose, designable, repackable, task_factory, bb_rmsd
+    aligner = constrain_mutant_to_wt(mut_pose, wt_pose, [mut_focus],
+            [wt_focus], constrain=constrain)
+    return designable, repackable, task_factory, aligner
 
 if __name__=='main':
     init()

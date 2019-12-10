@@ -45,21 +45,27 @@ class Alignment(object):
         focus_residues = ''
         for resi in focus_residue_list:
             focus_residues += (str(resi) + ',')
+        focus_residue_selector = rosetta.core.select.\
+                residue_selector.ResidueIndexSelector(focus_residues)
         if mobile_focus_list:
             mobile_focus_residues = ''
             for resi in mobile_focus_list:
                 mobile_focus_residues += (str(resi) + ',')
+            mobile_focus_selector = \
+                    rosetta.core.select.residue_selector.\
+                    ResidueIndexSelector(mobile_focus_residues)
         else:
-            mobile_focus_residues = focus_residues
+            mobile_focus_selector = focus_residue_selector
 
-        focus_residue_selector = rosetta.core.select.\
-                residue_selector.ResidueIndexSelector(focus_residues)
-        selector = rosetta.core.select.residue_selector.\
+        target_selector = rosetta.core.select.residue_selector.\
                 NeighborhoodResidueSelector(focus_residue_selector,\
                 shell, include_focus_in_subset=True)
+        mobile_selector = rosetta.core.select.residue_selector.\
+                NeighborhoodResidueSelector(mobile_focus_selector,\
+                shell, include_focus_in_subset=True)
 
-        self.set_target_residues(selector.apply(self.target))
-        self.set_mobile_residues(selector.apply(self.mobile))
+        self.set_target_residues(target_selector.apply(self.target))
+        self.set_mobile_residues(mobile_selector.apply(self.mobile))
 
     def match_align(self, match_only=True):
         """
@@ -70,6 +76,8 @@ class Alignment(object):
         alignments = pairwise2.align.localxs(self.target_sequence,\
                 self.mobile_sequence, -0.1, -0.1)
         #for alignment in alignments:
+        if not alignments:
+            return False
         tseq = alignments[0][0]
         mseq = alignments[0][1]
         tmatch = []
@@ -78,24 +86,38 @@ class Alignment(object):
         m_iter = self.mobile_residues.__iter__()
         target_align_residues = []
         mobile_align_residues = []
+        self.mismatches = []
         for i in range(len(tseq)):
             t = tseq[i]
             m = mseq[i]
-            if t == '-' or t not in oneletter:
-                next(m_iter)
-            elif m == '-' or m not in oneletter:
-                next(t_iter)
-            elif match_only and t != m:
-                next(t_iter)
-                next(m_iter)
-            else:
-                target_align_residues.append(next(t_iter))
-                mobile_align_residues.append(next(m_iter))
+            if t != '-' and t in oneletter:
+                tres = next(t_iter)
+            if m != '-' and m in oneletter:
+                mres = next(m_iter)
+                if t != '-':
+                    if t == m:
+                        target_align_residues.append(tres)
+                        mobile_align_residues.append(mres)
+                    elif t != m:
+                        self.mismatches.append((tres, mres))
+                        if not match_only:
+                            target_align_residues.append(tres)
+                            mobile_align_residues.append(mres)
         superimpose_poses_by_residues(self.mobile, mobile_align_residues,\
                 self.target, target_align_residues)
 
-        self.bb_rmsd = calc_backbone_RMSD(self.target, target_align_residues,
-                self.mobile, mobile_align_residues)
+        self.bb_rmsd = calc_backbone_RMSD(self.mobile, mobile_align_residues,
+                self.target, target_align_residues)
+        return True
+
+
+def get_shell_selector(shell, focus_selector, include_focus=True):
+    shell_selector = \
+            rosetta.core.select.residue_selector.NeighborhoodResidueSelector(
+                    focus_selector, float(shell),
+                    include_focus_in_subset=include_focus
+                    )
+    return shell_selector
 
 
 
