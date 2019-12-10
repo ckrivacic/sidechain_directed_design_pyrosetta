@@ -45,7 +45,7 @@ if __name__=='__main__':
     bb rmsd separately.
     '''
     #task_num = 1 # make sure to subtract 1 from SGE TASK ID for the real thing
-    task_num = int(os.environ['SGE_TASK_ID'])
+    task_num = int(os.environ['SGE_TASK_ID']) - 1
     num_models = 20
     row_num = task_num//num_models
     init('-ignore_unrecognized_res')
