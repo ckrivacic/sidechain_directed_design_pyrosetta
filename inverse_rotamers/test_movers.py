@@ -46,7 +46,7 @@ if __name__=='__main__':
     '''
     #task_num = 1 # make sure to subtract 1 from SGE TASK ID for the real thing
     task_num = int(os.environ['SGE_TASK_ID']) - 1
-    num_models = 20
+    num_models = 250
     row_num = task_num//num_models
     init('-ignore_unrecognized_res')
     #wt_pdb = '3fa0'
@@ -54,7 +54,7 @@ if __name__=='__main__':
     #pattern = re.compile('\w\d{1,3}\w')
     row = df.loc[row_num]
 
-    outdir = mover + '_' + str(row['constrain'])
+    outdir = 'funnel_test/' + mover + '_' + str(row['constrain'])
     if not os.path.exists(outdir):
         os.mkdir(outdir)
 
@@ -71,10 +71,10 @@ if __name__=='__main__':
 
     if not os.path.exists(outdir + '/aligned/'):
         os.mkdir(outdir + '/aligned/')
-    aligner.mobile.dump_scored_pdb(outdir + '/aligned/' + wt_pdbid +
-            '_' + str(task_num) + '.pdb', default_sfxn)
-    aligner.target.dump_scored_pdb(outdir + '/aligned/' + mut_pdbid +
-            '_' + str(task_num) + '.pdb', default_sfxn)
+    #aligner.mobile.dump_scored_pdb(outdir + '/aligned/' + wt_pdbid +
+    #        '_' + str(task_num) + '.pdb', default_sfxn)
+    #aligner.target.dump_scored_pdb(outdir + '/aligned/' + mut_pdbid +
+    #        '_' + str(task_num) + '.pdb', default_sfxn)
 
     out_dict['pre_rmsd'] = aligner.bb_rmsd
     out_dict['pre_dist'] = distance_rosetta(aligner.target, focus_res,
@@ -96,12 +96,13 @@ if __name__=='__main__':
         out_dict['post_rmsd'] = aligner.bb_rmsd
         out_dict['post_dist'] = distance_rosetta(aligner.target,
             focus_res, aligner.mobile, row['wt_res'])
+        out_dict['post_score'] = default_sfxn(aligner.target)
 
         if not os.path.exists(outdir + '/ngk/'):
             os.mkdir(outdir + '/ngk/')
 
-        aligner.target.dump_scored_pdb(outdir + '/ngk/' + mut_pdbid +
-                '_' + str(task_num) + '_ngk.pdb', default_sfxn)
+        #aligner.target.dump_scored_pdb(outdir + '/ngk/' + mut_pdbid +
+        #        '_' + str(task_num) + '_ngk.pdb', default_sfxn)
         
         relaxer = fast_relax(aligner.target, designable, repackable,
                 selectors=True)
@@ -135,12 +136,13 @@ if __name__=='__main__':
         out_dict['post_rmsd'] = aligner.bb_rmsd
         out_dict['post_dist'] = distance_rosetta(aligner.target,
             focus_res, aligner.mobile, row['wt_res'])
+        out_dict['post_score'] = default_sfxn(aligner.target)
 
         if not os.path.exists(outdir + '/ngk/'):
             os.mkdir(outdir + '/ngk/')
 
-        aligner.target.dump_scored_pdb(outdir + '/ngk/' + mut_pdbid +
-                '_' + str(task_num) + '_ngk.pdb', default_sfxn)
+        #aligner.target.dump_scored_pdb(outdir + '/ngk/' + mut_pdbid +
+        #        '_' + str(task_num) + '_ngk.pdb', default_sfxn)
         
         relaxer = fast_relax(aligner.target, designable, repackable,
                 selectors=True)
@@ -173,13 +175,14 @@ if __name__=='__main__':
         out_dict['post_rmsd'] = aligner.bb_rmsd
         out_dict['post_dist'] = distance_rosetta(aligner.target, 
                 focus_res, aligner.mobile, row['wt_res'])
+        out_dict['post_score'] = default_sfxn(aligner.target)
 
         if not os.path.exists(outdir + '/fastdesign/'):
             os.mkdir(outdir + '/fastdesign/')
 
-        aligner.target.dump_scored_pdb(outdir + '/fastdesign/' +
-                mut_pdbid + '_' + str(task_num) + '_fastdesign.pdb',
-                default_sfxn)
+        #aligner.target.dump_scored_pdb(outdir + '/fastdesign/' +
+        #        mut_pdbid + '_' + str(task_num) + '_fastdesign.pdb',
+        #        default_sfxn)
 
         relaxer = fast_relax(aligner.target, designable, repackable,
                 selectors=True)
