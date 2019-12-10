@@ -54,7 +54,7 @@ if __name__=='__main__':
     #pattern = re.compile('\w\d{1,3}\w')
     row = df.loc[row_num]
 
-    outdir = mover + '_fast_true_' + str(row['constrain'])
+    outdir = mover + '_' + str(row['constrain'])
     if not os.path.exists(outdir):
         os.mkdir(outdir)
 
@@ -81,7 +81,47 @@ if __name__=='__main__':
             aligner.mobile, row['wt_res'])
     print(out_dict)
 
+
     if mover == 'ngk':
+        loopmodeler = get_loop_modeler(aligner.target, designable, repackable,
+                focus_res, task_factory=task_factory, fast=False,
+                mover='ngk', resbuffer=4)
+        start_time = time.time()
+        loopmodeler.apply(aligner.target)
+        elapsed = time.time() - start_time
+        out_dict['elapsed_time'] = elapsed
+        aligner.target.remove_constraints()
+
+        aligner.match_align()
+        out_dict['post_rmsd'] = aligner.bb_rmsd
+        out_dict['post_dist'] = distance_rosetta(aligner.target,
+            focus_res, aligner.mobile, row['wt_res'])
+
+        if not os.path.exists(outdir + '/ngk/'):
+            os.mkdir(outdir + '/ngk/')
+
+        aligner.target.dump_scored_pdb(outdir + '/ngk/' + mut_pdbid +
+                '_' + str(task_num) + '_ngk.pdb', default_sfxn)
+        
+        relaxer = fast_relax(aligner.target, designable, repackable,
+                selectors=True)
+        relaxer.apply(aligner.target)
+
+        aligner.match_align()
+        out_dict['post_rmsd_relaxed'] = aligner.bb_rmsd
+        out_dict['post_dist_relaxed'] = distance_rosetta(aligner.target,
+            focus_res, aligner.mobile, row['wt_res'])
+
+        aligner.target.dump_scored_pdb(outdir + '/ngk/' + mut_pdbid +
+                '_' + str(task_num) + '_relaxed.pdb', default_sfxn)
+        out_dict['final_score'] = default_sfxn(aligner.target)
+        print(default_sfxn(aligner.target))
+        print(out_dict)
+        with open(outdir + '/results_task_' + str(task_num), 'wb') as f:
+            pickle.dump(out_dict, f)
+
+
+    if mover == 'ngkf':
         loopmodeler = get_loop_modeler(aligner.target, designable, repackable,
                 focus_res, task_factory=task_factory, fast=True,
                 mover='ngk', resbuffer=4)
@@ -113,6 +153,7 @@ if __name__=='__main__':
 
         aligner.target.dump_scored_pdb(outdir + '/ngk/' + mut_pdbid +
                 '_' + str(task_num) + '_relaxed.pdb', default_sfxn)
+        out_dict['final_score'] = default_sfxn(aligner.target)
         print(default_sfxn(aligner.target))
         print(out_dict)
         with open(outdir + '/results_task_' + str(task_num), 'wb') as f:
