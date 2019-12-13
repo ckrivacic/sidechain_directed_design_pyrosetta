@@ -61,6 +61,9 @@ if __name__=='__main__':
                     for data, group, order in zip(to_plot, groups, zorders):
                         x, y = data
                         ax.scatter(x, y, label=group, zorder=order)
+
+                    ax.axvline(df[(df['mutant'] == mut) & (df['wt'] ==
+                        wt)]['distance'])
                     
                     plt.legend(loc=1)
                     plt.xlabel(by)
