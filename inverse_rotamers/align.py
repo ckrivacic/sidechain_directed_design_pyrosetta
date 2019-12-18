@@ -99,7 +99,7 @@ class Alignment(object):
                         target_align_residues.append(tres)
                         mobile_align_residues.append(mres)
                     elif t != m:
-                        self.mismatches.append((tres, mres))
+                        self.mismatches.append(Mismatch(tres, mres))
                         if not match_only:
                             target_align_residues.append(tres)
                             mobile_align_residues.append(mres)
@@ -109,6 +109,29 @@ class Alignment(object):
         self.bb_rmsd = calc_backbone_RMSD(self.mobile, mobile_align_residues,
                 self.target, target_align_residues)
         return True
+
+
+class Mismatch(object):
+    """Class for storing mismatch info."""
+    def __init__(self, target_res, mobile_res):
+        self.target_ = target_res
+        self.mobile_ = mobile_res
+
+    @property
+    def target(self):
+        return self.target_
+
+    @target.setter
+    def target(self, target_res):
+        self.target_ = target_res
+
+    @property
+    def mobile(self):
+        return self.mobile_
+
+    @mobile.setter
+    def mobile(self, mobile_res):
+        self.mobile_ = mobile_res
 
 
 def get_shell_selector(shell, focus_selector, include_focus=True):

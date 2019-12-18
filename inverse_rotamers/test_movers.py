@@ -63,6 +63,7 @@ if __name__=='__main__':
     mut_pdbid = row['mutant']
     out_dict = row.to_dict()
     focus_res = int(row['mut_res'])
+    focus = Mismatch(int(row['mut_res']), int(row['wt_res']))
     motif_dict = {focus_res:row['wt_restype']}
 
     designable, repackable, task_factory, aligner = \

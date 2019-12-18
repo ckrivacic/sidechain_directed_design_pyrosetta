@@ -229,7 +229,8 @@ def generate_loops_from_res_selector(pose, designable_selector, focus_residue,
 
 
 
-def choose_designable_residues(pose, focus_residues, include_focus=False):
+def choose_designable_residues(pose, focus_residues, include_focus=True,
+        dshell=8.0, pshell=12.0):
     """
     Chooses a shell (for now, might make more sophisticated later) of residues
     to design around the motif residue.
@@ -239,7 +240,7 @@ def choose_designable_residues(pose, focus_residues, include_focus=False):
             rosetta.core.select.residue_selector.ResidueIndexSelector(list_to_str(focus_residues))
     designable_selector =\
             rosetta.core.select.residue_selector.NeighborhoodResidueSelector(
-                    focus_residue_selector, 8.0,
+                    focus_residue_selector, dshell,
                     include_focus_in_subset=include_focus
             )
     designable_not_selector =\
@@ -248,7 +249,7 @@ def choose_designable_residues(pose, focus_residues, include_focus=False):
                     )
     packable_selector =\
             rosetta.core.select.residue_selector.NeighborhoodResidueSelector(
-                    focus_residue_selector, 12.0,
+                    focus_residue_selector, pshell,
                     include_focus_in_subset=include_focus
             )
     repack_only_selector =\
