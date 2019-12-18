@@ -4,31 +4,11 @@
 import sys
 sys.path.insert(1,
         '/netapp/home/krivacic/intelligent_design/sidechain_directed_design_pyrosetta/inverse_rotamers/')
-from create_constraints import prepare_pdbid_for_modeling
+from benchmark_utils import *
 from utils import distance_rosetta
 from inverse_rotamers import *
 import time, re, os, pickle
 import pandas as pd
-
-
-def import_t4_dataframe(path):
-    df = pd.read_csv(path)
-    df['mutant_dict'] = [[] for x in range(len(df))]
-    for i, row in df.iterrows():
-        mutlist = []
-        for mutation in row['mutant'].split(','):
-            mutlist.append(mutation.strip())
-        #df.set_value(i,'mutant',mutlist)
-        df.at[i, 'mutant'] = mutlist
-        resdict = {}
-        for mutation in mutlist:
-            wt, resnum, mut = re.split('([0-9]+)',mutation)
-            wt = wt.upper()
-            mut = mut.upper()
-            resnum = int(resnum)
-            resdict[resnum] = wt
-        df.at[i, 'mutant_dict'] = [resdict]
-    return df
 
 
 def import_benchmark_dataframe(path):
@@ -37,6 +17,13 @@ def import_benchmark_dataframe(path):
 
 
 if __name__=='__main__':
+    pdbredo_directory = '/netapp/home/krivacic/pdb_redo'
+    shell=6
+    task_num = int(os.environ['SGE_TASK_ID']) - 1
+    #task_num = 1 # make sure to subtract 1 from SGE TASK ID for the real thing
+    num_models = 250
+    row_num = task_num//num_models
+
     mover = sys.argv[2]
     df = import_benchmark_dataframe(sys.argv[1])
     print(df)
@@ -44,14 +31,7 @@ if __name__=='__main__':
     Going to need to get all focus residues on their own line, so we can calc
     bb rmsd separately.
     '''
-    #task_num = 1 # make sure to subtract 1 from SGE TASK ID for the real thing
-    task_num = int(os.environ['SGE_TASK_ID']) - 1
-    num_models = 250
-    row_num = task_num//num_models
     init('-ignore_unrecognized_res')
-    #wt_pdb = '3fa0'
-    #df = import_t4_dataframe('t4_inputs/t4_lysozyme.csv')
-    #pattern = re.compile('\w\d{1,3}\w')
     row = df.loc[row_num]
 
     outdir = 'funnel_test/' + mover + '_' + str(row['constrain'])
@@ -60,15 +40,21 @@ if __name__=='__main__':
 
     default_sfxn = create_score_function('ref2015')
     wt_pdbid = row['wt']
+    wt_pose = pose_from_pdbredo(wt_pdbid, prefix=pdbredo_directory)
     mut_pdbid = row['mutant']
-    out_dict = row.to_dict()
-    focus_res = int(row['mut_res'])
+    mut_pose = pose_from_pdbredo(mut_pdbid, prefix=pdbredo_directory)
+    
     focus = Mismatch(int(row['mut_res']), int(row['wt_res']))
-    motif_dict = {focus_res:row['wt_restype']}
+    mut_pair = MutantPair(mut_pose, wt_pose, [focus], shell=shell)
 
-    designable, repackable, task_factory, aligner = \
-            prepare_pdbid_for_modeling(wt_pdbid, mut_pdbid, motif_dict,
-                    focus_res, int(row['wt_res']), constrain=row['constrain'])
+    out_dict = row.to_dict()
+    ##focus_res = int(row['mut_res'])
+    ##motif_dict = {focus_res:row['wt_restype']}
+
+    designable, repackable = choose_designable_residues(mut_pose, [focus])
+    task_factory = setup_task_factory(mut_pair.mut, mut_pair.wt,
+            designable, repackable, motif_dict=mut_pair.motif_dict,
+            layered_design=False, prepare_focus=True)
 
     if not os.path.exists(outdir + '/aligned/'):
         os.mkdir(outdir + '/aligned/')

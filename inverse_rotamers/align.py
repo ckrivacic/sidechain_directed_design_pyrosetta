@@ -42,6 +42,7 @@ class Alignment(object):
         self.set_mobile_sequence()
 
     def create_shell(self, shell, focus_residue_list, mobile_focus_list=None):
+        print('Creating shell for alignment of size ' + str(shell))
         focus_residues = ''
         for resi in focus_residue_list:
             focus_residues += (str(resi) + ',')
@@ -71,6 +72,9 @@ class Alignment(object):
         """
         Figure out which residue numbers to align based on sequence alignment.
         """
+
+        print('Running match_align')
+
         oneletter =\
                 ['A','R','N','D','B','C','E','Q','G','H','I','L','K','M','F','P','S','T','W','Y','V']
         alignments = pairwise2.align.localxs(self.target_sequence,\
