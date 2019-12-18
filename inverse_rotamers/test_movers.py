@@ -17,7 +17,7 @@ def import_benchmark_dataframe(path):
 
 
 if __name__=='__main__':
-    pdbredo_directory = '/netapp/home/krivacic/pdb_redo'
+    #pdbredo_directory = '/netapp/home/krivacic/pdb_redo'
     shell=6
     task_num = int(os.environ['SGE_TASK_ID']) - 1
     #task_num = 1 # make sure to subtract 1 from SGE TASK ID for the real thing
@@ -40,10 +40,8 @@ if __name__=='__main__':
 
     default_sfxn = create_score_function('ref2015')
     wt_pdbid = row['wt']
-    wt_pose = pose_from_pdbredo(wt_pdbid, prefix=pdbredo_directory)
     mut_pdbid = row['mutant']
-    mut_pose = pose_from_pdbredo(mut_pdbid, prefix=pdbredo_directory)
-    
+
     focus = Mismatch(int(row['mut_res']), int(row['wt_res']))
     mut_pair = MutantPair(mut_pose, wt_pose, [focus], shell=shell)
 
@@ -51,10 +49,9 @@ if __name__=='__main__':
     ##focus_res = int(row['mut_res'])
     ##motif_dict = {focus_res:row['wt_restype']}
 
-    designable, repackable = choose_designable_residues(mut_pose, [focus])
-    task_factory = setup_task_factory(mut_pair.mut, mut_pair.wt,
-            designable, repackable, motif_dict=mut_pair.motif_dict,
-            layered_design=False, prepare_focus=True)
+    designable, repackable, task_factory, mut_pair = \
+            prepare_pdbids_for_modeling(wt_pdbid, mut_pdbid, [focus])
+
 
     if not os.path.exists(outdir + '/aligned/'):
         os.mkdir(outdir + '/aligned/')
