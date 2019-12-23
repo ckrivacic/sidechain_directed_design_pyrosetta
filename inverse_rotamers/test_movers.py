@@ -12,6 +12,8 @@ import pandas as pd
 
 '''
 Please put path to pdbredo as $PDBREDO in your bashrc
+Usage:
+    test_movers.py <input_df> <output_dir> <mover> [br]
 '''
 
 def import_benchmark_dataframe(path):
@@ -32,11 +34,11 @@ if __name__=='__main__':
     num_models = 250
     row_num = task_num//num_models
 
-    mover = sys.argv[2]
+    mover = sys.argv[3]
 
     # backrub variable tells us if we're reading from the backrub
     # benchmark dataframe, NOT whether we're using the backrub mover
-    backrub = True if (len(sys.argv > 3) and sys.argv[3] == 'br') else False
+    backrub = True if (len(sys.argv > 4) and sys.argv[4] == 'br') else False
     if backrub:
         df = import_backrub_dataframe(sys.argv[1])
     else:
@@ -49,7 +51,10 @@ if __name__=='__main__':
     init('-ignore_unrecognized_res')
     row = df.loc[row_num]
 
-    outdir = 'funnel_test/' + mover + '_' + str(row['constrain'])
+    if not os.path.exists(sys.argv[2]):
+        os.mkdir(sys.argv[2])
+    constrain = 'constrained' if (task_num%2 == 0) else 'unconstrained'
+    outdir = os.path.join(sys.argv[2], constrain)
     if not os.path.exists(outdir):
         os.mkdir(outdir)
 
