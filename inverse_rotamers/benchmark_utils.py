@@ -88,14 +88,14 @@ def pose_from_pdbredo(pdbid, prefix):
 def prepare_pdbids_for_modeling(wt_pdbid, mut_pdbid, focus_mismatch_list,
         prefix='/netapp/home/krivacic/pdb_redo', constrain=True, shell=6.0):
     '''
-    Should be depreciated.
+    Update info below.
 
-    Given 2 pdbs and a motif dict, prepare them for modeling (get designable
-    residues and task factory).
-    Motif dict should have the following structure:
-    {int(resnum):one_letter_resname}
-    Ex:
-    {4:'E',5:'V'}
+    #Given 2 pdbs and a motif dict, prepare them for modeling (get designable
+    #residues and task factory).
+    #Motif dict should have the following structure:
+    #{int(resnum):one_letter_resname}
+    #Ex:
+    #{4:'E',5:'V'}
     '''
     wt_pose = pose_from_pdbredo(wt_pdbid,
             prefix=prefix)
