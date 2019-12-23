@@ -5,6 +5,7 @@ import sys
 sys.path.insert(1,
         '/netapp/home/krivacic/intelligent_design/sidechain_directed_design_pyrosetta/inverse_rotamers/')
 from benchmark_utils import *
+from align import Mismatch
 from utils import distance_rosetta
 from inverse_rotamers import *
 import time, re, os, pickle
@@ -22,7 +23,8 @@ def import_benchmark_dataframe(path):
 
 def import_backrub_dataframe(path):
     df = pd.read_csv(path, sep='\t')
-    df.rename(columns={'wt','wt_chain','wt_resnum','wt_restype','mut','mut_chain','mut_resnum','mut_restype','relsurf','ss'})
+    df.rename(columns={'pdb1':'wt','chain1':'wt_chain','resnum1':'wt_resnum','restype1':'wt_restype','pdb2':'mutant','chain2':'mut_chain','resnum2':'mut_resnum','restype2':'mut_restype'},
+            inplace=True)
     return df
 
 
@@ -30,7 +32,7 @@ if __name__=='__main__':
     #pdbredo_directory = '/netapp/home/krivacic/pdb_redo'
     shell=6
     #task_num = int(os.environ['SGE_TASK_ID']) - 0
-    task_num = 1 # make sure to subtract 1 from SGE TASK ID for the real thing
+    task_num = 0 # make sure to subtract 1 from SGE TASK ID for the real thing
     num_models = 250
     row_num = task_num//num_models
 
@@ -38,7 +40,7 @@ if __name__=='__main__':
 
     # backrub variable tells us if we're reading from the backrub
     # benchmark dataframe, NOT whether we're using the backrub mover
-    backrub = True if (len(sys.argv > 4) and sys.argv[4] == 'br') else False
+    backrub = True if (len(sys.argv) > 4 and sys.argv[4] == 'br') else False
     if backrub:
         df = import_backrub_dataframe(sys.argv[1])
     else:
@@ -59,11 +61,11 @@ if __name__=='__main__':
         os.mkdir(outdir)
 
     default_sfxn = create_score_function('ref2015')
-    wt_pdbid = row['wt']
-    mut_pdbid = row['mutant']
+    wt_pdbid = row['wt'].lower()
+    mut_pdbid = row['mutant'].lower()
 
     wt_pose = pose_from_pdbredo(wt_pdbid, os.environ['PDBREDO'])
-    mut_pose = pose_from_pdbred(mut_pdbid, os.environ['PDBREDO'])
+    mut_pose = pose_from_pdbredo(mut_pdbid, os.environ['PDBREDO'])
 
     if backrub:
         wtfocus = wt_pose.pdb_info().pdb2pose(row['wt_chain'],
@@ -91,14 +93,15 @@ if __name__=='__main__':
     #        '_' + str(task_num) + '.pdb', default_sfxn)
 
     out_dict['pre_rmsd'] = mut_pair.aligner.bb_rmsd
-    out_dict['pre_dist'] = distance_rosetta(mut_pair.aligner.target, focus_res,
-            mut_pair.aligner.mobile, row['wt_res'])
+    out_dict['pre_dist'] = distance_rosetta(mut_pair.aligner.target,
+            focus.target,
+            mut_pair.aligner.mobile, focus.mobile)
     print(out_dict)
 
 
     if mover == 'ngk':
         loopmodeler = get_loop_modeler(mut_pair.aligner.target, designable, repackable,
-                focus_res, task_factory=task_factory, fast=False,
+                focus.target, task_factory=task_factory, fast=False,
                 mover='ngk', resbuffer=4)
         start_time = time.time()
         loopmodeler.apply(mut_pair.aligner.target)
@@ -109,7 +112,7 @@ if __name__=='__main__':
         mut_pair.aligner.match_align()
         out_dict['post_rmsd'] = mut_pair.aligner.bb_rmsd
         out_dict['post_dist'] = distance_rosetta(mut_pair.aligner.target,
-            focus_res, mut_pair.aligner.mobile, row['wt_res'])
+            focus.target, mut_pair.aligner.mobile, focus.mobile)
         out_dict['post_score'] = default_sfxn(mut_pair.aligner.target)
 
         if not os.path.exists(outdir + '/ngk/'):
@@ -125,7 +128,7 @@ if __name__=='__main__':
         mut_pair.aligner.match_align()
         out_dict['post_rmsd_relaxed'] = mut_pair.aligner.bb_rmsd
         out_dict['post_dist_relaxed'] = distance_rosetta(mut_pair.aligner.target,
-            focus_res, mut_pair.aligner.mobile, row['wt_res'])
+            focus.target, mut_pair.aligner.mobile, focus.mobile)
 
         mut_pair.aligner.target.dump_scored_pdb(outdir + '/ngk/' + mut_pdbid +
                 '_' + str(task_num) + '_relaxed.pdb', default_sfxn)
@@ -138,7 +141,7 @@ if __name__=='__main__':
 
     if mover == 'ngkf':
         loopmodeler = get_loop_modeler(mut_pair.aligner.target, designable, repackable,
-                focus_res, task_factory=task_factory, fast=True,
+                focus.target, task_factory=task_factory, fast=True,
                 mover='ngk', resbuffer=4)
         start_time = time.time()
         loopmodeler.apply(mut_pair.aligner.target)
@@ -149,7 +152,7 @@ if __name__=='__main__':
         mut_pair.aligner.match_align()
         out_dict['post_rmsd'] = mut_pair.aligner.bb_rmsd
         out_dict['post_dist'] = distance_rosetta(mut_pair.aligner.target,
-            focus_res, mut_pair.aligner.mobile, row['wt_res'])
+            focus.target, mut_pair.aligner.mobile, focus.mobile)
         out_dict['post_score'] = default_sfxn(mut_pair.aligner.target)
 
         if not os.path.exists(outdir + '/ngk/'):
@@ -165,7 +168,7 @@ if __name__=='__main__':
         mut_pair.aligner.match_align()
         out_dict['post_rmsd_relaxed'] = mut_pair.aligner.bb_rmsd
         out_dict['post_dist_relaxed'] = distance_rosetta(mut_pair.aligner.target,
-            focus_res, mut_pair.aligner.mobile, row['wt_res'])
+            focus.target, mut_pair.aligner.mobile, focus.mobile)
 
         mut_pair.aligner.target.dump_scored_pdb(outdir + '/ngk/' + mut_pdbid +
                 '_' + str(task_num) + '_relaxed.pdb', default_sfxn)
@@ -188,7 +191,7 @@ if __name__=='__main__':
         mut_pair.aligner.match_align()
         out_dict['post_rmsd'] = mut_pair.aligner.bb_rmsd
         out_dict['post_dist'] = distance_rosetta(mut_pair.aligner.target, 
-                focus_res, mut_pair.aligner.mobile, row['wt_res'])
+            focus.target, mut_pair.aligner.mobile, focus.mobile)
         out_dict['post_score'] = default_sfxn(mut_pair.aligner.target)
 
         if not os.path.exists(outdir + '/fastdesign/'):
@@ -205,7 +208,7 @@ if __name__=='__main__':
         mut_pair.aligner.match_align()
         out_dict['post_rmsd_relaxed'] = mut_pair.aligner.bb_rmsd
         out_dict['post_dist_relaxed'] = distance_rosetta(mut_pair.aligner.target,
-            focus_res, mut_pair.aligner.mobile, row['wt_res'])
+            focus.target, mut_pair.aligner.mobile, focus.mobile)
 
         mut_pair.aligner.target.dump_scored_pdb(outdir + '/fastdesign/' +
                 mut_pdbid + '_' + str(task_num) + '_fastdesign_relaxed.pdb',
