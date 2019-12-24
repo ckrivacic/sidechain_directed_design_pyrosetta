@@ -22,14 +22,15 @@ def submit(alignments, **params):
     #num_tasks = (file_len(alignments) // task_len) + 1
     output_directory = 'logs'
     #error_directory = 'errors'
-    mover = str(sys.argv[2])
-    outdir = str(sys.argv[3])
+    mover = str(sys.argv[3])
+    outdir = str(sys.argv[2])
     if len(sys.argv) > 4:
         backrub = str(sys.argv[4])
     else:
         backrub = ''
     if backrub=='br':
-        num_tasks = file_len(csv_path) * task_len
+        #num_tasks = file_len(csv_path) * task_len
+        num_tasks = 100 * task_len
     else:
         num_tasks = 14 * task_len
 

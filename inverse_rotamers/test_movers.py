@@ -29,7 +29,7 @@ def import_backrub_dataframe(path):
 
 
 if __name__=='__main__':
-    #pdbredo_directory = '/netapp/home/krivacic/pdb_redo'
+    pdbredo_directory = '/netapp/home/krivacic/pdb_redo'
     shell=6
     #task_num = int(os.environ['SGE_TASK_ID']) - 0
     task_num = 0 # make sure to subtract 1 from SGE TASK ID for the real thing
@@ -53,8 +53,6 @@ if __name__=='__main__':
     init('-ignore_unrecognized_res')
     row = df.loc[row_num]
 
-    if not os.path.exists(sys.argv[2]):
-        os.mkdir(sys.argv[2])
     constrain = 'constrained' if (task_num%2 == 0) else 'unconstrained'
     outdir = os.path.join(sys.argv[2], constrain)
     if not os.path.exists(outdir):
@@ -64,8 +62,8 @@ if __name__=='__main__':
     wt_pdbid = row['wt'].lower()
     mut_pdbid = row['mutant'].lower()
 
-    wt_pose = pose_from_pdbredo(wt_pdbid, os.environ['PDBREDO'])
-    mut_pose = pose_from_pdbredo(mut_pdbid, os.environ['PDBREDO'])
+    wt_pose = pose_from_pdbredo(wt_pdbid, pdbredo_directory)
+    mut_pose = pose_from_pdbredo(mut_pdbid, pdbredo_directory)
 
     if backrub:
         wtfocus = wt_pose.pdb_info().pdb2pose(row['wt_chain'],
@@ -85,8 +83,8 @@ if __name__=='__main__':
             prepare_pdbids_for_modeling(wt_pdbid, mut_pdbid, [focus])
 
 
-    if not os.path.exists(outdir + '/aligned/'):
-        os.mkdir(outdir + '/aligned/')
+    #if not os.path.exists(outdir + '/aligned/'):
+    #    os.mkdir(outdir + '/aligned/')
     ##aligner.mobile.dump_scored_pdb(outdir + '/aligned/' + wt_pdbid +
     #        '_' + str(task_num) + '.pdb', default_sfxn)
     #aligner.target.dump_scored_pdb(outdir + '/aligned/' + mut_pdbid +
