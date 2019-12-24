@@ -78,9 +78,14 @@ if __name__=='__main__':
     out_dict = row.to_dict()
     ##focus_res = int(row['mut_res'])
     ##motif_dict = {focus_res:row['wt_restype']}
+    if constrain == 'constrained':
+        cst = True
+    else:
+        cst = False
 
     designable, repackable, task_factory, mut_pair = \
-            prepare_pdbids_for_modeling(wt_pdbid, mut_pdbid, [focus])
+            prepare_pdbids_for_modeling(wt_pdbid, mut_pdbid, [focus],
+                    constrain=cst)
 
 
     #if not os.path.exists(outdir + '/aligned/'):
