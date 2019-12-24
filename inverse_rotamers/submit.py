@@ -20,7 +20,6 @@ def submit(alignments, **params):
     import json
     csv_path = sys.argv[1]
     #num_tasks = (file_len(alignments) // task_len) + 1
-    num_tasks = 14 * task_len
     output_directory = 'logs'
     #error_directory = 'errors'
     mover = str(sys.argv[2])
@@ -29,6 +28,10 @@ def submit(alignments, **params):
         backrub = str(sys.argv[4])
     else:
         backrub = ''
+    if backrub=='br':
+        num_tasks = file_len(csv_path) * task_len
+    else:
+        num_tasks = 14 * task_len
 
     max_runtime = params.get('max_runtime','12:00:00')
     max_memory = params.get('max_memory','4G')
