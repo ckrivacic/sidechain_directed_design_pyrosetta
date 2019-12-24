@@ -31,8 +31,8 @@ def import_backrub_dataframe(path):
 if __name__=='__main__':
     pdbredo_directory = '/netapp/home/krivacic/pdb_redo'
     shell=6
-    #task_num = int(os.environ['SGE_TASK_ID']) - 0
-    task_num = 0 # make sure to subtract 1 from SGE TASK ID for the real thing
+    task_num = int(os.environ['SGE_TASK_ID']) - 0
+    #task_num = 0 # make sure to subtract 1 from SGE TASK ID for the real thing
     num_models = 250
     row_num = task_num//num_models
 
@@ -118,9 +118,6 @@ if __name__=='__main__':
             focus.target, mut_pair.aligner.mobile, focus.mobile)
         out_dict['post_score'] = default_sfxn(mut_pair.aligner.target)
 
-        if not os.path.exists(outdir + '/ngk/'):
-            os.mkdir(outdir + '/ngk/')
-
         #aligner.target.dump_scored_pdb(outdir + '/ngk/' + mut_pdbid +
         #        '_' + str(task_num) + '_ngk.pdb', default_sfxn)
         
@@ -133,7 +130,7 @@ if __name__=='__main__':
         out_dict['post_dist_relaxed'] = distance_rosetta(mut_pair.aligner.target,
             focus.target, mut_pair.aligner.mobile, focus.mobile)
 
-        mut_pair.aligner.target.dump_scored_pdb(outdir + '/ngk/' + mut_pdbid +
+        mut_pair.aligner.target.dump_scored_pdb(outdir + '/' + mut_pdbid +
                 '_' + str(task_num) + '_relaxed.pdb', default_sfxn)
         out_dict['final_score'] = default_sfxn(mut_pair.aligner.target)
         print(default_sfxn(mut_pair.aligner.target))
@@ -158,9 +155,6 @@ if __name__=='__main__':
             focus.target, mut_pair.aligner.mobile, focus.mobile)
         out_dict['post_score'] = default_sfxn(mut_pair.aligner.target)
 
-        if not os.path.exists(outdir + '/ngk/'):
-            os.mkdir(outdir + '/ngk/')
-
         #aligner.target.dump_scored_pdb(outdir + '/ngk/' + mut_pdbid +
         #        '_' + str(task_num) + '_ngk.pdb', default_sfxn)
         
@@ -173,7 +167,7 @@ if __name__=='__main__':
         out_dict['post_dist_relaxed'] = distance_rosetta(mut_pair.aligner.target,
             focus.target, mut_pair.aligner.mobile, focus.mobile)
 
-        mut_pair.aligner.target.dump_scored_pdb(outdir + '/ngk/' + mut_pdbid +
+        mut_pair.aligner.target.dump_scored_pdb(outdir +'/' + mut_pdbid +
                 '_' + str(task_num) + '_relaxed.pdb', default_sfxn)
         out_dict['final_score'] = default_sfxn(mut_pair.aligner.target)
         print(default_sfxn(mut_pair.aligner.target))
@@ -197,9 +191,6 @@ if __name__=='__main__':
             focus.target, mut_pair.aligner.mobile, focus.mobile)
         out_dict['post_score'] = default_sfxn(mut_pair.aligner.target)
 
-        if not os.path.exists(outdir + '/fastdesign/'):
-            os.mkdir(outdir + '/fastdesign/')
-
         ##aligner.target.dump_scored_pdb(outdir + '/fastdesign/' +
         #        mut_pdbid + '_' + str(task_num) + '_fastdesign.pdb',
         #        default_sfxn)
@@ -213,7 +204,7 @@ if __name__=='__main__':
         out_dict['post_dist_relaxed'] = distance_rosetta(mut_pair.aligner.target,
             focus.target, mut_pair.aligner.mobile, focus.mobile)
 
-        mut_pair.aligner.target.dump_scored_pdb(outdir + '/fastdesign/' +
+        mut_pair.aligner.target.dump_scored_pdb(outdir + '/' +
                 mut_pdbid + '_' + str(task_num) + '_fastdesign_relaxed.pdb',
                 default_sfxn)
         out_dict['final_score'] = default_sfxn(mut_pair.aligner.target)
