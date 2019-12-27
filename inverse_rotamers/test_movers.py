@@ -14,7 +14,7 @@ import pandas as pd
 '''
 Please put path to pdbredo as $PDBREDO in your bashrc
 Usage:
-    test_movers.py <input_df> <output_dir> <mover> [br]
+    test_movers.py <input_df> <output_dir> <mover> <submission_number> [br]
 '''
 
 def import_benchmark_dataframe(path):
@@ -38,9 +38,12 @@ if __name__=='__main__':
 
     mover = sys.argv[3]
 
+    offset = (int(sys.argv[4]) - 1) * num_models * 100
+    task_num += offset
+
     # backrub variable tells us if we're reading from the backrub
     # benchmark dataframe, NOT whether we're using the backrub mover
-    backrub = True if (len(sys.argv) > 4 and sys.argv[4] == 'br') else False
+    backrub = True if (len(sys.argv) > 5 and sys.argv[5] == 'br') else False
     if backrub:
         df = import_backrub_dataframe(sys.argv[1])
     else:
@@ -53,14 +56,15 @@ if __name__=='__main__':
     init('-ignore_unrecognized_res')
     row = df.loc[row_num]
 
-    constrain = 'constrained' if (task_num%2 == 0) else 'unconstrained'
-    outdir = os.path.join(sys.argv[2], constrain)
-    if not os.path.exists(outdir):
-        os.mkdir(outdir)
 
     default_sfxn = create_score_function('ref2015')
     wt_pdbid = row['wt'].lower()
     mut_pdbid = row['mutant'].lower()
+
+    constrain = 'constrained' if (task_num%2 == 0) else 'unconstrained'
+    outdir = os.path.join(sys.argv[2], wt_pdbid + '_' + mut_pdbid, constrain)
+    if not os.path.exists(outdir):
+        os.mkdir(outdir)
 
     wt_pose = pose_from_pdbredo(wt_pdbid, pdbredo_directory)
     mut_pose = pose_from_pdbredo(mut_pdbid, pdbredo_directory)
@@ -130,7 +134,8 @@ if __name__=='__main__':
         out_dict['post_dist_relaxed'] = distance_rosetta(mut_pair.aligner.target,
             focus.target, mut_pair.aligner.mobile, focus.mobile)
 
-        mut_pair.aligner.target.dump_scored_pdb(outdir + '/' + mut_pdbid +
+        mut_pair.aligner.target.dump_scored_pdb(outdir + '/' + wt_pdbid
+                + '_' + mut_pdbid +
                 '_' + str(task_num) + '_relaxed.pdb', default_sfxn)
         out_dict['final_score'] = default_sfxn(mut_pair.aligner.target)
         print(default_sfxn(mut_pair.aligner.target))
@@ -167,7 +172,8 @@ if __name__=='__main__':
         out_dict['post_dist_relaxed'] = distance_rosetta(mut_pair.aligner.target,
             focus.target, mut_pair.aligner.mobile, focus.mobile)
 
-        mut_pair.aligner.target.dump_scored_pdb(outdir +'/' + mut_pdbid +
+        mut_pair.aligner.target.dump_scored_pdb(outdir +'/' + wt_pdbid +
+                '_' + mut_pdbid +
                 '_' + str(task_num) + '_relaxed.pdb', default_sfxn)
         out_dict['final_score'] = default_sfxn(mut_pair.aligner.target)
         print(default_sfxn(mut_pair.aligner.target))
@@ -205,7 +211,7 @@ if __name__=='__main__':
             focus.target, mut_pair.aligner.mobile, focus.mobile)
 
         mut_pair.aligner.target.dump_scored_pdb(outdir + '/' +
-                mut_pdbid + '_' + str(task_num) + '_fastdesign_relaxed.pdb',
+                wt_pdbid + '_' + mut_pdbid + '_' + str(task_num) + '_fastdesign_relaxed.pdb',
                 default_sfxn)
         out_dict['final_score'] = default_sfxn(mut_pair.aligner.target)
         print(default_sfxn(mut_pair.aligner.target))

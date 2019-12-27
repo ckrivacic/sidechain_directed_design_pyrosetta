@@ -24,8 +24,9 @@ def submit(alignments, **params):
     #error_directory = 'errors'
     mover = str(sys.argv[3])
     outdir = str(sys.argv[2])
-    if len(sys.argv) > 4:
-        backrub = str(sys.argv[4])
+    submit_num = sys.argv[4]
+    if len(sys.argv) > 5:
+        backrub = str(sys.argv[5])
     else:
         backrub = ''
     if backrub=='br':
@@ -50,6 +51,7 @@ def submit(alignments, **params):
     qsub_command += csv_path,
     qsub_command += outdir,
     qsub_command += mover,
+    qsub_command += submit_num,
     qsub_command += backrub,
     print(qsub_command)
 
