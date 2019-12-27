@@ -64,7 +64,7 @@ if __name__=='__main__':
     constrain = 'constrained' if (task_num%2 == 0) else 'unconstrained'
     outdir = os.path.join(sys.argv[2], wt_pdbid + '_' + mut_pdbid, constrain)
     if not os.path.exists(outdir):
-        os.mkdir(outdir)
+        os.makedirs(outdir, exist_ok=True)
 
     wt_pose = pose_from_pdbredo(wt_pdbid, pdbredo_directory)
     mut_pose = pose_from_pdbredo(mut_pdbid, pdbredo_directory)
