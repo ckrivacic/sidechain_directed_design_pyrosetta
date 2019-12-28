@@ -10,10 +10,11 @@ if __name__=='__main__':
     #by = 'post_rmsd'
     #by = 'post_rmsd_relaxed'
 
-    true = sys.argv[1]
-    false = sys.argv[2]
-    outdir = sys.argv[3]
-    relaxed = sys.argv[4]
+    directory = sys.argv[1]
+    true = directory + '/constrained'
+    false = directory + '/unconstrained'
+    outdir = sys.argv[2]
+    relaxed = sys.argv[3]
     if relaxed == 'y':
         cols = ['post_dist_relaxed','post_rmsd_relaxed']
     elif relaxed == 'n':
@@ -22,36 +23,52 @@ if __name__=='__main__':
     #difference = 139
 
     for by in cols:
-        all_data = []
+        data_cst = []
         for filename in glob.glob(true + '/results*'):
             f = open(filename, 'rb')
-            all_data.append(pickle.load(f))
+            data_cst.append(pickle.load(f))
             f.close()
 
+        data_uncst = []
         for filename in glob.glob(false + '/results*'):
             f = open(filename, 'rb')
-            all_data.append(pickle.load(f))
+            data_uncst.append(pickle.load(f))
             f.close()
 
-        df = pd.DataFrame(all_data)
-        print(df)
-        for wt in df['wt'].unique():
-            for mut in df['mutant'].unique():
+        df_cst = pd.DataFrame(data_cst)
+        df_uncst = pd.DataFrame(data_uncst)
+        print(df_cst)
+        print(df_uncst)
+
+        for wt in df_cst['wt'].unique():
+            for mut in df_cst['mutant'].unique():
                 to_plot = []
                 groups = []
                 zorders = []
-                for bul in [True, False]:
-                    x = df[(df['constrain'] == bul) & (df['wt'] == wt) &
-                            (df['mutant'] == mut)][by]
-                    y = df[(df['constrain'] == bul) & (df['wt'] == wt) &
-                            (df['mutant'] == mut)]['final_score']
-                    if len(x) > 0 and len(y) > 0:
 
-                        to_plot.append((x, y))
-                        constrained = ' constrained' if bul else ' unconstrained'
-                        groups.append(mut + ' to ' + wt + constrained)
-                        zorder = 2 if bul else 1
-                        zorders.append(zorder)
+                # Add constrained data
+                x = df_cst[(df_cst['wt'] == wt) &
+                        (df_cst['mutant'] == mut)][by]
+                y = df_cst[(df_cst['wt'] == wt) &
+                        (df_cst['mutant'] == mut)]['final_score']
+                if len(x) > 0 and len(y) > 0:
+
+                    to_plot.append((x, y))
+                    groups.append(mut + ' to ' + wt + ' constrained')
+                    zorder = 2
+                    zorders.append(zorder)
+
+                # Add unconstrained data
+                x = df_uncst[(df_uncst['wt'] == wt) &
+                        (df_uncst['mutant'] == mut)][by]
+                y = df_uncst[(df_uncst['wt'] == wt) &
+                        (df_uncst['mutant'] == mut)]['final_score']
+                if len(x) > 0 and len(y) > 0:
+
+                    to_plot.append((x, y))
+                    groups.append(mut + ' to ' + wt + ' unconstrained')
+                    zorder = 1
+                    zorders.append(zorder)
 
                 # Create plot
                 if len(to_plot) > 0:
@@ -62,8 +79,13 @@ if __name__=='__main__':
                         x, y = data
                         ax.scatter(x, y, label=group, zorder=order)
 
-                    ax.axvline(df[(df['mutant'] == mut) & (df['wt'] ==
-                        wt)]['distance'])
+                    if by=='post_dist_relaxed' or by=='post_dist':
+                        pre_dist = df_cst[(df_cst['mutant'] == mut) &
+                            (df_cst['wt'] == wt)]['pre_dist']
+                        ax.axvline(pre_dist[0])
+                    elif by=='post_rmsd_relaxed' or by=='post_rmsd':
+                        ax.axvline(df_cst[(df_cst['mutant'] == mut) &
+                            (df_cst['wt'] == wt)]['pre_rmsd'][0])
                     
                     plt.legend(loc=1)
                     plt.xlabel(by)
