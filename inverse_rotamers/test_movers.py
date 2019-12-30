@@ -134,9 +134,9 @@ if __name__=='__main__':
         out_dict['post_dist_relaxed'] = distance_rosetta(mut_pair.aligner.target,
             focus.target, mut_pair.aligner.mobile, focus.mobile)
 
-        mut_pair.aligner.target.dump_scored_pdb(outdir + '/' + wt_pdbid
-                + '_' + mut_pdbid +
-                '_' + str(task_num) + '_relaxed.pdb', default_sfxn)
+        pdb_path = os.path.join(outdir, wt_pdbid + '_' + mut_pdbid + '_' +
+                str(task_num) + '_ngk_relaxed.pdb')
+        mut_pair.aligner.target.dump_scored_pdb(pdb_path, default_sfxn)
         out_dict['final_score'] = default_sfxn(mut_pair.aligner.target)
         print(default_sfxn(mut_pair.aligner.target))
         print(out_dict)
@@ -144,7 +144,7 @@ if __name__=='__main__':
             pickle.dump(out_dict, f)
 
 
-    if mover == 'ngkf':
+    elif mover == 'ngkf':
         loopmodeler = get_loop_modeler(mut_pair.aligner.target, designable, repackable,
                 focus.target, task_factory=task_factory, fast=True,
                 mover='ngk', resbuffer=4)
@@ -172,9 +172,9 @@ if __name__=='__main__':
         out_dict['post_dist_relaxed'] = distance_rosetta(mut_pair.aligner.target,
             focus.target, mut_pair.aligner.mobile, focus.mobile)
 
-        mut_pair.aligner.target.dump_scored_pdb(outdir +'/' + wt_pdbid +
-                '_' + mut_pdbid +
-                '_' + str(task_num) + '_relaxed.pdb', default_sfxn)
+        pdb_path = os.path.join(outdir, wt_pdbid + '_' + mut_pdbid + '_' +
+                str(task_num) + '_ngkf_relaxed.pdb')
+        mut_pair.aligner.target.dump_scored_pdb(pdb_path, default_sfxn)
         out_dict['final_score'] = default_sfxn(mut_pair.aligner.target)
         print(default_sfxn(mut_pair.aligner.target))
         print(out_dict)
@@ -210,14 +210,24 @@ if __name__=='__main__':
         out_dict['post_dist_relaxed'] = distance_rosetta(mut_pair.aligner.target,
             focus.target, mut_pair.aligner.mobile, focus.mobile)
 
-        mut_pair.aligner.target.dump_scored_pdb(outdir + '/' +
-                wt_pdbid + '_' + mut_pdbid + '_' + str(task_num) + '_fastdesign_relaxed.pdb',
+        pdb_path = os.path.join(outdir, wt_pdbid + '_' + mut_pdbid + '_' +
+                str(task_num) + '_fastdesign_relaxed.pdb')
+        mut_pair.aligner.target.dump_scored_pdb(pdb_path,
                 default_sfxn)
         out_dict['final_score'] = default_sfxn(mut_pair.aligner.target)
         print(default_sfxn(mut_pair.aligner.target))
         print(out_dict)
         with open(outdir + '/results_task_' + str(task_num), 'wb') as f:
             pickle.dump(out_dict, f)
+
+    with open(pdb_path, 'a') as f:
+        for key in out_dict:
+            if type(out_dict[key]) != type('asdf'):
+                f.write('\nmetric_' + key + ' ')
+            else:
+                f.write('\n' + key + ' ')
+            f.write(str(out_dict[key]))
+
     '''
     for i, row in df.iterrows():
         if len(row['mutant']) > 1:
