@@ -18,3 +18,42 @@ def dump_invrot(inverse_rotamer, filename):
     dummy_pose.append_residue_by_jump(inverse_rotamer.clone(), 1)
 
     dummy_pose.dump_file(filename)
+
+
+def plot(list_of_tuples, xlabel='x', ylabel='y', title='title', groups=None,
+        zorders=None, vline=None):
+    '''Plotting function. Input should be a list of tuples (x, y). For ex:
+    [(x1, y1), (x2, y2)]'''
+
+    from matplotlib import pyplot as plt
+
+    fig = plt.Figure()
+    ax = fig.add_subplot(1, 1, 1)
+
+    if groups is not None and zorders is not None:
+        for data, group, order in zip(list_of_tuples, groups, zorders):
+            x, y = data
+            ax.scatter(x, y, label=group, zorder=order)
+
+    elif groups is not None:
+        for data, group in zip(list_of_tuples, groups):
+            x, y = data
+            ax.scatter(x, y, label=group)
+
+    elif groups is None and zorders is None:
+        for data in list_of_tuples:
+            x, y = data
+            ax.scatter(x, y)
+
+    if vline:
+        ax.axvline(vline)
+
+    plt.legend(loc=1)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.title(title)
+
+    plt.show()
+
+    #return plt
+
