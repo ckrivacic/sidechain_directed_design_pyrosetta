@@ -78,11 +78,11 @@ if __name__=='__main__':
     xlabel = 'x'
     ylabel = 'y'
 
-    fig = plt.Figure()
+    fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1)
-    for data, group in zip(list_of_tuples, groups):
-        x, y = data
-        print(group)
+    for datum, group in zip(data, groups):
+        x, y = datum
+        print(x)
         ax.scatter(x, y, label=group)
 
     plt.legend(loc=1)
