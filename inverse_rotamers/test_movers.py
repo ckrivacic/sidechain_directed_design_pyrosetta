@@ -34,12 +34,12 @@ if __name__=='__main__':
     task_num = int(os.environ['SGE_TASK_ID']) - 0
     #task_num = 0 # make sure to subtract 1 from SGE TASK ID for the real thing
     num_models = 250
-    row_num = task_num//num_models
 
     mover = sys.argv[3]
 
     offset = (int(sys.argv[4]) - 1) * num_models * 100
     task_num += offset
+    row_num = task_num//num_models
 
     # backrub variable tells us if we're reading from the backrub
     # benchmark dataframe, NOT whether we're using the backrub mover
