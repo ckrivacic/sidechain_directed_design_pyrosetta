@@ -21,13 +21,13 @@ def dump_invrot(inverse_rotamer, filename):
 
 
 def plot(list_of_tuples, xlabel='x', ylabel='y', title='title', groups=None,
-        zorders=None, vline=None):
+        zorders=None, vline=None, unitline=False):
     '''Plotting function. Input should be a list of tuples (x, y). For ex:
     [(x1, y1), (x2, y2)]'''
 
     from matplotlib import pyplot as plt
 
-    fig = plt.Figure()
+    fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1)
 
     if groups is not None and zorders is not None:
@@ -45,6 +45,8 @@ def plot(list_of_tuples, xlabel='x', ylabel='y', title='title', groups=None,
             x, y = data
             ax.scatter(x, y)
 
+    if unitline:
+        ax.plot(x, x)
     if vline:
         ax.axvline(vline)
 
@@ -53,7 +55,6 @@ def plot(list_of_tuples, xlabel='x', ylabel='y', title='title', groups=None,
     plt.ylabel(ylabel)
     plt.title(title)
 
-    plt.show()
+    #plt.show()
 
-    #return plt
-
+    return plt

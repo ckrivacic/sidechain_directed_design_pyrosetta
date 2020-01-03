@@ -15,7 +15,7 @@ For each subdirectory, summarize:
 
 '''
 
-def summarize(input_dir):
+def summarize(input_dir, summary='mean'):
     avgs = []
     for pair in os.listdir(input_dir):
         curr_dir = os.path.join(input_dir, pair)
@@ -37,16 +37,14 @@ def summarize(input_dir):
                 if df.shape[0] > 0:
                     for col in df.columns:
                         try:
-                            avgs_dict[col + '_avg'] = df[col].mean()
+                            if summary == 'mean':
+                                print('hey what')
+                                avgs_dict[col + '_sum'] = df[col].mean()
+                            elif summary == 'low_score':
+                                avgs_dict[col + '_sum'] = \
+                                        df[col].loc[[df['final_score'].idxmin()]]
                         except:
-                            avgs_dict[col + '_avg'] = df[col][0]
-                    if type(avgs_dict[col + '_avg']) != type('abcd'):
-                        if np.isna(avgs_dict[col + '_avg']):
-                            print(df[col])
-                        if np.isnull(avgs_dict[col + '_avg']):
-                            print(df[col])
-                        if avgs_dict[col + '_avg'] == 'NaN':
-                            print(df[col])
+                            avgs_dict[col + '_sum'] = df[col][0]
 
                     if cst == 'constrained':
                         avgs_dict['constrained'] = True
@@ -60,34 +58,16 @@ def summarize(input_dir):
     return pd.DataFrame(avgs)
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
     from matplotlib import pyplot as plt
     input_dir = sys.argv[1]
-    df = summarize(input_dir)
-    data1 = (df[df['constrained']==True]['pre_rmsd_avg'],
-        df[df['constrained']==True]['post_rmsd_relaxed_avg'])
-    data2 = (df[df['constrained']==False]['pre_rmsd_avg'],
-            df[df['constrained']==False]['post_rmsd_relaxed_avg'])
+    df = summarize(input_dir, summary='low_score')
+    data1 = (df[df['constrained']==True]['pre_rmsd_sum'],
+        df[df['constrained']==True]['post_rmsd_relaxed_sum'])
+    data2 = (df[df['constrained']==False]['pre_rmsd_sum'],
+            df[df['constrained']==False]['post_rmsd_relaxed_sum'])
     data = [data1, data2]
     groups = ['constrained', 'unconstrained']
-    #plt = plot(data, groups=groups)
-
-    list_of_tuples = data
-    zorders = None
-    title = 'title'
-    xlabel = 'x'
-    ylabel = 'y'
-
-    fig = plt.figure()
-    ax = fig.add_subplot(1, 1, 1)
-    for datum, group in zip(data, groups):
-        x, y = datum
-        print(x)
-        ax.scatter(x, y, label=group)
-
-    plt.legend(loc=1)
-    plt.xlabel('else')
-    plt.ylabel('okay')
-    plt.title('titular')
-
+    plt = plot(data, groups=groups, xlabel='rmsd pre-mover',
+            ylabel='rmsd post-mover', title='rmsd comparison', unitline=True)
     plt.show()
