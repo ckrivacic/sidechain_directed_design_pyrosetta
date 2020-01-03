@@ -74,10 +74,10 @@ def summarize(input_dir, summary='mean'):
 
 if __name__ == '__main__':
     from matplotlib import pyplot as plt
-    mid = 'rmsd'
+    mid = 'dist'
     x = 'pre_' + mid + '_sum'
     y = 'post_' + mid + '_sum'
-    summary = 'low_score'
+    summary = 'mean'
 
     input_dir = sys.argv[1]
     df = summarize(input_dir, summary=summary)
