@@ -38,11 +38,25 @@ def summarize(input_dir, summary='mean'):
                     for col in df.columns:
                         try:
                             if summary == 'mean':
-                                print('hey what')
                                 avgs_dict[col + '_sum'] = df[col].mean()
                             elif summary == 'low_score':
                                 avgs_dict[col + '_sum'] = \
                                         df[col].loc[[df['final_score'].idxmin()]]
+                            elif summary == 'median':
+                                avgs_dict[col + '_sum'] = df[col].median()
+                            elif summary == 'percent_improved':
+                                if col.split('_')[0] == 'pre':
+                                    avgs_dict[col + '_sum'] = df[col][0]
+                                else:
+                                    subname = col.split('_')[1]
+                                    if subname == 'dist' or subname == 'rmsd':
+                                        fraction = df[df[col] < df['pre_' +
+                                            subname]][col].size / df['pre_' +
+                                                    subname].size
+                                        if fraction == 1.0:
+                                            print(df[curr_dir][0])
+                                        avgs_dict[col + '_sum'] = 100 * fraction
+                                #avgs_dict[col + '_sum'] = df[df[]]
                         except:
                             avgs_dict[col + '_sum'] = df[col][0]
 
@@ -60,14 +74,23 @@ def summarize(input_dir, summary='mean'):
 
 if __name__ == '__main__':
     from matplotlib import pyplot as plt
+    mid = 'rmsd'
+    x = 'pre_' + mid + '_sum'
+    y = 'post_' + mid + '_sum'
+    summary = 'low_score'
+
     input_dir = sys.argv[1]
-    df = summarize(input_dir, summary='low_score')
-    data1 = (df[df['constrained']==True]['pre_rmsd_sum'],
-        df[df['constrained']==True]['post_rmsd_relaxed_sum'])
-    data2 = (df[df['constrained']==False]['pre_rmsd_sum'],
-            df[df['constrained']==False]['post_rmsd_relaxed_sum'])
+    df = summarize(input_dir, summary=summary)
+    data1 = (df[df['constrained']==True][x],
+        df[df['constrained']==True][y])
+    data2 = (df[df['constrained']==False][x],
+            df[df['constrained']==False][y])
     data = [data1, data2]
     groups = ['constrained', 'unconstrained']
-    plt = plot(data, groups=groups, xlabel='rmsd pre-mover',
-            ylabel='rmsd post-mover', title='rmsd comparison', unitline=True)
+    if summary != 'percent_improved':
+        unitline = True
+    else:
+        unitline = False
+    plt = plot(data, groups=groups, xlabel=x,
+            ylabel=y, title='rmsd comparison', unitline=unitline)
     plt.show()

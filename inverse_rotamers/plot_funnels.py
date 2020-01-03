@@ -90,6 +90,6 @@ if __name__=='__main__':
                     plt.legend(loc=1)
                     plt.xlabel(by)
                     plt.ylabel('Total score')
-                    plt.savefig(outdir + '/fastdesign_' + by + '_' + groups[0] +
-                            '_' + groups[1] + '.png')
+                    #plt.savefig(outdir + '/fastdesign_' + by + '_' + groups[0] +
+                            #'_' + groups[1] + '.png')
                     plt.show()
