@@ -57,4 +57,4 @@ def plot(list_of_tuples, xlabel='x', ylabel='y', title='title', groups=None,
 
     #plt.show()
 
-    return plt
+    return plt, fig, ax

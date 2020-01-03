@@ -91,6 +91,23 @@ if __name__ == '__main__':
         unitline = True
     else:
         unitline = False
-    plt = plot(data, groups=groups, xlabel=x,
+    plt, fig, ax = plot(data, groups=groups, xlabel=x,
             ylabel=y, title='rmsd comparison', unitline=unitline)
+
+    def on_pick(event):
+        artist = event.artist
+        xmouse, ymouse = event.mouseevent.xdata, event.mouseevent.ydata
+        x, y = artist.get_xdata(), artist.get_ydata()
+        ind = event.ind
+        print('artist picked: ', event.artist)
+        print('{} vertices picked'.format(len(ind)))
+        print('picked between vertices {} and {}'.format(min(ind), max(ind) + 1))
+        print('x, y of mouse: {:.2f},{:.2f}'.format(xmouse, ymouse))
+        print('Data point: ', x[ind[0]], y[ind[0]])
+        print()
+
+    #fig, ax = plt.subplots()
+
+    tolerance = 10
+    fig.canvas.mpl_connect('button_press_event', on_pick)
     plt.show()
