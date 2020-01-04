@@ -3,6 +3,7 @@ import numpy as np
 import sys, os, glob
 import pickle
 from test_utils import plot
+from numeric import euclidean_distance
 
 '''
 Input: directory of directories with constrained and unconstrained
@@ -74,10 +75,17 @@ def summarize(input_dir, summary='mean'):
 
 if __name__ == '__main__':
     from matplotlib import pyplot as plt
-    mid = 'dist'
+    #mid = 'dist'
+    if len(sys.argv) < 3:
+        mid = input('Analyze distance (dist) or RMSD (rmsd)? ')
+    if len(sys.argv) < 4:
+        summary = input('Enter data analysis method (mean, median, low_score, percent_improved): ')
+    if len(sys.argv) > 3:
+        mid = sys.argv[2]
+        summary = sys.argv[3]
     x = 'pre_' + mid + '_sum'
     y = 'post_' + mid + '_sum'
-    summary = 'mean'
+    #summary = 'mean'
 
     input_dir = sys.argv[1]
     df = summarize(input_dir, summary=summary)
@@ -91,23 +99,39 @@ if __name__ == '__main__':
         unitline = True
     else:
         unitline = False
+    title = mid + ' comparison summarized by ' + summary
     plt, fig, ax = plot(data, groups=groups, xlabel=x,
-            ylabel=y, title='rmsd comparison', unitline=unitline)
+            ylabel=y, title=title, unitline=unitline)
 
     def on_pick(event):
-        artist = event.artist
-        xmouse, ymouse = event.mouseevent.xdata, event.mouseevent.ydata
-        x, y = artist.get_xdata(), artist.get_ydata()
+        if not hasattr(event, 'ind'):
+            return True
         ind = event.ind
-        print('artist picked: ', event.artist)
-        print('{} vertices picked'.format(len(ind)))
-        print('picked between vertices {} and {}'.format(min(ind), max(ind) + 1))
-        print('x, y of mouse: {:.2f},{:.2f}'.format(xmouse, ymouse))
-        print('Data point: ', x[ind[0]], y[ind[0]])
-        print()
+        #for a, b in enumerate(ind):
+        data = event.artist.get_offsets()
+        xmouse, ymouse = event.mouseevent.xdata, event.mouseevent.ydata
+        if len(ind) > 1:
+            low_dist = None
+            low_index = None
+            for i in ind:
+                dist = euclidean_distance(data[i], (xmouse,ymouse))
+                if (not low_dist) or (dist < low_dist):
+                    low_dist = dist
+                    low_index = i
+        else:
+            low_index = ind[0]
+            
+        pathlist = df.loc[low_index]['path'].split('/')
+        if pathlist[-1] == 'constrained' or pathlist[-1] == 'unconstrained':
+            pathlist = pathlist[:-1]
+        path = os.path.abspath('/'.join(pathlist))
+        print(path)
+        #cmd = 'show_my_designs ' + path + '/*' # Need pdb files
+        cmd = 'python3 '\
+        '/home/ckrivacic/intelligent_design/sidechain_directed_design/inverse_rotamers/plot_funnels.py ' + path + ' fakeout/ n'
 
-    #fig, ax = plt.subplots()
+        os.system(cmd)
 
-    tolerance = 10
-    fig.canvas.mpl_connect('button_press_event', on_pick)
+    #fig.canvas.mpl_connect('button_press_event', on_pick)
+    fig.canvas.mpl_connect('pick_event', on_pick)
     plt.show()

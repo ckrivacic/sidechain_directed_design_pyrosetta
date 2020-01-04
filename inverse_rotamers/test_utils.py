@@ -28,22 +28,22 @@ def plot(list_of_tuples, xlabel='x', ylabel='y', title='title', groups=None,
     from matplotlib import pyplot as plt
 
     fig = plt.figure()
-    ax = fig.add_subplot(1, 1, 1)
+    ax = fig.add_subplot(1, 1, 1, picker=True)
 
     if groups is not None and zorders is not None:
         for data, group, order in zip(list_of_tuples, groups, zorders):
             x, y = data
-            ax.scatter(x, y, label=group, zorder=order)
+            ax.scatter(x, y, label=group, zorder=order, picker=True)
 
     elif groups is not None:
         for data, group in zip(list_of_tuples, groups):
             x, y = data
-            ax.scatter(x, y, label=group)
+            ax.scatter(x, y, label=group, picker=True)
 
     elif groups is None and zorders is None:
         for data in list_of_tuples:
             x, y = data
-            ax.scatter(x, y)
+            ax.scatter(x, y, picker=True)
 
     if unitline:
         ax.plot(x, x)
