@@ -14,7 +14,7 @@ class Alignment(object):
         self.mobile_residues = res_selector_to_size_list(mselect)
         self.set_target_sequence()
         self.set_mobile_sequence()
-        self.atoms = ['N','C','CA','O']
+        self.atoms = ['N','C','CA']
         self.bb_rmsd = None
 
     def set_atoms(self, atoms):

@@ -45,14 +45,14 @@ def constraints_from_pose(reference_pose, res_dict):
 
 
 def constrain_mutant_to_wt(mutant_pose, wt_pose, mut_focus_residues,
-        wt_focus_residues, constrain=True):
+        wt_focus_residues, constrain=True, shell=6):
     aligner = Alignment(mutant_pose, wt_pose)
-    aligner.create_shell(10, mut_focus_residues, mobile_focus_list=wt_focus_residues)
+    aligner.create_shell(shell, mut_focus_residues, mobile_focus_list=wt_focus_residues)
     aligner.match_align()
-    alignment_dict = {}
-    for focus_residue in mut_focus_residues:
-        alignment_dict[focus_residue] = ['N','C','CA']
     if constrain:
+        alignment_dict = {}
+        for focus_residue in mut_focus_residues:
+            alignment_dict[focus_residue] = ['N','C','CA']
         csts = constraints_from_pose(aligner.mobile, alignment_dict)
         for cst in csts:
             aligner.target.add_constraint(cst)
@@ -101,7 +101,8 @@ def prepare_pdbids_for_modeling(wt_pdbid, mut_pdbid, focus_mismatch_list,
             prefix=prefix)
     mut_pose = pose_from_pdbredo(mut_pdbid,
             prefix=prefix)
-    mut_pair = MutantPair(mut_pose, wt_pose, focus_mismatch_list, shell=shell)
+    mut_pair = MutantPair(mut_pose, wt_pose, focus_mismatch_list, shell=shell,
+            cst=constrain)
 
     focus_list = [x.target for x in focus_mismatch_list]
     designable, repackable = choose_designable_residues(mut_pair.mut.pose,
@@ -171,18 +172,17 @@ class TestPose(object):
 
 class MutantPair(object):
     """Stores pair of mutants to be tested"""
-    def __init__(self, mut_pose, wt_pose, focus_mismatches, shell=6):
+    def __init__(self, mut_pose, wt_pose, focus_mismatches, shell=6, cst=False):
         self.mut_ = TestPose(mut_pose)
         self.mut_.mobile = False
         self.wt_ = TestPose(wt_pose)
         self.wt_.mobile = True
 
-        self.aligner_ = Alignment(self.mut.pose, self.wt.pose)
         target_focus_list = [x.target for x in focus_mismatches]
         mobile_focus_list = [x.mobile for x in focus_mismatches]
-        self.aligner_.create_shell(shell, target_focus_list,\
-                mobile_focus_list=mobile_focus_list)
-        self.aligner_.match_align()
+        self.aligner_ = constrain_mutant_to_wt(self.mut_, self.wt_,
+                target_focus_list, mobile_focus_list, constrain=cst,
+                shell=shell)
 
         self.mut_.mismatches = self.aligner_.mismatches
         self.wt_.mismatches = self.aligner_.mismatches
