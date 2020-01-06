@@ -180,7 +180,8 @@ class MutantPair(object):
 
         target_focus_list = [x.target for x in focus_mismatches]
         mobile_focus_list = [x.mobile for x in focus_mismatches]
-        self.aligner_ = constrain_mutant_to_wt(self.mut_, self.wt_,
+        self.aligner_ = constrain_mutant_to_wt(self.mut_.pose,
+                self.wt_.pose,
                 target_focus_list, mobile_focus_list, constrain=cst,
                 shell=shell)
 
