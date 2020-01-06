@@ -37,8 +37,8 @@ if __name__=='__main__':
 
         df_cst = pd.DataFrame(data_cst)
         df_uncst = pd.DataFrame(data_uncst)
-        print(df_cst)
-        print(df_uncst)
+        #print(df_cst)
+        #print(df_uncst)
 
         for wt in df_cst['wt'].unique():
             for mut in df_cst['mutant'].unique():

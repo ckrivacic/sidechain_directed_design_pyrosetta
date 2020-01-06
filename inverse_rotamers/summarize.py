@@ -83,16 +83,22 @@ if __name__ == '__main__':
     if len(sys.argv) > 3:
         mid = sys.argv[2]
         summary = sys.argv[3]
+    relaxed = False
     x = 'pre_' + mid + '_sum'
-    y = 'post_' + mid + '_sum'
+    if not relaxed:
+        y = 'post_' + mid + '_sum'
+    if relaxed:
+        y = 'post_' + mid + '_relaxed_sum'
     #summary = 'mean'
 
     input_dir = sys.argv[1]
     df = summarize(input_dir, summary=summary)
-    data1 = (df[df['constrained']==True][x],
-        df[df['constrained']==True][y])
-    data2 = (df[df['constrained']==False][x],
-            df[df['constrained']==False][y])
+    df_cst = df[df['constrained']==True]
+    df_uncst = df[df['constrained']==False]
+    data1 = (df_cst[x],
+        df_cst[y])
+    data2 = (df_uncst[x],
+            df_uncst[y])
     data = [data1, data2]
     groups = ['constrained', 'unconstrained']
     if summary != 'percent_improved':
@@ -103,12 +109,24 @@ if __name__ == '__main__':
     plt, fig, ax = plot(data, groups=groups, xlabel=x,
             ylabel=y, title=title, unitline=unitline)
 
+    annot = ax.annotate("", xy=(0,0), xytext=(20,20),textcoords="offset points",
+                        bbox=dict(boxstyle="round", fc="w"),
+                        arrowprops=dict(arrowstyle="->"))
+    #annot.set_visible(False)
+
+    
+
     def on_pick(event):
         if not hasattr(event, 'ind'):
             return True
         ind = event.ind
         #for a, b in enumerate(ind):
         data = event.artist.get_offsets()
+        if event.artist.get_label() == 'constrained':
+            pick_df = df_cst
+        else:
+            pick_df = df_uncst
+
         xmouse, ymouse = event.mouseevent.xdata, event.mouseevent.ydata
         if len(ind) > 1:
             low_dist = None
@@ -120,15 +138,19 @@ if __name__ == '__main__':
                     low_index = i
         else:
             low_index = ind[0]
-            
-        pathlist = df.loc[low_index]['path'].split('/')
+
+        pathlist = pick_df.iloc[low_index]['path'].split('/')
+        #pathlist = pick_df['path'][low_index].split('/')
         if pathlist[-1] == 'constrained' or pathlist[-1] == 'unconstrained':
             pathlist = pathlist[:-1]
         path = os.path.abspath('/'.join(pathlist))
-        print(path)
+        #print(path)
         #cmd = 'show_my_designs ' + path + '/*' # Need pdb files
+
+        relaxed_str = 'y' if relaxed else 'n'
         cmd = 'python3 '\
-        '/home/ckrivacic/intelligent_design/sidechain_directed_design/inverse_rotamers/plot_funnels.py ' + path + ' fakeout/ n'
+        '/home/ckrivacic/intelligent_design/sidechain_directed_design/inverse_rotamers/plot_funnels.py '\
+        + path + ' fakeout/ ' + relaxed_str
 
         os.system(cmd)
 
