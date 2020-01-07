@@ -8,7 +8,7 @@ from benchmark_utils import *
 from align import Mismatch
 from utils import distance_rosetta
 from inverse_rotamers import *
-import time, re, os, yaml
+import time, re, os, pickle
 import pandas as pd
 
 '''
@@ -140,8 +140,8 @@ if __name__=='__main__':
         out_dict['final_score'] = default_sfxn(mut_pair.aligner.target)
         print(default_sfxn(mut_pair.aligner.target))
         print(out_dict)
-        with open(outdir + '/results_task_' + str(task_num), 'w') as f:
-            yaml.dump(out_dict, f)
+        with open(outdir + '/results_task_' + str(task_num) + '.pkl', 'wb') as f:
+            pickle.dump(out_dict, f)
 
 
     elif mover == 'ngkf':
@@ -178,8 +178,8 @@ if __name__=='__main__':
         out_dict['final_score'] = default_sfxn(mut_pair.aligner.target)
         print(default_sfxn(mut_pair.aligner.target))
         print(out_dict)
-        with open(outdir + '/results_task_' + str(task_num), 'w') as f:
-            yaml.dump(out_dict, f)
+        with open(outdir + '/results_task_' + str(task_num) + 'pkl', 'wb') as f:
+            pickle.dump(out_dict, f)
 
 
     elif mover == 'fastdesign':
@@ -217,8 +217,8 @@ if __name__=='__main__':
         out_dict['final_score'] = default_sfxn(mut_pair.aligner.target)
         print(default_sfxn(mut_pair.aligner.target))
         print(out_dict)
-        with open(outdir + '/results_task_' + str(task_num), 'w') as f:
-            yaml.dump(out_dict, f)
+        with open(outdir + '/results_task_' + str(task_num) + '.pkl', 'wb') as f:
+            pickle.dump(out_dict, f)
 
     with open(pdb_path, 'a') as f:
         for key in out_dict:
