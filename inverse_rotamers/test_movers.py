@@ -140,7 +140,7 @@ if __name__=='__main__':
         out_dict['final_score'] = default_sfxn(mut_pair.aligner.target)
         print(default_sfxn(mut_pair.aligner.target))
         print(out_dict)
-        with open(outdir + '/results_task_' + str(task_num), 'wb') as f:
+        with open(outdir + '/results_task_' + str(task_num), 'w') as f:
             yaml.dump(out_dict, f)
 
 
@@ -178,7 +178,7 @@ if __name__=='__main__':
         out_dict['final_score'] = default_sfxn(mut_pair.aligner.target)
         print(default_sfxn(mut_pair.aligner.target))
         print(out_dict)
-        with open(outdir + '/results_task_' + str(task_num), 'wb') as f:
+        with open(outdir + '/results_task_' + str(task_num), 'w') as f:
             yaml.dump(out_dict, f)
 
 
@@ -217,7 +217,7 @@ if __name__=='__main__':
         out_dict['final_score'] = default_sfxn(mut_pair.aligner.target)
         print(default_sfxn(mut_pair.aligner.target))
         print(out_dict)
-        with open(outdir + '/results_task_' + str(task_num), 'wb') as f:
+        with open(outdir + '/results_task_' + str(task_num), 'w') as f:
             yaml.dump(out_dict, f)
 
     with open(pdb_path, 'a') as f:
