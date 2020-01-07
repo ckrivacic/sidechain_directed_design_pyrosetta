@@ -1,7 +1,8 @@
 import pandas as pd
 import numpy as np
 import sys, os, glob
-import pickle
+import yaml
+import yaml
 from test_utils import plot
 from numeric import euclidean_distance
 
@@ -29,7 +30,7 @@ def summarize(input_dir, summary='mean'):
 
                 for filename in glob.glob(folder + '/results*'):
                     with open(filename, 'rb') as f:
-                        data = pickle.load(f)
+                        data = yaml.load(f)
                     data_list.append(data)
 
                 df = pd.DataFrame(data_list)
