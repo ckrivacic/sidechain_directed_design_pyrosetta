@@ -109,12 +109,6 @@ if __name__ == '__main__':
     plt, fig, ax = plot(data, groups=groups, xlabel=x,
             ylabel=y, title=title, unitline=unitline)
 
-    annot = ax.annotate("", xy=(0,0), xytext=(20,20),textcoords="offset points",
-                        bbox=dict(boxstyle="round", fc="w"),
-                        arrowprops=dict(arrowstyle="->"))
-    #annot.set_visible(False)
-
-    
 
     def on_pick(event):
         if not hasattr(event, 'ind'):
