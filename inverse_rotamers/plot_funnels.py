@@ -1,6 +1,7 @@
 import pickle, sys, os, glob
 import pandas as pd
 from matplotlib import pyplot as plt
+from numeric import euclidean_distance
 
 
 if __name__=='__main__':
@@ -72,12 +73,43 @@ if __name__=='__main__':
 
                 # Create plot
                 if len(to_plot) > 0:
+
+                    def on_pick(event):
+                        if not hasattr(event, 'ind'):
+                            return True
+                        ind = event.ind
+                        data = event.artist.get_offsets()
+                        if event.artist.get_label().endswith('unconstrained'):
+                            pick_df = df_uncst
+                        else:
+                            pick_df = df_cst
+
+                        xmouse, ymouse = event.mouseevent.xdata, event.mouseevent.ydata
+                        if len(ind) > 1:
+                            low_dist = None
+                            low_index = None
+                            for i in ind:
+                                dist = euclidean_distance(data[i],
+                                        (xmouse,ymouse))
+                                if (not low_dist) or (dist < low_dist):
+                                    low_dist = dist
+                                    low_index = i
+                        else:
+                            low_index = ind[0]
+
+                        pathlist = pick_df.iloc[low_index]['path'].split('/')
+                        if pathlist[-1] == 'constrained' or pathlist[-1] == 'unconstrained':
+                            pathlist = pathlist[:-1]
+                        path = os.path.abspath('/'.join(pathlist))
+                        print(path)
+
+
                     fig = plt.figure()
-                    ax = fig.add_subplot(1, 1, 1)
+                    ax = fig.add_subplot(1, 1, 1, picker=True)
 
                     for data, group, order in zip(to_plot, groups, zorders):
                         x, y = data
-                        ax.scatter(x, y, label=group, zorder=order)
+                        ax.scatter(x, y, label=group, zorder=order, picker=True)
 
                     if by=='post_dist_relaxed' or by=='post_dist':
                         pre_dist = df_cst[(df_cst['mutant'] == mut) &
@@ -89,6 +121,7 @@ if __name__=='__main__':
                     
                     plt.legend(loc=1)
                     plt.xlabel(by)
+                    fig.canvas.mpl_connect('pick_event', on_pick)
                     plt.ylabel('Total score')
                     #plt.savefig(outdir + '/fastdesign_' + by + '_' + groups[0] +
                             #'_' + groups[1] + '.png')

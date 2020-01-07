@@ -10,12 +10,28 @@ from utils import distance_rosetta
 from inverse_rotamers import *
 import time, re, os, pickle
 import pandas as pd
+import gzip
 
 '''
 Please put path to pdbredo as $PDBREDO in your bashrc
 Usage:
     test_movers.py <input_df> <output_dir> <mover> <submission_number> [br]
 '''
+def smart_open(path, options):
+    try:
+        if path.endswith('.gz'): return gzip.open(path, options)
+        else: return open(path, options)
+
+
+def annotate_pdb(pdb_path, out_dict):
+    f = open(pdb_path, 'a')
+    for key in out_dict:
+        if type(out_dict[key]) != type('asdf'):
+            f.write('\nmetric_' + key + ' ')
+        else:
+            f.write('\n' + key + ' ')
+        f.write(str(out_dict[key]))
+    f.close()
 
 def import_benchmark_dataframe(path):
     df = pd.read_csv(path)
@@ -53,7 +69,7 @@ if __name__=='__main__':
     Going to need to get all focus residues on their own line, so we can calc
     bb rmsd separately.
     '''
-    init('-ignore_unrecognized_res')
+    init('-ignore_unrecognized_res -pdb_gz')
     row = df.loc[row_num]
 
 
@@ -103,7 +119,7 @@ if __name__=='__main__':
     out_dict['pre_dist'] = distance_rosetta(mut_pair.aligner.target,
             focus.target,
             mut_pair.aligner.mobile, focus.mobile)
-    print(out_dict)
+    out_dict['mover'] = mover
 
 
     if mover == 'ngk':
@@ -124,6 +140,10 @@ if __name__=='__main__':
 
         #aligner.target.dump_scored_pdb(outdir + '/ngk/' + mut_pdbid +
         #        '_' + str(task_num) + '_ngk.pdb', default_sfxn)
+        pdb_path = os.path.join(outdir, wt_pdbid + '_' + mut_pdbid + '_' +
+                str(task_num) + '_ngk_relaxed.pdb')
+        out_dict['path'] = pdb_path
+        mut_pair.aligner.target.dump_scored_pdb(pdb_path, default_sfxn)
         
         relaxer = fast_relax(mut_pair.aligner.target, designable, repackable,
                 selectors=True)
@@ -134,14 +154,18 @@ if __name__=='__main__':
         out_dict['post_dist_relaxed'] = distance_rosetta(mut_pair.aligner.target,
             focus.target, mut_pair.aligner.mobile, focus.mobile)
 
-        pdb_path = os.path.join(outdir, wt_pdbid + '_' + mut_pdbid + '_' +
+        pdb_path_rel = os.path.join(outdir, wt_pdbid + '_' + mut_pdbid + '_' +
                 str(task_num) + '_ngk_relaxed.pdb')
+        out_dict['path_relaxed'] = pdb_path_rel
         mut_pair.aligner.target.dump_scored_pdb(pdb_path, default_sfxn)
         out_dict['final_score'] = default_sfxn(mut_pair.aligner.target)
         print(default_sfxn(mut_pair.aligner.target))
         print(out_dict)
         with open(outdir + '/results_task_' + str(task_num) + '.pkl', 'wb') as f:
             pickle.dump(out_dict, f)
+
+        annotate_pdb(pdb_path, out_dict)
+        annotate_pdb(pdb_path_rel, out_dict)
 
 
     elif mover == 'ngkf':
@@ -162,6 +186,10 @@ if __name__=='__main__':
 
         #aligner.target.dump_scored_pdb(outdir + '/ngk/' + mut_pdbid +
         #        '_' + str(task_num) + '_ngk.pdb', default_sfxn)
+        pdb_path = os.path.join(outdir, wt_pdbid + '_' + mut_pdbid + '_' +
+                str(task_num) + '_ngkf.pdb.gz')
+        out_dict['path'] = pdb_path
+        mut_pair.aligner.target.dump_scored_pdb(pdb_path, default_sfxn)
         
         relaxer = fast_relax(mut_pair.aligner.target, designable, repackable,
                 selectors=True)
@@ -172,14 +200,18 @@ if __name__=='__main__':
         out_dict['post_dist_relaxed'] = distance_rosetta(mut_pair.aligner.target,
             focus.target, mut_pair.aligner.mobile, focus.mobile)
 
-        pdb_path = os.path.join(outdir, wt_pdbid + '_' + mut_pdbid + '_' +
-                str(task_num) + '_ngkf_relaxed.pdb')
+        pdb_path_rel = os.path.join(outdir, wt_pdbid + '_' + mut_pdbid + '_' +
+                str(task_num) + '_ngkf_relaxed.pdb.gz')
+        out_dict['path_relaxed'] = pdb_path_rel
         mut_pair.aligner.target.dump_scored_pdb(pdb_path, default_sfxn)
         out_dict['final_score'] = default_sfxn(mut_pair.aligner.target)
         print(default_sfxn(mut_pair.aligner.target))
         print(out_dict)
         with open(outdir + '/results_task_' + str(task_num) + 'pkl', 'wb') as f:
             pickle.dump(out_dict, f)
+
+        annotate_pdb(pdb_path, out_dict)
+        annotate_pdb(pdb_path_rel, out_dict)
 
 
     elif mover == 'fastdesign':
@@ -200,6 +232,10 @@ if __name__=='__main__':
         ##aligner.target.dump_scored_pdb(outdir + '/fastdesign/' +
         #        mut_pdbid + '_' + str(task_num) + '_fastdesign.pdb',
         #        default_sfxn)
+        pdb_path = os.path.join(outdir, wt_pdbid + '_' + mut_pdbid + '_' +
+                str(task_num) + '_fastdesign.pdb.gz')
+        out_dict['path'] = pdb_path
+        mut_pair.aligner.target.dump_scored_pdb(pdb_path, default_sfxn)
 
         relaxer = fast_relax(mut_pair.aligner.target, designable, repackable,
                 selectors=True)
@@ -210,8 +246,9 @@ if __name__=='__main__':
         out_dict['post_dist_relaxed'] = distance_rosetta(mut_pair.aligner.target,
             focus.target, mut_pair.aligner.mobile, focus.mobile)
 
-        pdb_path = os.path.join(outdir, wt_pdbid + '_' + mut_pdbid + '_' +
-                str(task_num) + '_fastdesign_relaxed.pdb')
+        pdb_path_rel = os.path.join(outdir, wt_pdbid + '_' + mut_pdbid + '_' +
+                str(task_num) + '_fastdesign_relaxed.pdb.gz')
+        out_dict['path_relaxed'] = pdb_path_rel
         mut_pair.aligner.target.dump_scored_pdb(pdb_path,
                 default_sfxn)
         out_dict['final_score'] = default_sfxn(mut_pair.aligner.target)
@@ -220,13 +257,9 @@ if __name__=='__main__':
         with open(outdir + '/results_task_' + str(task_num) + '.pkl', 'wb') as f:
             pickle.dump(out_dict, f)
 
-    with open(pdb_path, 'a') as f:
-        for key in out_dict:
-            if type(out_dict[key]) != type('asdf'):
-                f.write('\nmetric_' + key + ' ')
-            else:
-                f.write('\n' + key + ' ')
-            f.write(str(out_dict[key]))
+        annotate_pdb(pdb_path, out_dict)
+        annotate_pdb(pdb_path_rel, out_dict)
+
 
     '''
     for i, row in df.iterrows():

@@ -142,7 +142,7 @@ if __name__ == '__main__':
         #cmd = 'show_my_designs ' + path + '/*' # Need pdb files
 
         relaxed_str = 'y' if relaxed else 'n'
-        cmd = 'python3 '\
+        cmd = 'python3.7 '\
         '/home/ckrivacic/intelligent_design/sidechain_directed_design/inverse_rotamers/plot_funnels.py '\
         + path + ' fakeout/ ' + relaxed_str
 
