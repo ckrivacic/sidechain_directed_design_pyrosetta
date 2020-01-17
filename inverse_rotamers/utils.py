@@ -255,5 +255,6 @@ def distance_rosetta(pose1, res1, pose2, res2):
     xyz2 = pose2.residue(res2).xyz('CA')
     return euclidean_distance(xyz1, xyz2)
 
+
 #init('-extrachi_cutoff 0 -ex1 -ex2')
 #test_rotamer_gen("ASP")

@@ -7,7 +7,7 @@ Please put path to pdbredo as $PDBREDO in your bashrc
 Usage:
     test_movers.py <input_df> <output_dir> <mover> [br]
 '''
-task_len = 500
+#task_len = 500
 
 def file_len(fname):
     with open(fname) as f:
@@ -24,16 +24,16 @@ def submit(alignments, **params):
     #error_directory = 'errors'
     mover = str(sys.argv[3])
     outdir = str(sys.argv[2])
-    submit_num = sys.argv[4]
-    if len(sys.argv) > 5:
-        backrub = str(sys.argv[5])
+    #submit_num = sys.argv[4]
+    if len(sys.argv) > 4:
+        backrub = str(sys.argv[4])
     else:
         backrub = ''
     if backrub=='br':
-        #num_tasks = file_len(csv_path) * task_len
-        num_tasks = 100 * task_len
+        num_tasks = file_len(csv_path) * 2
+        #num_tasks = 100 * task_len
     else:
-        num_tasks = 14 * task_len
+        num_tasks = 14 * 2
 
     max_runtime = params.get('max_runtime','12:00:00')
     max_memory = params.get('max_memory','4G')

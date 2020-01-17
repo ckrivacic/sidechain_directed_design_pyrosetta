@@ -50,19 +50,19 @@ def import_backrub_dataframe(path):
 if __name__=='__main__':
     pdbredo_directory = '/wynton/home/kortemme/krivacic/pdb_redo'
     shell=6
-    task_num = int(os.environ['SGE_TASK_ID']) - 0
-    #task_num = 0 # make sure to subtract 1 from SGE TASK ID for the real thing
-    num_models = 250
+    #task_num = int(os.environ['SGE_TASK_ID']) - 1
+    task_num = 0 # make sure to subtract 1 from SGE TASK ID for the real thing
+    num_models = 200
 
     mover = sys.argv[3]
 
-    offset = (int(sys.argv[4]) - 1) * num_models * 100
-    task_num += offset
-    row_num = task_num//num_models
+    #offset = (int(sys.argv[4]) - 1) * num_models * 100
+    #task_num += offset
+    row_num = task_num//2
 
     # backrub variable tells us if we're reading from the backrub
     # benchmark dataframe, NOT whether we're using the backrub mover
-    backrub = True if (len(sys.argv) > 5 and sys.argv[5] == 'br') else False
+    backrub = True if (len(sys.argv) > 4 and sys.argv[4] == 'br') else False
     if backrub:
         df = import_backrub_dataframe(sys.argv[1])
     else:
@@ -81,9 +81,17 @@ if __name__=='__main__':
     mut_pdbid = row['mutant'].lower()
 
     constrain = 'constrained' if (task_num%2 == 0) else 'unconstrained'
-    outdir = os.path.join(sys.argv[2], wt_pdbid + '_' + mut_pdbid, constrain)
-    if not os.path.exists(outdir):
-        os.makedirs(outdir, exist_ok=True)
+    outdir_final = os.path.join(sys.argv[2], mut_pdbid + '_' + wt_pdbid, constrain)
+    if not os.path.exists(outdir_final):
+        os.makedirs(outdir_final, exist_ok=True)
+
+    if 'TMPDIR' in os.environ:
+        os_tmp = os.environ['TMPDIR']
+    else:
+        os_tmp = os.path.join('/scratch',os.environ['USER'])
+    outdir_temp = os.path.join(os_tmp, str(task_num))
+    if not os.path.exists(outdir_temp):
+        os.makedirs(outdir_temp, exist_ok=True)
 
     wt_pose = pose_from_pdbredo(wt_pdbid, pdbredo_directory)
     mut_pose = pose_from_pdbredo(mut_pdbid, pdbredo_directory)
@@ -98,83 +106,91 @@ if __name__=='__main__':
         focus = Mismatch(int(row['mut_res']), int(row['wt_res']))
     #mut_pair = MutantPair(mut_pose, wt_pose, [focus], shell=shell)
 
-    out_dict = row.to_dict()
-    ##focus_res = int(row['mut_res'])
-    ##motif_dict = {focus_res:row['wt_restype']}
-    if constrain == 'constrained':
-        cst = True
-    else:
-        cst = False
+    for jobnum in range(0, num_models):
 
-    designable, repackable, task_factory, mut_pair = \
-            prepare_pdbids_for_modeling(wt_pdbid, mut_pdbid, [focus],
-                    constrain=cst)
+        try:
+            out_dict = row.to_dict()
+            ##focus_res = int(row['mut_res'])
+            ##motif_dict = {focus_res:row['wt_restype']}
+            if constrain == 'constrained':
+                cst = True
+            else:
+                cst = False
 
-
-    #if not os.path.exists(outdir + '/aligned/'):
-    #    os.mkdir(outdir + '/aligned/')
-    ##aligner.mobile.dump_scored_pdb(outdir + '/aligned/' + wt_pdbid +
-    #        '_' + str(task_num) + '.pdb', default_sfxn)
-    #aligner.target.dump_scored_pdb(outdir + '/aligned/' + mut_pdbid +
-    #        '_' + str(task_num) + '.pdb', default_sfxn)
-
-    out_dict['pre_rmsd'] = mut_pair.aligner.bb_rmsd
-    out_dict['pre_dist'] = distance_rosetta(mut_pair.aligner.target,
-            focus.target,
-            mut_pair.aligner.mobile, focus.mobile)
-    out_dict['mover'] = mover
+            designable, repackable, task_factory, mut_pair = \
+                    prepare_pdbids_for_modeling(wt_pdbid, mut_pdbid, [focus],
+                            constrain=cst)
 
 
-    if mover == 'ngk':
-        modeler = get_loop_modeler(mut_pair.aligner.target, designable, repackable,
-                focus.target, task_factory=task_factory, fast=False,
-                mover='ngk', resbuffer=4)
-    elif mover == 'ngkf':
-        modeler = get_loop_modeler(mut_pair.aligner.target, designable, repackable,
-                focus.target, task_factory=task_factory, fast=True,
-                mover='ngk', resbuffer=4)
-    elif mover == 'fastdesign':
-        modeler = fast_design(mut_pair.aligner.target, designable, repackable,
-                task_factory=task_factory)    
+            #if not os.path.exists(outdir + '/aligned/'):
+            #    os.mkdir(outdir + '/aligned/')
+            ##aligner.mobile.dump_scored_pdb(outdir + '/aligned/' + wt_pdbid +
+            #        '_' + str(task_num) + '.pdb', default_sfxn)
+            #aligner.target.dump_scored_pdb(outdir + '/aligned/' + mut_pdbid +
+            #        '_' + str(task_num) + '.pdb', default_sfxn)
+
+            out_dict['pre_rmsd'] = mut_pair.aligner.bb_rmsd
+            out_dict['pre_dist'] = distance_rosetta(mut_pair.aligner.target,
+                    focus.target,
+                    mut_pair.aligner.mobile, focus.mobile)
+            out_dict['mover'] = mover
 
 
-    start_time = time.time()
-    modeler.apply(mut_pair.aligner.target)
-    elapsed = time.time() - start_time
-    out_dict['elapsed_time'] = elapsed
-    mut_pair.aligner.target.remove_constraints()
+            if mover == 'ngk':
+                modeler = get_loop_modeler(mut_pair.aligner.target, designable, repackable,
+                        focus.target, task_factory=task_factory, fast=False,
+                        mover='ngk', resbuffer=4)
+            elif mover == 'ngkf':
+                modeler = get_loop_modeler(mut_pair.aligner.target, designable, repackable,
+                        focus.target, task_factory=task_factory, fast=True,
+                        mover='ngk', resbuffer=4)
+            elif mover == 'fastdesign':
+                modeler = fast_design(mut_pair.aligner.target, designable, repackable,
+                        task_factory=task_factory)    
 
-    mut_pair.aligner.match_align()
-    out_dict['post_rmsd'] = mut_pair.aligner.bb_rmsd
-    out_dict['post_dist'] = distance_rosetta(mut_pair.aligner.target,
-        focus.target, mut_pair.aligner.mobile, focus.mobile)
-    out_dict['post_score'] = default_sfxn(mut_pair.aligner.target)
 
-    #aligner.target.dump_scored_pdb(outdir + '/ngk/' + mut_pdbid +
-    #        '_' + str(task_num) + '_ngk.pdb', default_sfxn)
-    pdb_path = os.path.join(outdir, wt_pdbid + '_' + mut_pdbid + '_' +
-            str(task_num) + '_' + mover + '.pdb.gz')
-    out_dict['path'] = pdb_path
-    mut_pair.aligner.target.dump_scored_pdb(pdb_path, default_sfxn)
-    
-    relaxer = fast_relax(mut_pair.aligner.target, designable, repackable,
-            selectors=True)
-    relaxer.apply(mut_pair.aligner.target)
+            start_time = time.time()
+            modeler.apply(mut_pair.aligner.target)
+            elapsed = time.time() - start_time
+            out_dict['elapsed_time'] = elapsed
+            mut_pair.aligner.target.remove_constraints()
 
-    mut_pair.aligner.match_align()
-    out_dict['post_rmsd_relaxed'] = mut_pair.aligner.bb_rmsd
-    out_dict['post_dist_relaxed'] = distance_rosetta(mut_pair.aligner.target,
-        focus.target, mut_pair.aligner.mobile, focus.mobile)
+            mut_pair.aligner.match_align()
+            out_dict['post_rmsd'] = mut_pair.aligner.bb_rmsd
+            out_dict['post_dist'] = distance_rosetta(mut_pair.aligner.target,
+                focus.target, mut_pair.aligner.mobile, focus.mobile)
+            out_dict['post_score'] = default_sfxn(mut_pair.aligner.target)
 
-    pdb_path_rel = os.path.join(outdir, wt_pdbid + '_' + mut_pdbid + '_' +
-            str(task_num) + '_' + mover + '_relaxed.pdb')
-    out_dict['path_relaxed'] = pdb_path_rel
-    mut_pair.aligner.target.dump_scored_pdb(pdb_path, default_sfxn)
-    out_dict['final_score'] = default_sfxn(mut_pair.aligner.target)
-    print(default_sfxn(mut_pair.aligner.target))
-    print(out_dict)
-    with open(outdir + '/results_task_' + str(task_num) + '.pkl', 'wb') as f:
-        pickle.dump(out_dict, f)
+            #aligner.target.dump_scored_pdb(outdir + '/ngk/' + mut_pdbid +
+            #        '_' + str(task_num) + '_ngk.pdb', default_sfxn)
+            pdb_path = os.path.join(outdir_temp, wt_pdbid + '_' + mut_pdbid + '_' +
+                    str(jobnum) + '_' + mover + '.pdb.gz')
+            out_dict['path'] = pdb_path
+            mut_pair.aligner.target.dump_scored_pdb(pdb_path, default_sfxn)
+            
+            relaxer = fast_relax(mut_pair.aligner.target, designable, repackable,
+                    selectors=True)
+            relaxer.apply(mut_pair.aligner.target)
 
-    annotate_pdb(pdb_path, out_dict)
-    annotate_pdb(pdb_path_rel, out_dict)
+            mut_pair.aligner.match_align()
+            out_dict['post_rmsd_relaxed'] = mut_pair.aligner.bb_rmsd
+            out_dict['post_dist_relaxed'] = distance_rosetta(mut_pair.aligner.target,
+                focus.target, mut_pair.aligner.mobile, focus.mobile)
+
+            pdb_path_rel = os.path.join(outdir_temp, wt_pdbid + '_' + mut_pdbid + '_' +
+                    str(jobnum) + '_' + mover + '_relaxed.pdb.gz')
+            out_dict['path_relaxed'] = pdb_path_rel
+            mut_pair.aligner.target.dump_scored_pdb(pdb_path_rel, default_sfxn)
+            out_dict['final_score'] = default_sfxn(mut_pair.aligner.target)
+            print(default_sfxn(mut_pair.aligner.target))
+            print(out_dict)
+            with open(outdir_temp + '/results_' + str(jobnum) + '.pkl', 'wb') as f:
+                pickle.dump(out_dict, f)
+
+            annotate_pdb(pdb_path, out_dict)
+            annotate_pdb(pdb_path_rel, out_dict)
+        except:
+            with open(os.path.join(outdir_temp, 'errors.txt'),'a') as f:
+                f.write('Job number ' + str(jobnum) + ' failed \n')
+
+    finish_io(outdir_temp, outdir_final)
