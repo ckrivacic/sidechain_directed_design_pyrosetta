@@ -86,7 +86,7 @@ def pose_from_pdbredo(pdbid, prefix):
 
 
 def prepare_pdbids_for_modeling(wt_pdbid, mut_pdbid, focus_mismatch_list,
-        prefix='/netapp/home/krivacic/pdb_redo', constrain=True, shell=6.0):
+        prefix='/wynton/home/kortemme/krivacic/pdb_redo', constrain=True, shell=6.0):
     '''
     Update info below.
 

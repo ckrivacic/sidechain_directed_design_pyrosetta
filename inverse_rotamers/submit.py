@@ -38,15 +38,19 @@ def submit(alignments, **params):
     max_runtime = params.get('max_runtime','12:00:00')
     max_memory = params.get('max_memory','4G')
 
+    python = '/wynton/home/kortemme/krivacic/software/anaconda3/bin/python'
     script_path = os.path.expanduser('~/intelligent_design/sidechain_directed_design_pyrosetta/inverse_rotamers/test_movers.py')
 
     qsub_command = 'qsub', '-h', '-cwd',
+    qsub_command += '-b',
+    qsub_command += 'y',
     qsub_command += '-o', output_directory,
     #qsub_command += '-e', error_directory,
     qsub_command += '-j', 'y',
     qsub_command += '-t', '1-{0}'.format(num_tasks),
     qsub_command += '-l', 'h_rt={0}'.format(max_runtime),
     qsub_command += '-l', 'mem_free={0}'.format(max_memory),
+    #qsub_command += python,
     qsub_command += script_path,
     qsub_command += csv_path,
     qsub_command += outdir,

@@ -1,9 +1,9 @@
-#$ -S /netapp/home/krivacic/.python36/bin/python3
+#! /wynton/home/kortemme/krivacic/software/anaconda3/bin/python3
+##$ -S /wynton/home/kortemme/krivacic/software/python38/bin/python3
 #$ -l mem_free=4G
 #$ -cwd
 import sys
-sys.path.insert(1,
-        '/netapp/home/krivacic/intelligent_design/sidechain_directed_design_pyrosetta/inverse_rotamers/')
+sys.path.insert(1, "/wynton/home/kortemme/krivacic/intelligent_design/sidechain_directed_design_pyrosetta/inverse_rotamers/")
 from benchmark_utils import *
 from align import Mismatch
 from utils import distance_rosetta
@@ -19,9 +19,12 @@ Usage:
 '''
 def smart_open(path, options):
     try:
-        if path.endswith('.gz'): return gzip.open(path, options)
-        else: return open(path, options)
-
+        if path.endswith('.gz'): 
+            return gzip.open(path, options)
+        else: 
+            return open(path, options)
+    except:
+        print('could not open file')
 
 def annotate_pdb(pdb_path, out_dict):
     f = open(pdb_path, 'a')
@@ -45,7 +48,7 @@ def import_backrub_dataframe(path):
 
 
 if __name__=='__main__':
-    pdbredo_directory = '/netapp/home/krivacic/pdb_redo'
+    pdbredo_directory = '/wynton/home/kortemme/krivacic/pdb_redo'
     shell=6
     task_num = int(os.environ['SGE_TASK_ID']) - 0
     #task_num = 0 # make sure to subtract 1 from SGE TASK ID for the real thing
