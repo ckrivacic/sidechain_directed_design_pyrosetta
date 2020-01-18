@@ -50,8 +50,8 @@ def import_backrub_dataframe(path):
 if __name__=='__main__':
     pdbredo_directory = '/wynton/home/kortemme/krivacic/pdb_redo'
     shell=6
-    #task_num = int(os.environ['SGE_TASK_ID']) - 1
-    task_num = 0 # make sure to subtract 1 from SGE TASK ID for the real thing
+    task_num = int(os.environ['SGE_TASK_ID']) - 1
+    #task_num = 0 # make sure to subtract 1 from SGE TASK ID for the real thing
     num_models = 200
 
     mover = sys.argv[3]
