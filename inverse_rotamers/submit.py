@@ -55,7 +55,7 @@ def submit(alignments, **params):
     qsub_command += csv_path,
     qsub_command += outdir,
     qsub_command += mover,
-    qsub_command += submit_num,
+    #qsub_command += submit_num,
     qsub_command += backrub,
     print(qsub_command)
 
