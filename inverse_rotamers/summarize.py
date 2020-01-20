@@ -28,9 +28,12 @@ def summarize(input_dir, summary='mean'):
                 folder = os.path.join(curr_dir, cst)
 
                 for filename in glob.glob(folder + '/results*'):
-                    with open(filename, 'rb') as f:
-                        data = pickle.load(f)
-                    data_list.append(data)
+                    try:
+                        with open(filename, 'rb') as f:
+                            data = pickle.load(f)
+                        data_list.append(data)
+                    except:
+                        print(filename)
 
                 df = pd.DataFrame(data_list)
                 avgs_dict = {}
