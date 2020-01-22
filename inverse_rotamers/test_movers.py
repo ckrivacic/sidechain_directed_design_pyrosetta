@@ -106,6 +106,8 @@ if __name__=='__main__':
         focus = Mismatch(int(row['mut_res']), int(row['wt_res']))
     #mut_pair = MutantPair(mut_pose, wt_pose, [focus], shell=shell)
 
+    output_data = []
+
     for jobnum in range(0, num_models):
 
         try:
@@ -185,13 +187,16 @@ if __name__=='__main__':
             out_dict['final_score'] = default_sfxn(mut_pair.aligner.target)
             print(default_sfxn(mut_pair.aligner.target))
             print(out_dict)
-            with open(outdir_temp + '/results_' + str(jobnum) + '.pkl', 'wb') as f:
-                pickle.dump(out_dict, f)
+            #with open(outdir_temp + '/results_' + str(jobnum) + '.pkl', 'wb') as f:
+            #    pickle.dump(out_dict, f)
+            output_data.append(out_dict)
 
             annotate_pdb(pdb_path, out_dict)
             annotate_pdb(pdb_path_rel, out_dict)
         except:
             with open(os.path.join(outdir_temp, 'errors.txt'),'a') as f:
                 f.write('Job number ' + str(jobnum) + ' failed \n')
-
+    df_out = pd.DataFrame(out_dict)
+    with open(outdir_temp + '/results.pkl', 'wb') as f:
+        pickle.dump(df_out, f)
     finish_io(outdir_temp, outdir_final)
