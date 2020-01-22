@@ -134,6 +134,7 @@ if __name__=='__main__':
                     focus.target,
                     mut_pair.aligner.mobile, focus.mobile)
             out_dict['mover'] = mover
+            out_dict['decoy_number'] = jobnum
 
 
             if mover == 'ngk':
