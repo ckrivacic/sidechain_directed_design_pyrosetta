@@ -230,7 +230,7 @@ class MutantPair(object):
 
 def finish_io(temp, final):
     from shutil import copyfile
-    cmd = 'tar -czvf ' + os.path.join(temp, 'out.tar.gz') + ' --directory=' + temp + ' .'
+    cmd = 'tar -czvf ' + os.path.join(temp, 'pdbs.tar.gz') + ' --directory=' + temp + ' .'
     print('RUNNING COMMAND ' + cmd)
     os.system(cmd)
     if not os.path.exists(final):

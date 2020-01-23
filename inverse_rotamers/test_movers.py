@@ -52,7 +52,7 @@ if __name__=='__main__':
     shell=6
     task_num = int(os.environ['SGE_TASK_ID']) - 1
     #task_num = 0 # make sure to subtract 1 from SGE TASK ID for the real thing
-    num_models = 200
+    num_models = 150
 
     mover = sys.argv[3]
 
@@ -197,6 +197,6 @@ if __name__=='__main__':
             with open(os.path.join(outdir_temp, 'errors.txt'),'a') as f:
                 f.write('Job number ' + str(jobnum) + ' failed \n')
     df_out = pd.DataFrame(out_dict)
-    with open(outdir_temp + '/results.pkl', 'wb') as f:
+    with open(outdir_final + '/results.pkl', 'wb') as f:
         pickle.dump(df_out, f)
     finish_io(outdir_temp, outdir_final)
