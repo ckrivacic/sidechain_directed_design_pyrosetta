@@ -11,6 +11,7 @@ from inverse_rotamers import *
 import time, re, os, pickle
 import pandas as pd
 import gzip
+import copy.deepcopy
 
 '''
 Please put path to pdbredo as $PDBREDO in your bashrc
@@ -93,8 +94,16 @@ if __name__=='__main__':
     if not os.path.exists(outdir_temp):
         os.makedirs(outdir_temp, exist_ok=True)
 
-    wt_pose = pose_from_pdbredo(wt_pdbid, pdbredo_directory)
-    mut_pose = pose_from_pdbredo(mut_pdbid, pdbredo_directory)
+    # Try to get poses from pdbredo, otherwise download from rcsb.
+    try:
+        wt_pose = pose_from_pdbredo(wt_pdbid, pdbredo_directory)
+    except:
+        wt_pose = pose_from_rcsb(wt_pdbid, os_tmp)
+
+    try:
+        mut_pose = pose_from_pdbredo(mut_pdbid, pdbredo_directory)
+    except:
+        mut_pose = pose_from_rcsb(mut_pdbid, os_tmp)
 
     if backrub:
         wtfocus = wt_pose.pdb_info().pdb2pose(row['wt_chain'],
@@ -111,7 +120,7 @@ if __name__=='__main__':
     for jobnum in range(0, num_models):
 
         try:
-            out_dict = row.to_dict()
+            out_dict = deepcopy(row.to_dict())
             ##focus_res = int(row['mut_res'])
             ##motif_dict = {focus_res:row['wt_restype']}
             if constrain == 'constrained':
@@ -196,7 +205,8 @@ if __name__=='__main__':
         except:
             with open(os.path.join(outdir_temp, 'errors.txt'),'a') as f:
                 f.write('Job number ' + str(jobnum) + ' failed \n')
-    df_out = pd.DataFrame(out_dict)
+    df_out = pd.DataFrame.from_records(output_data)
+    print(df_out)
     with open(outdir_final + '/results.pkl', 'wb') as f:
         pickle.dump(df_out, f)
     finish_io(outdir_temp, outdir_final)

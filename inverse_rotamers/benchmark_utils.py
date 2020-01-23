@@ -65,7 +65,7 @@ def pose_from_rcsb(pdbid, prefix=None):
         path = prefix + '/' + pdbid
     else:
         path = pdbid
-    if not os.path.exists(path):
+    if not os.path.exists(path + '.pdb'):
         url = 'https://files.rcsb.org/download/' + pdbid + '.pdb'
         wget.download(url, path + '.pdb')
     pyrosetta.toolbox.cleanATOM(path + '.pdb')
@@ -97,10 +97,23 @@ def prepare_pdbids_for_modeling(wt_pdbid, mut_pdbid, focus_mismatch_list,
     #Ex:
     #{4:'E',5:'V'}
     '''
-    wt_pose = pose_from_pdbredo(wt_pdbid,
-            prefix=prefix)
-    mut_pose = pose_from_pdbredo(mut_pdbid,
-            prefix=prefix)
+    try:
+        wt_pose = pose_from_pdbredo(wt_pdbid,
+                prefix=prefix)
+    except:
+        if 'TMPDIR' in os.environ:
+            wt_pose = pose_from_rcsb(wt_pdbid, prefix=os.environ['TMPDIR'])
+        else:
+            wt_pose = pose_from_rcsb(wt_pdbid, prefix=os.environ['USER'])
+    try:
+        mut_pose = pose_from_pdbredo(mut_pdbid,
+                prefix=prefix)
+    except:
+        if 'TMPDIR' in os.environ:
+            mut_pose = pose_from_rcsb(mut_pdbid, prefix=os.environ['TMPDIR'])
+        else:
+            mut_pose = pose_from_rcsb(mut_pdbid, prefix=os.environ['USER'])
+
     mut_pair = MutantPair(mut_pose, wt_pose, focus_mismatch_list, shell=shell,
             cst=constrain)
 
@@ -235,7 +248,7 @@ def finish_io(temp, final):
     os.system(cmd)
     if not os.path.exists(final):
         os.makedirs(final, exist_ok=True)
-    copyfile(os.path.join(temp,'out.tar.gz'),
-            os.path.join(final,'out.tar.gz'))
+    copyfile(os.path.join(temp,'pdbs.tar.gz'),
+            os.path.join(final,'pdbs.tar.gz'))
 # For testing use the following command
 # stuff = prepare_pdbids_for_modeling('8cho','1qj4',mm, prefix='/home/ckrivacic/pdb-redo')
