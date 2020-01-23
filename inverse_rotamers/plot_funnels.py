@@ -14,8 +14,8 @@ if __name__=='__main__':
     directory = sys.argv[1]
     true = directory + '/constrained'
     false = directory + '/unconstrained'
-    outdir = sys.argv[2]
-    relaxed = sys.argv[3]
+    #outdir = sys.argv[2]
+    relaxed = sys.argv[2]
     if relaxed == 'y':
         cols = ['post_dist_relaxed','post_rmsd_relaxed']
     elif relaxed == 'n':
@@ -36,8 +36,10 @@ if __name__=='__main__':
             data_uncst.append(pickle.load(f))
             f.close()
 
-        df_cst = pd.DataFrame(data_cst)
-        df_uncst = pd.DataFrame(data_uncst)
+        with open(true + '/results.pkl', 'rb') as f:
+            df_cst = pickle.load(f)
+        with open(false + '/results.pkl', 'rb') as f:
+            df_uncst = pickle.load(f)
         #print(df_cst)
         #print(df_uncst)
 
