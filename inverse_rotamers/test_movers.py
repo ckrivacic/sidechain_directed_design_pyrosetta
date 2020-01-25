@@ -11,7 +11,7 @@ from inverse_rotamers import *
 import time, re, os, pickle
 import pandas as pd
 import gzip
-import copy.deepcopy
+from copy import deepcopy
 
 '''
 Please put path to pdbredo as $PDBREDO in your bashrc
