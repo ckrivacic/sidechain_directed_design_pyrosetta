@@ -156,6 +156,11 @@ if __name__=='__main__':
                 modeler = get_loop_modeler(mut_pair.aligner.target, designable, repackable,
                         focus.target, task_factory=task_factory, fast=True,
                         mover='ngk', resbuffer=4)
+            elif mover == 'lhk':
+                modeler = get_loop_modeler(mut_pair.aligner.target,
+                        designable, repackable, focus.target,
+                        task_factory=task_factory, fast=False,
+                        mover='lhk', resbuffer=4)
             elif mover == 'fastdesign':
                 modeler = fast_design(mut_pair.aligner.target, designable, repackable,
                         task_factory=task_factory)    
