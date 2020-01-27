@@ -277,7 +277,6 @@ def get_loop_modeler(pose, designable_selector, repackable_selector,
 
 
     loopmodeler.set_loops(loops)
-    #loopmodeler.set_cen_scorefxn(sfxn)
     loopmodeler.set_fa_scorefxn(sfxn)
 
     if fast:
@@ -287,9 +286,9 @@ def get_loop_modeler(pose, designable_selector, repackable_selector,
     if task_factory:
         loopmodeler.set_task_factory(task_factory)
 
-    #loopmodeler.apply(pose)
-    #pose.dump_file('out.pdb')
     return loopmodeler
+
+
 
 
 '''
