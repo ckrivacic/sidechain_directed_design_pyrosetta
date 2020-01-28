@@ -256,5 +256,39 @@ def distance_rosetta(pose1, res1, pose2, res2):
     return euclidean_distance(xyz1, xyz2)
 
 
+def oneletter_to_threeletter(aa):
+    one_to_three = {
+            'a':'ala', 'r':'arg', 'n':'asn', 'd':'asp', 'c':'cys', 'e':'glu',
+            'q':'gln', 'g':'gly', 'h':'his', 'i':'ile', 'l':'leu', 'k':'lys',
+            'm':'met', 'f':'phe', 'p':'pro', 's':'ser', 't':'thr', 'w':'trp',
+            'y':'tyr', 'v':'val'
+            }
+    return one_to_three[aa.lower()]
+
+
+def chemical_aa_from_oneletter(aa):
+    one_to_three = {
+            'a':rosetta.core.chemical.AA.aa_ala,
+            'r':rosetta.core.chemical.AA.aa_arg,
+            'n':rosetta.core.chemical.AA.aa_asn,
+            'd':rosetta.core.chemical.AA.aa_asp,
+            'c':rosetta.core.chemical.AA.aa_cys,
+            'e':rosetta.core.chemical.AA.aa_glu,
+            'q':rosetta.core.chemical.AA.aa_gln,
+            'g':rosetta.core.chemical.AA.aa_gly,
+            'h':rosetta.core.chemical.AA.aa_his,
+            'i':rosetta.core.chemical.AA.aa_ile,
+            'l':rosetta.core.chemical.AA.aa_leu,
+            'k':rosetta.core.chemical.AA.aa_lys,
+            'm':rosetta.core.chemical.AA.aa_met,
+            'f':rosetta.core.chemical.AA.aa_phe,
+            'p':rosetta.core.chemical.AA.aa_pro,
+            's':rosetta.core.chemical.AA.aa_ser,
+            't':rosetta.core.chemical.AA.aa_thr,
+            'w':rosetta.core.chemical.AA.aa_trp,
+            'y':rosetta.core.chemical.AA.aa_tyr,
+            'v':rosetta.core.chemical.AA.aa_val
+            }
+    return one_to_three[aa.lower()]
 #init('-extrachi_cutoff 0 -ex1 -ex2')
 #test_rotamer_gen("ASP")
