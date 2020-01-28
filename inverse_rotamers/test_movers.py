@@ -132,14 +132,6 @@ if __name__=='__main__':
                     prepare_pdbids_for_modeling(wt_pdbid, mut_pdbid, [focus],
                             constrain=cst)
 
-
-            #if not os.path.exists(outdir + '/aligned/'):
-            #    os.mkdir(outdir + '/aligned/')
-            ##aligner.mobile.dump_scored_pdb(outdir + '/aligned/' + wt_pdbid +
-            #        '_' + str(task_num) + '.pdb', default_sfxn)
-            #aligner.target.dump_scored_pdb(outdir + '/aligned/' + mut_pdbid +
-            #        '_' + str(task_num) + '.pdb', default_sfxn)
-
             out_dict['pre_rmsd'] = mut_pair.aligner.bb_rmsd
             out_dict['pre_dist'] = distance_rosetta(mut_pair.aligner.target,
                     focus.target,
@@ -157,6 +149,11 @@ if __name__=='__main__':
                         focus.target, task_factory=task_factory, fast=True,
                         mover='ngk', resbuffer=4)
             elif mover == 'lhk':
+                for key in mut_pair.motif_dict:
+                    aatype = chemical_aa_from_oneletter(mut_pair.motif_dict[key])
+                    mut_res = rosetta.protocols.simple_moves.MutateResidue(key,
+                            aatype)
+                    mut_res.apply(mut_pair.aligner.target)
                 modeler = get_loop_modeler(mut_pair.aligner.target,
                         designable, repackable, focus.target,
                         task_factory=task_factory, fast=False,
