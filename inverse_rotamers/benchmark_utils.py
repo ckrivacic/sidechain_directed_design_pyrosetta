@@ -247,14 +247,15 @@ class MutantPair(object):
         self.motif_dict_ = motif_dict
 
 
-def finish_io(temp, final):
+def finish_io(temp, final, suffix=''):
     from shutil import copyfile
-    cmd = 'tar -czvf ' + os.path.join(temp, 'pdbs.tar.gz') + ' --directory=' + temp + ' .'
+    pdbfile = 'pdbs_' + suffix + '.tar.gz'
+    cmd = 'tar -czvf ' + os.path.join(temp, pdbfile) + ' --directory=' + temp + ' .'
     print('RUNNING COMMAND ' + cmd)
     os.system(cmd)
     if not os.path.exists(final):
         os.makedirs(final, exist_ok=True)
-    copyfile(os.path.join(temp,'pdbs.tar.gz'),
-            os.path.join(final,'pdbs.tar.gz'))
+    copyfile(os.path.join(temp, pdbfile),
+            os.path.join(final, pdbfile))
 # For testing use the following command
 # stuff = prepare_pdbids_for_modeling('8cho','1qj4',mm, prefix='/home/ckrivacic/pdb-redo')
