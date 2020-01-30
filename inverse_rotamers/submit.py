@@ -30,8 +30,9 @@ def submit(alignments, **params):
     else:
         backrub = ''
     if backrub=='br':
-        num_tasks = file_len(csv_path) * 2
-        #num_tasks = 100 * task_len
+        num_tasks = file_len(csv_path) * 4 # Splitting each row into 2
+        #tasks, one for constrained and one for unconstrained, then those
+        #into 2 to make the task complete on time
     else:
         num_tasks = 14 * 2
 
