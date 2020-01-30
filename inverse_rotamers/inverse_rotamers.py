@@ -289,20 +289,60 @@ def get_loop_modeler(pose, designable_selector, repackable_selector,
     return loopmodeler
 
 
+def get_backrub_protocol(motif_dict, shell=6, kt=1.6, ntrials=100,
+        recover_low='true', stride=100, task_factory = None):
 
+    focus_list = []
+    for key in motif_dict:
+        focus_list.append(str(key))
+    focus = ','.join(focus_list)
+    rs = rosetta.protocols.rosetta_scripts.XmlObjects.create_from_string(
+    '''
+    <RESIDUE_SELECTORS>
+        <Index name="focus_residues" resnums="{focus}"/>
+        <Neighborhood name="neighbors" selector="focus_residues"
+        distance="{shell}"/>
+    </RESIDUE_SELECTORS>
+    <MOVERS>
+        <MinMover name="minimize" chi="1" bb="1"
+        type="lbfgs_armijo_nonmonotone" tolerance="0.000001" max_iter="1000"/>
 
-'''
-cst_test = ConstrainToInvRot()
-rotamer_set = cst_test.create_inverse_rotamers('GLU')
-cst_test.choose_rotamer()
-cst_test.make_constraints_from_inverse_rotamer()
+        <BackrubProtocol name="backrub"
+                mc_kt="{kt}"
+                ntrials="{ntrials}" trajectory="false" trajectory_gz="false"
+                recover_low="{recover_low}" pivot_residue_selector="neighbors"
+                trajectory_apply_mover="minimize"
+                trajectory_stride="{stride}" />
+    </MOVERS>
+    '''.format(
+        focus=focus,
+        shell=shell,
+        kt=kt,
+        ntrials=ntrials,
+        recover_low=recover_low,
+        stride=stride
+        )
+    )
+    minimizer = rs.get_mover('minimize')
+    sfxn = create_score_function('ref2015_cst')
+    minimizer.score_function(sfxn)
+    backrub = rs.get_mover('backrub')
+    if task_factory:
+        backrub.set_taskfactory(task_factory)
+    backrub.set_scorefunction(sfxn)
 
-designable, repackable = choose_designable_residues(cst_test.pose, [38])
-task_factory = setup_task_factory(cst_test.pose, designable, repackable,
-        motif_dict={38:'E'},layered_design=False, prepare_focus=True)
+    return backrub
+#cst_test = ConstrainToInvRot()
+#rotamer_set = cst_test.create_inverse_rotamers('GLU')
+#cst_test.choose_rotamer()
+#cst_test.make_constraints_from_inverse_rotamer()
 
-bb_movable = [i for i in range(1,cst_test.pose.size() + 1)]
-sc_movable = []
+#designable, repackable = choose_designable_residues(cst_test.pose, [38])
+#task_factory = setup_task_factory(cst_test.pose, designable, repackable,
+#        motif_dict={38:'E'},layered_design=False, prepare_focus=True)
+
+#bb_movable = [i for i in range(1,cst_test.pose.size() + 1)]
+#sc_movable = []
 #fast_relax(cst_test.pose, bb_movable, sc_movable, selectors=False)
 #print(cst_test.pose.constraint_set())
 #print(designable)
@@ -310,10 +350,9 @@ sc_movable = []
 #fast_design(cst_test.pose, designable, repackable, task_factory=task_factory)
 
 
-model_loops(cst_test.pose, designable, repackable, 38,
-        task_factory=task_factory, 
-        fast=True, mover='lhk', resbuffer=4)
+#model_loops(cst_test.pose, designable, repackable, 38,
+#        task_factory=task_factory, 
+#        fast=True, mover='lhk', resbuffer=4)
 
 #lhk = lhk_xml(task_factory)
 #lhk.apply(cst_test.pose)
-'''
