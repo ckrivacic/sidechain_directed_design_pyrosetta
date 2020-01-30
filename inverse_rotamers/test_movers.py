@@ -98,12 +98,12 @@ if __name__=='__main__':
     try:
         wt_pose = pose_from_pdbredo(wt_pdbid, pdbredo_directory)
     except:
-        wt_pose = pose_from_pdb(wt_pdbid)
+        wt_pose = pose_from_netapp_pdb(wt_pdbid)
 
     try:
         mut_pose = pose_from_pdbredo(mut_pdbid, pdbredo_directory)
     except:
-        mut_pose = pose_from_pdb(mut_pdbid)
+        mut_pose = pose_from_netapp_pdb(mut_pdbid)
 
     if backrub:
         wtfocus = wt_pose.pdb_info().pdb2pose(row['wt_chain'],

@@ -73,7 +73,7 @@ def pose_from_rcsb(pdbid, prefix=None):
 
     return pose
 
-def pose_from_pdb(pdbid, prefix='/netapp/database/pdb/remediated/mmCIF/'):
+def pose_from_netapp_pdb(pdbid, prefix='/netapp/database/pdb/remediated/mmCIF/'):
     path = os.path.join(prefix, pdbid[1:3], pdbid + '.cif.gz')
     print('opening file ' + path)
     pose = pose_from_file(path)
