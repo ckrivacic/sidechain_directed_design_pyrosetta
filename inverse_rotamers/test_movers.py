@@ -163,7 +163,8 @@ if __name__=='__main__':
                         task_factory=task_factory)    
             elif mover == 'br':
                 modeler = get_backrub_protocol(mut_pair.motif_dict,
-                        shell=shell, kt=1.6, task_factory=task_factory)
+                        shell=shell, kt=1.6, task_factory=task_factory,
+                        ntrials=10000, stride=10000)
 
 
             start_time = time.time()
