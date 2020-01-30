@@ -23,11 +23,21 @@ class Alignment(object):
     def set_target_sequence(self):
         """Take list of residue numbers and return a sequence"""
         self.target_sequence = ''
+        target_residues = []
+        if len(self.target_residues) < 1:
+            for i in range(0, self.target.size()):
+                target_residues.append(i+1)
+            self.target_residues = target_residues
         for resnum in self.target_residues:
             self.target_sequence += self.target.sequence(resnum, resnum)
 
     def set_mobile_sequence(self):
         self.mobile_sequence = ''
+        mobile_residues = []
+        if len(self.mobile_residues) < 1:
+            for i in range(0, self.mobile.size()):
+                mobile_residues.append(i+1)
+            self.mobile_residues = mobile_residues
         for resnum in self.mobile_residues:
             self.mobile_sequence += self.mobile.sequence(resnum, resnum)
 
