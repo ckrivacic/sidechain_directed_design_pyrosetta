@@ -161,6 +161,9 @@ if __name__=='__main__':
             elif mover == 'fastdesign':
                 modeler = fast_design(mut_pair.aligner.target, designable, repackable,
                         task_factory=task_factory)    
+            elif mover == 'br':
+                modeler = get_backrub_protocol(mut_pair.motif_dict,
+                        shell=shell, kt=1.6, task_factory=task_factory)
 
 
             start_time = time.time()
