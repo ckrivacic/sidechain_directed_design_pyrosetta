@@ -53,13 +53,13 @@ if __name__=='__main__':
     shell=6
     task_num = int(os.environ['SGE_TASK_ID']) - 1
     #task_num = 0 # make sure to subtract 1 from SGE TASK ID for the real thing
-    num_models = 150
+    num_models = 75
 
     mover = sys.argv[3]
 
     #offset = (int(sys.argv[4]) - 1) * num_models * 100
     #task_num += offset
-    row_num = task_num//2
+    row_num = task_num//4
 
     # backrub variable tells us if we're reading from the backrub
     # benchmark dataframe, NOT whether we're using the backrub mover
@@ -98,12 +98,12 @@ if __name__=='__main__':
     try:
         wt_pose = pose_from_pdbredo(wt_pdbid, pdbredo_directory)
     except:
-        wt_pose = pose_from_pdb(wt_pdbid, os_tmp)
+        wt_pose = pose_from_pdb(wt_pdbid)
 
     try:
         mut_pose = pose_from_pdbredo(mut_pdbid, pdbredo_directory)
     except:
-        mut_pose = pose_from_pdb(mut_pdbid, os_tmp)
+        mut_pose = pose_from_pdb(mut_pdbid)
 
     if backrub:
         wtfocus = wt_pose.pdb_info().pdb2pose(row['wt_chain'],
@@ -213,6 +213,6 @@ if __name__=='__main__':
                 f.write('Job number ' + str(jobnum) + ' failed \n')
     df_out = pd.DataFrame.from_records(output_data)
     print(df_out)
-    with open(outdir_final + '/results.pkl', 'wb') as f:
+    with open(outdir_final + '/results_' + str(task_num%4) + '.pkl', 'wb') as f:
         pickle.dump(df_out, f)
     finish_io(outdir_temp, outdir_final)
