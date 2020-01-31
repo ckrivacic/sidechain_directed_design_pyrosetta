@@ -28,8 +28,9 @@ def summarize(input_dir, summary='mean'):
                 folder = os.path.join(curr_dir, cst)
 
                 #df = pd.DataFrame(data_list)
-                if os.path.exists(folder + '/results.pkl'):
-                    with open(folder + '/results.pkl', 'rb') as f:
+                #if os.path.exists(folder + '/results.pkl'):
+                for filename in glob.glob(folder + '/results*'):
+                    with open(filename, 'rb') as f:
                         df = pickle.load(f)
 
                     avgs_dict = {}
