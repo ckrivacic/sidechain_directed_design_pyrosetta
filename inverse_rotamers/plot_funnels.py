@@ -36,10 +36,20 @@ if __name__=='__main__':
             data_uncst.append(pickle.load(f))
             f.close()
 
-        with open(true + '/results.pkl', 'rb') as f:
-            df_cst = pickle.load(f)
-        with open(false + '/results.pkl', 'rb') as f:
-            df_uncst = pickle.load(f)
+        cst_list = []
+        for filename in glob.glob(true + '/results*.pkl'):
+            with open(filename, 'rb') as f:
+                df = pickle.load(f)
+                cst_list.append(df)
+        df_cst = pd.concat(cst_list)
+
+        uncst_list = []
+        for filename in glob.glob(false + '/results*.pkl'):
+            with open(filename, 'rb') as f:
+                df = pickle.load(f)
+                uncst_list.append(df)
+        df_uncst = pd.concat(uncst_list)
+
         #print(df_cst)
         #print(df_uncst)
 
@@ -114,12 +124,16 @@ if __name__=='__main__':
                         ax.scatter(x, y, label=group, zorder=order, picker=True)
 
                     if by=='post_dist_relaxed' or by=='post_dist':
-                        pre_dist = df_cst[(df_cst['mutant'] == mut) &
-                            (df_cst['wt'] == wt)]['pre_dist']
-                        ax.axvline(pre_dist[0])
+                        #pre_dist = df_cst[(df_cst['mutant'] == mut) &
+                        #    (df_cst['wt'] == wt)]['pre_dist']
+                        #ax.axvline(pre_dist[0])
+                        pre_dist = df['pre_dist'][0]
+                        ax.axvline(pre_dist)
                     elif by=='post_rmsd_relaxed' or by=='post_rmsd':
-                        ax.axvline(df_cst[(df_cst['mutant'] == mut) &
-                            (df_cst['wt'] == wt)]['pre_rmsd'][0])
+                        #ax.axvline(df_cst[(df_cst['mutant'] == mut) &
+                        #    (df_cst['wt'] == wt)]['pre_rmsd'][0])
+                        pre_rmsd = df['pre_rmsd'][0]
+                        ax.axvline(pre_rmsd)
                     
                     plt.legend(loc=1)
                     plt.xlabel(by)

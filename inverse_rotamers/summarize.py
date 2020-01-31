@@ -140,8 +140,10 @@ if __name__ == '__main__':
         #cmd = 'show_my_designs ' + path + '/*' # Need pdb files
 
         relaxed_str = 'y' if relaxed else 'n'
-        cmd = 'python3.7 ' +\
-        os.environ['HOME'] + '/intelligent_design/sidechain_directed_design/inverse_rotamers/plot_funnels.py '\
+        #cmd = 'python3.7 ' +\
+        #os.environ['HOME'] + '/intelligent_design/sidechain_directed_design/inverse_rotamers/plot_funnels.py '\
+        cmd = 'python3.8 ' +\
+        os.environ['HOME'] + '/intelligent_design/sidechain_directed_design_pyrosetta/inverse_rotamers/plot_funnels.py '\
         + path + ' ' + relaxed_str
 
         os.system(cmd)
