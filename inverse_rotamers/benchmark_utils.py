@@ -17,7 +17,7 @@ from align import Alignment
 from inverse_rotamers import *
 
 
-def constraints_from_pose(reference_pose, res_dict):
+def constraints_from_pose(reference_pose, target_pose, res_dict):
     """
     Make constraints from a pose given the resnum and list of atoms.
     res_dict should have the following structure:
@@ -31,10 +31,10 @@ def constraints_from_pose(reference_pose, res_dict):
     coordinate_constraints = []
     for resi in res_dict:
         for atom in res_dict[resi]:
-            xyzV = reference_pose.residue(resi).xyz(atom) 
+            xyzV = reference_pose.residue(resi[0]).xyz(atom)
             fixed_pt = reference_pose.atom_tree().root().atom_id()
-            atomno = reference_pose.residue(resi).atom_index(atom)
-            atom_id = rosetta.core.id.AtomID(atomno, resi)
+            atomno = target_pose.residue(resi[1]).atom_index(atom)
+            atom_id = rosetta.core.id.AtomID(atomno, resi[1])
             coordinate_constraint = \
                     rosetta.core.scoring.constraints.CoordinateConstraint(\
                     atom_id, fixed_pt, xyzV, func
@@ -51,9 +51,10 @@ def constrain_mutant_to_wt(mutant_pose, wt_pose, mut_focus_residues,
     aligner.match_align()
     if constrain:
         alignment_dict = {}
-        for focus_residue in mut_focus_residues:
-            alignment_dict[focus_residue] = ['N','C','CA']
-        csts = constraints_from_pose(aligner.mobile, alignment_dict)
+        assert(len(mut_focus_residues) == len(wt_focus_residues))
+        for i in range(0, len(mut_focus_residues)):
+            alignment_dict[(wt_focus_residues[i],mut_focus_residues[i])] = ['N','C','CA']
+        csts = constraints_from_pose(aligner.mobile, aligner.target, alignment_dict)
         for cst in csts:
             aligner.target.add_constraint(cst)
 
@@ -114,8 +115,8 @@ def prepare_pdbids_for_modeling(wt_pdbid, mut_pdbid, focus_mismatch_list,
     except:
         mut_pose = pose_from_netapp_pdb(mut_pdbid)
 
-    mut_pair = MutantPair(mut_pose, wt_pose, focus_mismatch_list, shell=shell,
-            cst=constrain)
+    mut_pair = MutantPair(mut_pose, wt_pose, focus_mismatch_list, 
+            shell=shell, cst=constrain)
 
     focus_list = [x.target for x in focus_mismatch_list]
     designable, repackable = choose_designable_residues(mut_pair.mut.pose,
@@ -206,7 +207,6 @@ class MutantPair(object):
             wt_res_type = self.wt_.pose.residue(mismatch.mobile).name1()
             motif_dict[mismatch.target] = str(wt_res_type)
         self.motif_dict_ = motif_dict
-
 
     @property
     def mut(self):
