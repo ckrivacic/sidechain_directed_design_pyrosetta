@@ -52,7 +52,7 @@ if __name__=='__main__':
     pdbredo_directory = '/wynton/home/kortemme/krivacic/pdb_redo'
     shell=6
     task_num = int(os.environ['SGE_TASK_ID']) - 1
-    #task_num = 0 # make sure to subtract 1 from SGE TASK ID for the real thing
+    #task_num = 881*4 # make sure to subtract 1 from SGE TASK ID for the real thing
     num_models = 100
 
     mover = sys.argv[3]
@@ -80,6 +80,13 @@ if __name__=='__main__':
     default_sfxn = create_score_function('ref2015')
     wt_pdbid = row['wt'].lower()
     mut_pdbid = row['mutant'].lower()
+    print('-----------------------------------')
+    print('COMPARING THE FOLLOWING 2 PDBIDs:')
+    print(wt_pdbid)
+    print(mut_pdbid)
+    print('TASK NUMBER IS ' + str(task_num))
+    print('ROW NUMBER IS ' + str(row_num))
+    print('-----------------------------------')
 
     constrain = 'constrained' if (task_num%2 == 0) else 'unconstrained'
     outdir_final = os.path.join(sys.argv[2], mut_pdbid + '_' + wt_pdbid, constrain)
@@ -119,98 +126,100 @@ if __name__=='__main__':
 
     for jobnum in range(0, num_models):
 
-        try:
-            out_dict = deepcopy(row.to_dict())
-            ##focus_res = int(row['mut_res'])
-            ##motif_dict = {focus_res:row['wt_restype']}
-            if constrain == 'constrained':
-                cst = True
-            else:
-                cst = False
+        #try:
+        out_dict = deepcopy(row.to_dict())
+        ##focus_res = int(row['mut_res'])
+        ##motif_dict = {focus_res:row['wt_restype']}
+        if constrain == 'constrained':
+            cst = True
+        else:
+            cst = False
 
-            designable, repackable, task_factory, mut_pair = \
-                    prepare_pdbids_for_modeling(wt_pdbid, mut_pdbid, [focus],
-                            constrain=cst)
+        designable, repackable, task_factory, mut_pair = \
+                prepare_pdbids_for_modeling(wt_pdbid, mut_pdbid, [focus],
+                        constrain=cst)
 
-            out_dict['pre_rmsd'] = mut_pair.aligner.bb_rmsd
-            out_dict['pre_dist'] = distance_rosetta(mut_pair.aligner.target,
-                    focus.target,
-                    mut_pair.aligner.mobile, focus.mobile)
-            out_dict['mover'] = mover
-            out_dict['decoy_number'] = jobnum
-
-
-            if mover == 'ngk':
-                modeler = get_loop_modeler(mut_pair.aligner.target, designable, repackable,
-                        focus.target, task_factory=task_factory, fast=False,
-                        mover='ngk', resbuffer=4)
-            elif mover == 'ngkf':
-                modeler = get_loop_modeler(mut_pair.aligner.target, designable, repackable,
-                        focus.target, task_factory=task_factory, fast=True,
-                        mover='ngk', resbuffer=4)
-            elif mover == 'lhk':
-                for key in mut_pair.motif_dict:
-                    aatype = chemical_aa_from_oneletter(mut_pair.motif_dict[key])
-                    mut_res = rosetta.protocols.simple_moves.MutateResidue(key,
-                            aatype)
-                    mut_res.apply(mut_pair.aligner.target)
-                modeler = get_loop_modeler(mut_pair.aligner.target,
-                        designable, repackable, focus.target,
-                        task_factory=task_factory, fast=False,
-                        mover='lhk', resbuffer=4)
-            elif mover == 'fastdesign':
-                modeler = fast_design(mut_pair.aligner.target, designable, repackable,
-                        task_factory=task_factory)    
-            elif mover == 'br':
-                modeler = get_backrub_protocol(mut_pair.motif_dict,
-                        shell=shell, kt=1.6, task_factory=task_factory,
-                        ntrials=10000, stride=10000)
+        out_dict['pre_rmsd'] = mut_pair.aligner.bb_rmsd
+        out_dict['pre_dist'] = distance_rosetta(mut_pair.aligner.target,
+                focus.target,
+                mut_pair.aligner.mobile, focus.mobile)
+        out_dict['mover'] = mover
+        out_dict['decoy_number'] = jobnum
+        print(out_dict)
 
 
-            start_time = time.time()
-            modeler.apply(mut_pair.aligner.target)
-            elapsed = time.time() - start_time
-            out_dict['elapsed_time'] = elapsed
-            mut_pair.aligner.target.remove_constraints()
+        if mover == 'ngk':
+            modeler = get_loop_modeler(mut_pair.aligner.target, designable, repackable,
+                    focus.target, task_factory=task_factory, fast=False,
+                    mover='ngk', resbuffer=4)
+        elif mover == 'ngkf':
+            modeler = get_loop_modeler(mut_pair.aligner.target, designable, repackable,
+                    focus.target, task_factory=task_factory, fast=True,
+                    mover='ngk', resbuffer=4)
+        elif mover == 'lhk':
+            for key in mut_pair.motif_dict:
+                aatype = chemical_aa_from_oneletter(mut_pair.motif_dict[key])
+                mut_res = rosetta.protocols.simple_moves.MutateResidue(key,
+                        aatype)
+                mut_res.apply(mut_pair.aligner.target)
+            modeler = get_loop_modeler(mut_pair.aligner.target,
+                    designable, repackable, focus.target,
+                    task_factory=task_factory, fast=False,
+                    mover='lhk', resbuffer=4)
+        elif mover == 'fastdesign':
+            modeler = fast_design(mut_pair.aligner.target, designable, repackable,
+                    task_factory=task_factory)    
+        elif mover == 'br':
+            modeler = get_backrub_protocol(mut_pair.motif_dict,
+                    shell=shell, kt=1.6, task_factory=task_factory,
+                    ntrials=100, stride=100)
 
-            mut_pair.aligner.match_align()
-            out_dict['post_rmsd'] = mut_pair.aligner.bb_rmsd
-            out_dict['post_dist'] = distance_rosetta(mut_pair.aligner.target,
-                focus.target, mut_pair.aligner.mobile, focus.mobile)
-            out_dict['post_score'] = default_sfxn(mut_pair.aligner.target)
 
-            #aligner.target.dump_scored_pdb(outdir + '/ngk/' + mut_pdbid +
-            #        '_' + str(task_num) + '_ngk.pdb', default_sfxn)
-            pdb_path = os.path.join(outdir_temp, wt_pdbid + '_' + mut_pdbid + '_' +
-                    str(jobnum) + '_' + mover + '.pdb.gz')
-            out_dict['path'] = pdb_path
-            mut_pair.aligner.target.dump_scored_pdb(pdb_path, default_sfxn)
-            
-            relaxer = fast_relax(mut_pair.aligner.target, designable, repackable,
-                    selectors=True)
-            relaxer.apply(mut_pair.aligner.target)
+        start_time = time.time()
+        modeler.apply(mut_pair.aligner.target)
+        elapsed = time.time() - start_time
+        out_dict['elapsed_time'] = elapsed
+        mut_pair.aligner.target.remove_constraints()
 
-            mut_pair.aligner.match_align()
-            out_dict['post_rmsd_relaxed'] = mut_pair.aligner.bb_rmsd
-            out_dict['post_dist_relaxed'] = distance_rosetta(mut_pair.aligner.target,
-                focus.target, mut_pair.aligner.mobile, focus.mobile)
+        mut_pair.aligner.match_align()
+        out_dict['post_rmsd'] = mut_pair.aligner.bb_rmsd
+        out_dict['post_dist'] = distance_rosetta(mut_pair.aligner.target,
+            focus.target, mut_pair.aligner.mobile, focus.mobile)
+        out_dict['post_score'] = default_sfxn(mut_pair.aligner.target)
 
-            pdb_path_rel = os.path.join(outdir_temp, wt_pdbid + '_' + mut_pdbid + '_' +
-                    str(jobnum) + '_' + mover + '_relaxed.pdb.gz')
-            out_dict['path_relaxed'] = pdb_path_rel
-            mut_pair.aligner.target.dump_scored_pdb(pdb_path_rel, default_sfxn)
-            out_dict['final_score'] = default_sfxn(mut_pair.aligner.target)
-            print(default_sfxn(mut_pair.aligner.target))
-            print(out_dict)
-            #with open(outdir_temp + '/results_' + str(jobnum) + '.pkl', 'wb') as f:
-            #    pickle.dump(out_dict, f)
-            output_data.append(out_dict)
+        #aligner.target.dump_scored_pdb(outdir + '/ngk/' + mut_pdbid +
+        #        '_' + str(task_num) + '_ngk.pdb', default_sfxn)
+        pdb_path = os.path.join(outdir_temp, wt_pdbid + '_' + mut_pdbid + '_' +
+                str(jobnum) + '_' + mover + '.pdb.gz')
+        out_dict['path'] = pdb_path
+        mut_pair.aligner.target.dump_scored_pdb(pdb_path, default_sfxn)
+        
+        relaxer = fast_relax(mut_pair.aligner.target, designable, repackable,
+                selectors=True)
+        relaxer.apply(mut_pair.aligner.target)
 
-            annotate_pdb(pdb_path, out_dict)
-            annotate_pdb(pdb_path_rel, out_dict)
-        except:
-            with open(os.path.join(outdir_temp, 'errors.txt'),'a') as f:
-                f.write('Job number ' + str(jobnum) + ' failed \n')
+        mut_pair.aligner.match_align()
+        out_dict['post_rmsd_relaxed'] = mut_pair.aligner.bb_rmsd
+        out_dict['post_dist_relaxed'] = distance_rosetta(mut_pair.aligner.target,
+            focus.target, mut_pair.aligner.mobile, focus.mobile)
+
+        pdb_path_rel = os.path.join(outdir_temp, wt_pdbid + '_' + mut_pdbid + '_' +
+                str(jobnum) + '_' + mover + '_relaxed.pdb.gz')
+        out_dict['path_relaxed'] = pdb_path_rel
+        mut_pair.aligner.target.dump_scored_pdb(pdb_path_rel, default_sfxn)
+        out_dict['final_score'] = default_sfxn(mut_pair.aligner.target)
+        print(default_sfxn(mut_pair.aligner.target))
+        print(out_dict)
+        #with open(outdir_temp + '/results_' + str(jobnum) + '.pkl', 'wb') as f:
+        #    pickle.dump(out_dict, f)
+        output_data.append(out_dict)
+        print(out_dict)
+
+        annotate_pdb(pdb_path, out_dict)
+        annotate_pdb(pdb_path_rel, out_dict)
+        #except:
+        with open(os.path.join(outdir_temp, 'errors.txt'),'a') as f:
+            f.write('Job number ' + str(jobnum) + ' failed \n')
     df_out = pd.DataFrame.from_records(output_data)
     print(df_out)
     with open(outdir_final + '/results_' + str(task_num%4) + '.pkl', 'wb') as f:

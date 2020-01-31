@@ -107,18 +107,12 @@ def prepare_pdbids_for_modeling(wt_pdbid, mut_pdbid, focus_mismatch_list,
         wt_pose = pose_from_pdbredo(wt_pdbid,
                 prefix=prefix)
     except:
-        if 'TMPDIR' in os.environ:
-            wt_pose = pose_from_rcsb(wt_pdbid, prefix=os.environ['TMPDIR'])
-        else:
-            wt_pose = pose_from_rcsb(wt_pdbid, prefix=os.environ['USER'])
+        wt_pose = pose_from_netapp_pdb(wt_pdbid)
     try:
         mut_pose = pose_from_pdbredo(mut_pdbid,
                 prefix=prefix)
     except:
-        if 'TMPDIR' in os.environ:
-            mut_pose = pose_from_rcsb(mut_pdbid, prefix=os.environ['TMPDIR'])
-        else:
-            mut_pose = pose_from_rcsb(mut_pdbid, prefix=os.environ['USER'])
+        mut_pose = pose_from_netapp_pdb(mut_pdbid)
 
     mut_pair = MutantPair(mut_pose, wt_pose, focus_mismatch_list, shell=shell,
             cst=constrain)
