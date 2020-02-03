@@ -32,7 +32,7 @@ if __name__ == "__main__":
         y = 'post_' + mid + '_relaxed_sum'
 
     bins = [0, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0, 1.4, 1.6, 2.0, 10.0]
-    labels = [0.1, 0.2, 0.4, 0.6, 0.8, 1.0, 1.4, 1.6, 2.0, 10.0]
+    labels = [0, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0, 1.4, 1.6, 2.0]
     ind = np.arange(len(labels))
     width = 0.35
     fig, ax = plt.subplots()
@@ -73,7 +73,8 @@ if __name__ == "__main__":
         i += 1
 
 
-    ax.set_ylabel('Percent improved decoys')
+    ax.set_ylabel('Mean percent improved decoys')
+    ax.set_xlabel('Binned distance of starting structure to WT')
     ax.set_title('Sampling methods broken down by distance of point mutant to WT')
     ax.set_xticks(ind)
     ax.set_xticklabels([x for x in labels])
