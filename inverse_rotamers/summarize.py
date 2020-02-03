@@ -109,7 +109,7 @@ if __name__ == '__main__':
         unitline = False
     title = mid + ' comparison summarized by ' + summary
     plt, fig, ax = plot(data, groups=groups, xlabel=x,
-            ylabel=y, title=title, unitline=unitline)
+            ylabel=y, title=title, unitline=unitline, markersize=4)
 
 
     def on_pick(event):
