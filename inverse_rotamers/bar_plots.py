@@ -63,11 +63,11 @@ if __name__ == "__main__":
 
         if args['--cst'] == 'cst' or args['--cst'] == 'both':
             ax.bar(ind + (2 * i) * width / (len(args['<folders>'])),
-                    yvals_cst, width/2, yerr=stderr_cst,
+                    yvals_cst, width/(len(args['<folders>'])), yerr=stderr_cst,
                     label=folder_label + '_cst')
         if args['--cst'] == 'uncst' or args['--cst'] == 'both':
             ax.bar(ind + (2 * i + 1) * width / (len(args['<folders>'])),                
-                    yvals_uncst, width/2, yerr=stderr_uncst,
+                    yvals_uncst, width/(len(args['<folders>'])), yerr=stderr_uncst,
                     label=folder_label + '_uncst')
 
         i += 1
