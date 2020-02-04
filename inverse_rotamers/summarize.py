@@ -29,48 +29,52 @@ def summarize(input_dir, summary='mean'):
 
                 #df = pd.DataFrame(data_list)
                 #if os.path.exists(folder + '/results.pkl'):
+                # Open all resulst pkl files
                 for filename in glob.glob(folder + '/results*'):
                     with open(filename, 'rb') as f:
                         try:
                             df = pickle.load(f)
-                            avgs_dict = {}
-                            if df.shape[0] > 0:
-                                for col in df.columns:
-                                    try:
-                                        if summary == 'mean':
-                                            avgs_dict[col + '_sum'] = df[col].mean()
-                                        elif summary == 'low_score':
-                                            avgs_dict[col + '_sum'] = \
-                                                    df[col].loc[[df['final_score'].idxmin()]]
-                                        elif summary == 'median':
-                                            avgs_dict[col + '_sum'] = df[col].median()
-                                        elif summary == 'percent_improved':
-                                            if col.split('_')[0] == 'pre':
-                                                avgs_dict[col + '_sum'] = df[col][0]
-                                            else:
-                                                subname = col.split('_')[1]
-                                                if subname == 'dist' or subname == 'rmsd':
-                                                    fraction = df[df[col] < df['pre_' +
-                                                        subname]][col].size / df['pre_' +
-                                                                subname].size
-                                                    if fraction == 1.0:
-                                                        print(df[curr_dir][0])
-                                                    avgs_dict[col + '_sum'] = 100 * fraction
-                                            #avgs_dict[col + '_sum'] = df[df[]]
-                                    except:
-                                        avgs_dict[col + '_sum'] = df[col][0]
-
-                                        if cst == 'constrained':
-                                            avgs_dict['constrained'] = True
-                                        else:
-                                            avgs_dict['constrained'] = False
-
-                                        avgs_dict['path'] = folder
-                                        
-                                        avgs.append(avgs_dict)
+                            data_list.append(df)
                         except:
                             print('Error opening file ', filename)
+                avgs_dict = {}
+                if len(data_list) > 0:
+                    df = pd.concat(data_list, ignore_index=True)
+                    for col in df.columns:
+                        if not df.dtypes[col] == np.object:
+                        #try:
+                            if summary == 'mean':
+                                avgs_dict[col + '_sum'] = df[col].mean()
+                            elif summary == 'low_score':
+                                avgs_dict[col + '_sum'] = \
+                                        df[col].loc[[df['final_score'].idxmin()]]
+                            elif summary == 'median':
+                                avgs_dict[col + '_sum'] = df[col].median()
+                            elif summary == 'percent_improved':
+                                if col.split('_')[0] == 'pre':
+                                    avgs_dict[col + '_sum'] = df[col][0]
+                                else:
+                                    splt = col.split('_')
+                                    if len(splt) > 1:
+                                        subname = col.split('_')[1]
+                                        if subname == 'dist' or subname == 'rmsd':
+                                            fraction = df[df[col] < df['pre_' +
+                                                subname]][col].size / df['pre_' +
+                                                        subname].size
+                                            avgs_dict[col + '_sum'] = 100 * fraction
+                                #avgs_dict[col + '_sum'] = df[df[]]
+                        #except:
+                        else:
+                            avgs_dict[col + '_sum'] = df[col][0]
 
+                            if cst == 'constrained':
+                                avgs_dict['constrained'] = True
+                            else:
+                                avgs_dict['constrained'] = False
+
+                            avgs_dict['path'] = folder
+                            
+                        avgs.append(avgs_dict)
 
     return pd.DataFrame(avgs)
 
@@ -143,8 +147,8 @@ if __name__ == '__main__':
         #cmd = 'show_my_designs ' + path + '/*' # Need pdb files
 
         relaxed_str = 'y' if relaxed else 'n'
-        #cmd = 'python3.8 ' +\
-        cmd = 'python3.7 ' +\
+        #cmd = 'python3.7 ' +\
+        cmd = 'python3.8 ' +\
         os.environ['HOME'] + '/intelligent_design/sidechain_directed_design_pyrosetta/inverse_rotamers/plot_funnels.py '\
         + path + ' ' + relaxed_str
 

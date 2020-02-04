@@ -47,9 +47,12 @@ if __name__ == "__main__":
         yvals_uncst = []
         stderr_uncst = []
 
-        df['binned'] = pd.cut(df[y], bins=bins, labels=labels)
+        df['binned'] = pd.cut(df[x], bins=bins, labels=labels)
+        df.to_csv('test_out.csv')
+        print(df)
         
         for label in labels:
+            #print(label)
             cst_mean = df[(df['constrained']==True) &
                 (df['binned']==label)][y].mean()
             yvals_cst.append(cst_mean)
@@ -61,6 +64,7 @@ if __name__ == "__main__":
             stderr_uncst.append(df[(df['constrained']==False) &
                 (df['binned']==label)][y].std())
 
+        print(yvals_cst)
         if args['--cst'] == 'cst' or args['--cst'] == 'both':
             ax.bar(ind + (2 * i) * width / (len(args['<folders>'])),
                     yvals_cst, width/(len(args['<folders>'])), yerr=stderr_cst,
