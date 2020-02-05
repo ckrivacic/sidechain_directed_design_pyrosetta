@@ -16,7 +16,13 @@ For each subdirectory, summarize:
 
 '''
 
-def summarize(input_dir, summary='mean'):
+def summarize(input_dir, summary='mean', force=False, relaxed=False):
+    outpath = os.path.join(input_dir, 'summary_by_{}.pkl'.format(summary))
+    if not force:
+        if os.path.exists(outpath):
+            with open(outpath, 'rb') as f:
+                return pickle.load(f)
+
     avgs = []
     for pair in os.listdir(input_dir):
         curr_dir = os.path.join(input_dir, pair)
@@ -43,11 +49,14 @@ def summarize(input_dir, summary='mean'):
                     for col in df.columns:
                         if not df.dtypes[col] == np.object:
                         #try:
+                            avgs_dict[col + '_std'] = df[col].std
                             if summary == 'mean':
                                 avgs_dict[col + '_sum'] = df[col].mean()
                             elif summary == 'low_score':
+                                ycol = 'final_score' if relaxed else 'post_score'
                                 avgs_dict[col + '_sum'] = \
-                                        df[col].loc[[df['final_score'].idxmin()]]
+                                        df.loc[df[ycol].idxmin(),
+                                                col]
                             elif summary == 'median':
                                 avgs_dict[col + '_sum'] = df[col].median()
                             elif summary == 'percent_improved':
@@ -74,8 +83,10 @@ def summarize(input_dir, summary='mean'):
 
                             avgs_dict['path'] = folder
                             
-                        avgs.append(avgs_dict)
-
+                    avgs.append(avgs_dict)
+    avgs = pd.DataFrame(avgs)
+    with open(outpath, 'wb') as f:
+        pickle.dump(avgs, f)
     return pd.DataFrame(avgs)
 
 
@@ -98,7 +109,7 @@ if __name__ == '__main__':
     #summary = 'mean'
 
     input_dir = sys.argv[1]
-    df = summarize(input_dir, summary=summary)
+    df = summarize(input_dir, summary=summary, relaxed=relaxed)
     df_cst = df[df['constrained']==True]
     df_uncst = df[df['constrained']==False]
     data1 = (df_cst[x],

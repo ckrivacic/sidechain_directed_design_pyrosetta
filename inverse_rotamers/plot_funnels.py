@@ -55,6 +55,7 @@ if __name__=='__main__':
 
         for wt in df_cst['wt'].unique():
             for mut in df_cst['mutant'].unique():
+                ycol = 'final_score' if relaxed=='y' else 'post_score'
                 to_plot = []
                 groups = []
                 zorders = []
@@ -63,7 +64,7 @@ if __name__=='__main__':
                 x = df_cst[(df_cst['wt'] == wt) &
                         (df_cst['mutant'] == mut)][by]
                 y = df_cst[(df_cst['wt'] == wt) &
-                        (df_cst['mutant'] == mut)]['final_score']
+                        (df_cst['mutant'] == mut)][ycol]
                 if len(x) > 0 and len(y) > 0:
 
                     to_plot.append((x, y))
@@ -75,7 +76,7 @@ if __name__=='__main__':
                 x = df_uncst[(df_uncst['wt'] == wt) &
                         (df_uncst['mutant'] == mut)][by]
                 y = df_uncst[(df_uncst['wt'] == wt) &
-                        (df_uncst['mutant'] == mut)]['final_score']
+                        (df_uncst['mutant'] == mut)][ycol]
                 if len(x) > 0 and len(y) > 0:
 
                     to_plot.append((x, y))

@@ -87,11 +87,12 @@ class Alignment(object):
 
         oneletter =\
                 ['A','R','N','D','B','C','E','Q','G','H','I','L','K','M','F','P','S','T','W','Y','V']
-        alignments = pairwise2.align.localxs(self.target_sequence,\
+        alignments = pairwise2.align.globalxs(self.target_sequence,\
                 self.mobile_sequence, -0.1, -0.1)
         #for alignment in alignments:
         if not alignments:
             return False
+        print(alignments)
         tseq = alignments[0][0]
         mseq = alignments[0][1]
         tmatch = []
@@ -225,6 +226,35 @@ def get_superimpose_transformation(P1, P2):
 
     return M, com2 - np.dot(M, com1)
 
+
+def test_compare(pdb1, pdb1_focus_resnum, pdb1_focus_chain, pdb2,
+        pdb2_focus_resnum, pdb2_focus_chain, shell):
+    from benchmark_utils import pose_from_rcsb
+    pose1 = pose_from_rcsb(pdb1, prefix='temp/')
+    pose1reslist = [pose1.pdb_info().pdb2pose(pdb1_focus_chain,
+            pdb1_focus_resnum)]
+    pose2 = pose_from_rcsb(pdb2, prefix='temp/')
+    pose2reslist = [pose2.pdb_info().pdb2pose(pdb2_focus_chain,
+            pdb2_focus_resnum)]
+    aligner = Alignment(pose1, pose2)
+    aligner.create_shell(shell, pose1reslist,
+            mobile_focus_list=pose2reslist)
+    aligner.match_align()
+    return aligner
+
+def test_compare2(shell):
+    from benchmark_utils import pose_from_rcsb
+    pose2 = pose_from_file('temp/1nhs.cif.gz')
+    pose1 = pose_from_file('temp/1npx.cif.gz')
+    pose2reslist = [pose2.pdb_info().pdb2pose('A',
+            41)]
+    pose1reslist = [pose1.pdb_info().pdb2pose('A',
+            41)]
+    aligner = Alignment(pose1, pose2)
+    aligner.create_shell(shell, pose1reslist,
+            mobile_focus_list=pose2reslist)
+    aligner.match_align()
+    return aligner
 
 def sequence_align(seq1, seq2):
     return pairwise2.align.localxs(seq1, seq2, -0.1, -0.1)
