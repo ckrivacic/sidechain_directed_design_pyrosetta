@@ -16,7 +16,7 @@ For each subdirectory, summarize:
 
 '''
 
-def summarize(input_dir, summary='mean', force=False):
+def summarize(input_dir, summary='mean', force=False, relaxed=False):
     outpath = os.path.join(input_dir, 'summary_by_{}.pkl'.format(summary))
     if not force:
         if os.path.exists(outpath):
@@ -53,8 +53,9 @@ def summarize(input_dir, summary='mean', force=False):
                             if summary == 'mean':
                                 avgs_dict[col + '_sum'] = df[col].mean()
                             elif summary == 'low_score':
+                                ycol = 'final_score' if relaxed else 'post_score'
                                 avgs_dict[col + '_sum'] = \
-                                        df.loc[df['final_score'].idxmin(),
+                                        df.loc[df[ycol].idxmin(),
                                                 col]
                             elif summary == 'median':
                                 avgs_dict[col + '_sum'] = df[col].median()
@@ -108,7 +109,7 @@ if __name__ == '__main__':
     #summary = 'mean'
 
     input_dir = sys.argv[1]
-    df = summarize(input_dir, summary=summary)
+    df = summarize(input_dir, summary=summary, relaxed=relaxed)
     df_cst = df[df['constrained']==True]
     df_uncst = df[df['constrained']==False]
     data1 = (df_cst[x],

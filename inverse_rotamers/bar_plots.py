@@ -40,8 +40,8 @@ if __name__ == "__main__":
     if relaxed:
         y = 'post_' + mid + '_relaxed_sum'
 
-    bins = [0, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0, 1.4, 1.6, 2.0, 10.0]
-    labels = [0, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0, 1.4, 1.6, 2.0]
+    bins = [0, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0, 1.5, 2.0, 10.0]
+    labels = [0, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0, 1.5, 2.0]
     ind = np.arange(len(labels))
     width = 0.35
     fig, ax = plt.subplots()
@@ -51,7 +51,8 @@ if __name__ == "__main__":
     ticklabels = []
     for input_dir in args['<folders>']:
         folder_label = input_dir.split('/')[-3]
-        df = summarize(input_dir, summary=summary, force=force)
+        df = summarize(input_dir, summary=summary, force=force,
+                relaxed=relaxed)
 
         yvals_cst = []
         stderr_cst = []
@@ -91,11 +92,13 @@ if __name__ == "__main__":
 
         else:
             import random
-            num_examples = 10
+            num_examples = 50
             label = float(args['--bin'])
             df_cst = df[df['constrained']==True]
             df_uncst = df[df['constrained']==False]
             df_cst = df_cst[df_cst['binned']==label]
+            print('{} examples chosen out of {}'.format(num_examples,
+                len(df_cst.index)))
             df_uncst = df_uncst[df_uncst['binned']==label]
 
             yvals_cst = []
