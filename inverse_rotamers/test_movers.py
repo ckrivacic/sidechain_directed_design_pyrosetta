@@ -50,7 +50,7 @@ def import_backrub_dataframe(path):
 
 if __name__=='__main__':
     pdbredo_directory = '/wynton/home/kortemme/krivacic/pdb_redo'
-    shell=6
+    shell=10
     task_num = int(os.environ['SGE_TASK_ID']) - 1
     #task_num = 881*4 # make sure to subtract 1 from SGE TASK ID for the real thing
     num_models = 100
@@ -137,7 +137,7 @@ if __name__=='__main__':
 
         designable, repackable, task_factory, mut_pair = \
                 prepare_pdbids_for_modeling(wt_pdbid, mut_pdbid, [focus],
-                        constrain=cst)
+                        constrain=cst, shell=shell)
 
         out_dict['pre_rmsd'] = mut_pair.aligner.bb_rmsd
         out_dict['pre_dist'] = distance_rosetta(mut_pair.aligner.target,
