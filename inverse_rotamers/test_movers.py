@@ -52,14 +52,14 @@ if __name__=='__main__':
     pdbredo_directory = '/wynton/home/kortemme/krivacic/pdb_redo'
     shell=6
     task_num = int(os.environ['SGE_TASK_ID']) - 1
-    #task_num = 881*4 # make sure to subtract 1 from SGE TASK ID for the real thing
-    num_models = 100
+    #task_num = 518 # make sure to subtract 1 from SGE TASK ID for the real thing
+    num_models = 50
 
     mover = sys.argv[3]
 
     #offset = (int(sys.argv[4]) - 1) * num_models * 100
     #task_num += offset
-    row_num = task_num//4
+    row_num = task_num//8
 
     # backrub variable tells us if we're reading from the backrub
     # benchmark dataframe, NOT whether we're using the backrub mover
