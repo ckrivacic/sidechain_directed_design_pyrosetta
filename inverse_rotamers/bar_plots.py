@@ -8,6 +8,7 @@ Options:
     median, low_score, or percent_improved)  [default: percent_improved]
     --relaxed, -r  Choose to use the post-relaxed structures/data
     --cst=CST  Constrained, unconstrained, or both?  [default: both]
+    --bin=BIN  Plot examples from a particular bin.  [default: ]
 
 """
 
@@ -47,32 +48,35 @@ if __name__ == "__main__":
         yvals_uncst = []
         stderr_uncst = []
 
+        print(df[x])
         df['binned'] = pd.cut(df[x], bins=bins, labels=labels)
         df.to_csv('test_out.csv')
         print(df)
-        
-        for label in labels:
-            #print(label)
-            cst_mean = df[(df['constrained']==True) &
-                (df['binned']==label)][y].mean()
-            yvals_cst.append(cst_mean)
-            stderr_cst.append(df[(df['constrained']==True) &
-                (df['binned']==label)][y].std())
+    
+        if not args['--bin']:
+            for label in labels:
+                #print(label)
+                cst_mean = df[(df['constrained']==True) &
+                    (df['binned']==label)][y].mean()
+                yvals_cst.append(cst_mean)
+                stderr_cst.append(df[(df['constrained']==True) &
+                    (df['binned']==label)][y].std())
 
-            yvals_uncst.append(df[(df['constrained']==False) &
-                (df['binned']==label)][y].mean())
-            stderr_uncst.append(df[(df['constrained']==False) &
-                (df['binned']==label)][y].std())
+                yvals_uncst.append(df[(df['constrained']==False) &
+                    (df['binned']==label)][y].mean())
+                stderr_uncst.append(df[(df['constrained']==False) &
+                    (df['binned']==label)][y].std())
 
-        print(yvals_cst)
-        if args['--cst'] == 'cst' or args['--cst'] == 'both':
-            ax.bar(ind + (2 * i) * width / (len(args['<folders>'])),
-                    yvals_cst, width/(len(args['<folders>'])), yerr=stderr_cst,
-                    label=folder_label + '_cst')
-        if args['--cst'] == 'uncst' or args['--cst'] == 'both':
-            ax.bar(ind + (2 * i + 1) * width / (len(args['<folders>'])),                
-                    yvals_uncst, width/(len(args['<folders>'])), yerr=stderr_uncst,
-                    label=folder_label + '_uncst')
+            print(yvals_cst)
+            if args['--cst'] == 'cst' or args['--cst'] == 'both':
+                ax.bar(ind + (2 * i) * width / (len(args['<folders>'])),
+                        yvals_cst, width/(len(args['<folders>'])), yerr=stderr_cst,
+                        label=folder_label + '_cst')
+            if args['--cst'] == 'uncst' or args['--cst'] == 'both':
+                ax.bar(ind + (2 * i + 1) * width / (len(args['<folders>'])),                
+                        yvals_uncst, width/(len(args['<folders>'])), yerr=stderr_uncst,
+                        label=folder_label + '_uncst')
+
 
         i += 1
 

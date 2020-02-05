@@ -74,7 +74,7 @@ def summarize(input_dir, summary='mean'):
 
                             avgs_dict['path'] = folder
                             
-                        avgs.append(avgs_dict)
+                    avgs.append(avgs_dict)
 
     return pd.DataFrame(avgs)
 
@@ -99,6 +99,7 @@ if __name__ == '__main__':
 
     input_dir = sys.argv[1]
     df = summarize(input_dir, summary=summary)
+    df.to_csv('test_out.csv')
     df_cst = df[df['constrained']==True]
     df_uncst = df[df['constrained']==False]
     data1 = (df_cst[x],
