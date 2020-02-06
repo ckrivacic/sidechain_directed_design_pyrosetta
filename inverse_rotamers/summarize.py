@@ -16,8 +16,10 @@ For each subdirectory, summarize:
 
 '''
 
-def summarize(input_dir, summary='mean', force=False, relaxed=False):
-    outpath = os.path.join(input_dir, 'summary_by_{}.pkl'.format(summary))
+def summarize(input_dir, summary='mean', force=False, relaxed=False,
+        by='dist'):
+    outpath = os.path.join(input_dir,
+            'summary_of_{}_by_{}.pkl'.format(by, summary))
     if not force:
         if os.path.exists(outpath):
             with open(outpath, 'rb') as f:
@@ -59,6 +61,13 @@ def summarize(input_dir, summary='mean', force=False, relaxed=False):
                                                 col]
                             elif summary == 'median':
                                 avgs_dict[col + '_sum'] = df[col].median()
+                            elif summary == 'structure':
+                                ycol = 'post_{}_relaxed'.format(by) if relaxed else\
+                                    'post_{}'.format(by)
+                                df['delta_{}'.format(by)] = df[ycol] - df['pre_{}'.format(by)]
+                                avgs_dict[col + '_sum'] = \
+                                        df.loc[df['delta_{}'.format(by)].idxmin(),
+                                                col]
                             elif summary == 'percent_improved':
                                 if col.split('_')[0] == 'pre':
                                     avgs_dict[col + '_sum'] = df[col][0]
@@ -71,6 +80,12 @@ def summarize(input_dir, summary='mean', force=False, relaxed=False):
                                                 subname]][col].size / df['pre_' +
                                                         subname].size
                                             avgs_dict[col + '_sum'] = 100 * fraction
+                                        else:
+                                            avgs_dict[col + '_sum'] =\
+                                                df.loc[0,col]
+                                    else:
+                                        avgs_dict[col + '_sum'] =\
+                                                df.loc[0,col]
                                 #avgs_dict[col + '_sum'] = df[df[]]
                         #except:
                         else:
@@ -109,7 +124,7 @@ if __name__ == '__main__':
     #summary = 'mean'
 
     input_dir = sys.argv[1]
-    df = summarize(input_dir, summary=summary, relaxed=relaxed)
+    df = summarize(input_dir, summary=summary, relaxed=relaxed, by=mid)
     df_cst = df[df['constrained']==True]
     df_uncst = df[df['constrained']==False]
     data1 = (df_cst[x],

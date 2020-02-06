@@ -10,6 +10,8 @@ Options:
     --cst=CST  Constrained, unconstrained, or both?  [default: both]
     --bin=BIN  Plot examples from a particular bin.  [default: ]
     --force, -f  Force to re-analyze if analysis pkl file is found.
+    --binby=BINBY  What to bin by (distance, rmsd, relsurf)  
+    [default:]
 
 """
 
@@ -18,6 +20,7 @@ from summarize import summarize
 import docopt
 import pandas as pd
 import numpy as np
+from itertools import cycle
 
 
 def row_index_from_pdbs(mut, wt, df):
@@ -27,6 +30,11 @@ def row_index_from_pdbs(mut, wt, df):
 
 if __name__ == "__main__":
     from matplotlib import pyplot as plt
+
+    name_dict = {'fastdesign':'FastRelax ','ngkf':'Next-gen KIC (fast) ',
+            'br':'Backrub (100 trials) '}
+    colors = cycle(['navy', 'cornflowerblue', 'darkgreen',
+            'lightgreen', 'firebrick', 'lightcoral'])
 
     args = docopt.docopt(__doc__)
     print(args)
@@ -40,27 +48,52 @@ if __name__ == "__main__":
     if relaxed:
         y = 'post_' + mid + '_relaxed_sum'
 
-    bins = [0, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0, 1.5, 2.0, 10.0]
-    labels = [0, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0, 1.5, 2.0]
+    if args['--binby'] == 'relsurf_sum':
+        bins = [0, 0.02, 0.04, 0.06, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5,
+                1.0]
+        labels = [0, 0.02, 0.04, 0.06, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4,
+                0.5]
+        labels_str = ['0-0.02', '0.02-0.04', '0.04-0.06', '0.06-0.1',
+                '0.1-0.15', '0.15-0.2', '0.2-0.25', '0.25-0.3',
+                '0.3-0.4', '0.4-0.5', '>0.5']
+    else:
+        bins = [0, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0, 1.5, 10.0]
+        labels = [0, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0, 1.5]
+        labels_str = ['0-0.1', '0.1-0.2', '0.2-0.4', '0.4-0.6',
+                '0.6-0.8', '0.8-1.0', '1.0-1.5', '>1.5']
     ind = np.arange(len(labels))
-    width = 0.35
+    width = 0.45
     fig, ax = plt.subplots()
+    #fig = plt.figure(figsize=(10,4.8))
 
     # i keeps track of which folder we're on for formatting purposes
     i = 0
     ticklabels = []
+    pdbs = []
+    #pdbs = ['1a6g_1a6m','1b9k_1kyf','1bu7_1jme','1ffr_1edq','1hvf_1hve','1i4o_1kmc','1qop_1k8y','1qul_1quj']
+    #pdbs = ['1ccp_3ccp','1ec0_1hvs','5eaa_1qit','7pti_1aal']
     for input_dir in args['<folders>']:
-        folder_label = input_dir.split('/')[-3]
+        folder_label = name_dict[input_dir.split('/')[-3]]
         df = summarize(input_dir, summary=summary, force=force,
-                relaxed=relaxed)
+                relaxed=relaxed, by=mid)
 
         yvals_cst = []
         stderr_cst = []
         yvals_uncst = []
         stderr_uncst = []
 
-        df['binned'] = pd.cut(df[x], bins=bins, labels=labels)
+        print(df.columns)
+        if args['--binby']:
+            df['binned'] = pd.cut(df[args['--binby']], bins=bins,
+                    labels=labels)
+        else:
+            df['binned'] = pd.cut(df[x], bins=bins, labels=labels)
     
+        by_dict = {'dist':'distance', 'rmsd':'RMSD'}
+        sum_dict = {'low_score':'Lowest scoring', 'mean':'Mean',
+                'median':'Median', 
+                'percent_improved':'Percentage of improved',
+                'structure':'Closest structure '}
         if not args['--bin']:
             ind = np.arange(len(labels))
             for label in labels:
@@ -77,22 +110,26 @@ if __name__ == "__main__":
 
             if args['--cst'] == 'cst' or args['--cst'] == 'both':
                 ax.bar(ind + (2 * i) * width / (len(args['<folders>'])),
-                        yvals_cst, width/(len(args['<folders>'])), yerr=stderr_cst,
-                        label=folder_label + '_cst')
+                        yvals_cst, width/(len(args['<folders>'])), #yerr=stderr_cst,
+                        label=folder_label + '(constrained)',
+                        color = next(colors))
             if args['--cst'] == 'uncst' or args['--cst'] == 'both':
                 ax.bar(ind + (2 * i + 1) * width / (len(args['<folders>'])),                
-                        yvals_uncst, width/(len(args['<folders>'])), yerr=stderr_uncst,
-                        label=folder_label + '_uncst')
+                        yvals_uncst, width/(len(args['<folders>'])), #yerr=stderr_uncst,
+                        label=folder_label + '(unconstrained)',
+                        color=next(colors))
 
-            ax.set_ylabel('Mean percent improved decoys')
-            ax.set_xlabel('Binned distance of starting structure to WT')
-            ax.set_title('Sampling methods broken down by distance of point mutant to WT')
-            ax.set_xticks(ind)
-            ax.set_xticklabels([x for x in labels])
+            ax.set_ylabel('Mean percentage of improved decoys')
+            ax.set_xlabel('Binned {} (Å) of starting structure α-carbon to WT'\
+                     .format(by_dict[args['--by']]))
+            ax.set_title('Sampling methods broken down by {} of point mutant to WT'\
+                    .format(by_dict[args['--by']]))
+            ax.set_xticks(ind + width/(len(args['<folders>'])/2))
+            ax.set_xticklabels(labels_str)
 
         else:
             import random
-            num_examples = 50
+            num_examples = 10
             label = float(args['--bin'])
             df_cst = df[df['constrained']==True]
             df_uncst = df[df['constrained']==False]
@@ -103,39 +140,78 @@ if __name__ == "__main__":
 
             yvals_cst = []
             yvals_uncst = []
-            if i == 0:
+            if len(pdbs) < 1:
                 indices = random.sample(list(df_cst.index.values),min(num_examples,
                     len(df_cst.index)))
 
                 for index in indices:
-                    yval_cst = df_cst.loc[index, y] - df_cst.loc[index, x]
+                    if not args['--sum'] == 'percent_improved':
+                        yval_cst = df_cst.loc[index, y] - df_cst.loc[index, x]
+                    else:
+                        yval_cst = df_cst.loc[index, y]
 
                     wt = df_cst.loc[index, 'wt_sum']
+                    wtchain = df_cst.loc[index, 'wt_chain_sum']
+                    wtresnum = df_cst.loc[index, 'wt_resnum_sum']
                     mut = df_cst.loc[index, 'mutant_sum']
+                    mutchain = df_cst.loc[index, 'mut_chain_sum']
+                    mutresnum = df_cst.loc[index, 'mut_resnum_sum']
+
                     uncst_row = df_uncst.index[(df_uncst['wt_sum']==wt) &
                             (df_uncst['mutant_sum']==mut)].tolist()
                     if len(uncst_row) > 0:
                         uncst_row = uncst_row[0]
-                        yval_uncst = df_uncst.loc[uncst_row, y] - df_uncst.loc[uncst_row, x]
+                        if not args['--sum'] == 'percent_improved':
+                            yval_uncst = df_uncst.loc[uncst_row, y] - df_uncst.loc[uncst_row, x]
+                        else:
+                            yval_uncst = df_uncst.loc[uncst_row, y]
                         yvals_uncst.append(yval_uncst)
                         yvals_cst.append(yval_cst)
-                        ticklabels.append(mut + '_' + wt)
+                        ticklabels.append('{} ({}{}),\n{} ({}{})'\
+                                .format(mut, mutchain, mutresnum, wt,
+                                    wtchain, wtresnum))
+                        pdbs.append('_'.join([mut, wt]))
+                print(ticklabels)
             else:
-                for tick in ticklabels:
+                for tick in pdbs:
                     mut = tick.split('_')[0]
                     wt = tick.split('_')[1]
-                    cst_row = row_index_from_pdbs(mut, wt, df_cst)
+                    cst_row = row_index_from_pdbs(mut.upper(),
+                            wt.upper(), df_cst)
+                    print(cst_row)
                     if len(cst_row) > 0:
+
                         cst_row = cst_row[0]
-                        yval_cst = df_cst.loc[cst_row, y] - df_cst.loc[cst_row, x]
+
+                        # Block only relevant when custom pdbs are used
+                        '''
+                        wt = df_cst.loc[cst_row, 'wt_sum']
+                        wtchain = df_cst.loc[cst_row, 'wt_chain_sum']
+                        wtresnum = df_cst.loc[cst_row, 'wt_resnum_sum']
+                        mut = df_cst.loc[cst_row, 'mutant_sum']
+                        mutchain = df_cst.loc[cst_row, 'mut_chain_sum']
+                        mutresnum = df_cst.loc[cst_row, 'mut_resnum_sum']
+                        ticklabels.append('{} ({}{}),\n{} ({}{})'\
+                                .format(mut, mutchain, mutresnum, wt,
+                                    wtchain, wtresnum))
+                        '''
+                        
+                        if not args['--sum'] == 'percent_improved':
+                            yval_cst = df_cst.loc[cst_row, y] - df_cst.loc[cst_row, x]
+                        else:
+                            yval_cst = df_cst.loc[cst_row, y]
                         yvals_cst.append(yval_cst)
                     else:
                         yvals_cst.append(0)
 
-                    uncst_row = row_index_from_pdbs(mut, wt, df_uncst)
+                    uncst_row = row_index_from_pdbs(mut.upper(),
+                            wt.upper(), df_uncst)
                     if len(uncst_row) > 0:
                         uncst_row = uncst_row[0]
-                        yval_uncst = df_uncst.loc[uncst_row, y] - df_uncst.loc[uncst_row, x]
+                        if not args['--sum'] == 'percent_improved':
+                            yval_uncst = df_uncst.loc[uncst_row, y] - df_uncst.loc[uncst_row, x]
+                        else:
+                            yval_uncst = df_uncst.loc[uncst_row, y]
                         yvals_uncst.append(yval_uncst)
                     else:
                         yvals_uncst.append(0)
@@ -147,16 +223,19 @@ if __name__ == "__main__":
             if args['--cst'] == 'cst' or args['--cst'] == 'both':
                 ax.bar(ind + (2 * i) * width/(len(args['<folders>'])),
                         yvals_cst, width / (len(args['<folders>'])),
-                        label=folder_label + '_cst')
+                        label=folder_label + '(constrained)',
+                        color=next(colors))
 
             if args['--cst'] == 'uncst' or args['--cst'] == 'both':
                 ax.bar(ind + (2 * i + 1) * width/(len(args['<folders>'])),
                         yvals_uncst, width / (len(args['<folders>'])),
-                        label=folder_label + '_uncst')
+                        label=folder_label + '(unconstrained)',
+                        color=next(colors))
 
-            ax.set_ylabel('{} delta-{}'.format(args['--sum'], args['--by']))
-            ax.set_xlabel('PDB pair (mut_wt)')
-            ax.set_xticks(ind)
+            ax.set_ylabel('{} Δ-{}'.format(sum_dict[args['--sum']],
+                by_dict[args['--by']]))
+            ax.set_xlabel('Mutant-wildtype pair')
+            ax.set_xticks(ind + width/(len(args['<folders>'])/2))
             ax.set_xticklabels(ticklabels)
             ax.set_title('{} examples from bin {}'.format(num_examples,
                 label))
