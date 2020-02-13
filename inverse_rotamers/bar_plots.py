@@ -60,7 +60,7 @@ if __name__ == "__main__":
         bins = [0, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0,10.0]
         labels = [0, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0]
         labels_str = ['0-0.1', '0.1-0.2', '0.2-0.4', '0.4-0.6',
-                '0.6-0.8', '0.8-1.0']
+                '0.6-0.8', '0.8-1.0', '>1.0']
     '''
     else:
         bins = [0, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0, 1.5, 10.0]
@@ -96,7 +96,7 @@ if __name__ == "__main__":
                     labels=labels)
         else:
             df['binned'] = pd.cut(df[x], bins=bins, labels=labels)
-            df = df[df['binned'] != 1.0]
+            #df = df[df['binned'] != 1.0]
     
         by_dict = {'dist':'distance', 'rmsd':'RMSD'}
         sum_dict = {'low_score':'Lowest scoring', 'mean':'Mean',

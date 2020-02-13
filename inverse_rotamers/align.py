@@ -88,7 +88,7 @@ class Alignment(object):
         oneletter =\
                 ['A','R','N','D','B','C','E','Q','G','H','I','L','K','M','F','P','S','T','W','Y','V']
         alignments = pairwise2.align.globalxs(self.target_sequence,\
-                self.mobile_sequence, -0.1, -0.1)
+                self.mobile_sequence, 0, 0)
         #for alignment in alignments:
         if not alignments:
             return False
