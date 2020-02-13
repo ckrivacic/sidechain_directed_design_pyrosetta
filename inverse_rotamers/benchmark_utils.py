@@ -74,8 +74,18 @@ def pose_from_rcsb(pdbid, prefix=None):
 
     return pose
 
-def pose_from_netapp_pdb(pdbid, prefix='/netapp/database/pdb/remediated/mmCIF/'):
-    path = os.path.join(prefix, pdbid[1:3], pdbid + '.cif.gz')
+def pose_from_netapp_pdb(pdbid,\
+        prefix='/netapp/database/pdb/remediated/mmCIF/', suffix='.cif.gz'):
+    path = os.path.join(prefix, pdbid[1:3], pdbid + suffix)
+    print('opening file ' + path)
+    pose = pose_from_file(path)
+    return pose
+
+
+def custom_open(pdbid,\
+        prefix='/wynton/home/krivacic/intelligent_design/sidechain_directed_design_pyrosetta/backrub_pointmutant_benchmark/benchmark_pdbs',
+        suffix='.pdb'):
+    path = os.path.join(prefix, pdbid + suffix)
     print('opening file ' + path)
     pose = pose_from_file(path)
     return pose
@@ -108,12 +118,12 @@ def prepare_pdbids_for_modeling(wt_pdbid, mut_pdbid, focus_mismatch_list,
         wt_pose = pose_from_pdbredo(wt_pdbid,
                 prefix=prefix)
     except:
-        wt_pose = pose_from_netapp_pdb(wt_pdbid)
+        wt_pose = custom_open(wt_pdbid)
     try:
         mut_pose = pose_from_pdbredo(mut_pdbid,
                 prefix=prefix)
     except:
-        mut_pose = pose_from_netapp_pdb(mut_pdbid)
+        mut_pose = custom_open(mut_pdbid)
 
     mut_pair = MutantPair(mut_pose, wt_pose, focus_mismatch_list, 
             shell=shell, cst=constrain)

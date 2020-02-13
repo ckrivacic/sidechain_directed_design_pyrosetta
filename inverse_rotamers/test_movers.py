@@ -49,6 +49,7 @@ def import_backrub_dataframe(path):
 
 
 if __name__=='__main__':
+    denom = 8
     pdbredo_directory = '/wynton/home/kortemme/krivacic/pdb_redo'
     shell=10
     task_num = int(os.environ['SGE_TASK_ID']) - 1
@@ -59,7 +60,7 @@ if __name__=='__main__':
 
     #offset = (int(sys.argv[4]) - 1) * num_models * 100
     #task_num += offset
-    row_num = task_num//8
+    row_num = task_num//denom
 
     # backrub variable tells us if we're reading from the backrub
     # benchmark dataframe, NOT whether we're using the backrub mover
@@ -102,15 +103,13 @@ if __name__=='__main__':
         os.makedirs(outdir_temp, exist_ok=True)
 
     # Try to get poses from pdbredo, otherwise download from rcsb.
-    try:
-        wt_pose = pose_from_pdbredo(wt_pdbid, pdbredo_directory)
-    except:
-        wt_pose = pose_from_netapp_pdb(wt_pdbid)
+    wt_pose = custom_open(wt_pdbid,
+            prefix='/wynton/home/kortemme/krivacic/intelligent_design/sidechain_directed_design_pyrosetta/backrub_pointmutant_benchmark/benchmark_pdbs',
+            suffix='.pdb')
 
-    try:
-        mut_pose = pose_from_pdbredo(mut_pdbid, pdbredo_directory)
-    except:
-        mut_pose = pose_from_netapp_pdb(mut_pdbid)
+    mut_pose = custom_open(mut_pdbid,
+            prefix='/wynton/home/kortemme/krivacic/intelligent_design/sidechain_directed_design_pyrosetta/backrub_pointmutant_benchmark/benchmark_pdbs',
+            suffix='.pdb')
 
     if backrub:
         wtfocus = wt_pose.pdb_info().pdb2pose(row['wt_chain'],
@@ -222,6 +221,6 @@ if __name__=='__main__':
             f.write('Job number ' + str(jobnum) + ' failed \n')
     df_out = pd.DataFrame.from_records(output_data)
     print(df_out)
-    with open(outdir_final + '/results_' + str(task_num%4) + '.pkl', 'wb') as f:
+    with open(outdir_final + '/results_' + str(task_num%denom) + '.pkl', 'wb') as f:
         pickle.dump(df_out, f)
-    finish_io(outdir_temp, outdir_final, str(task_num%4))
+    finish_io(outdir_temp, outdir_final, str(task_num%denom))
