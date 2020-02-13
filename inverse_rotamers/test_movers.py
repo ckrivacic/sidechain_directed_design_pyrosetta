@@ -221,6 +221,7 @@ if __name__=='__main__':
             f.write('Job number ' + str(jobnum) + ' failed \n')
     df_out = pd.DataFrame.from_records(output_data)
     print(df_out)
+    print('Job finished, transferring files...')
     with open(outdir_final + '/results_' + str(task_num%denom) + '.pkl', 'wb') as f:
         pickle.dump(df_out, f)
     finish_io(outdir_temp, outdir_final, str(task_num%denom))

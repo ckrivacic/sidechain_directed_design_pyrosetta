@@ -83,7 +83,7 @@ def pose_from_netapp_pdb(pdbid,\
 
 
 def custom_open(pdbid,\
-        prefix='/wynton/home/krivacic/intelligent_design/sidechain_directed_design_pyrosetta/backrub_pointmutant_benchmark/benchmark_pdbs',
+        prefix='/wynton/home/kortemme/krivacic/intelligent_design/sidechain_directed_design_pyrosetta/backrub_pointmutant_benchmark/benchmark_pdbs',
         suffix='.pdb'):
     path = os.path.join(prefix, pdbid + suffix)
     print('opening file ' + path)
@@ -114,16 +114,18 @@ def prepare_pdbids_for_modeling(wt_pdbid, mut_pdbid, focus_mismatch_list,
     #Ex:
     #{4:'E',5:'V'}
     '''
-    try:
+    wt_pose = custom_open(wt_pdbid)
+    '''
+    except:
         wt_pose = pose_from_pdbredo(wt_pdbid,
                 prefix=prefix)
-    except:
-        wt_pose = custom_open(wt_pdbid)
+    '''
+    mut_pose = custom_open(mut_pdbid)
+    '''
     try:
         mut_pose = pose_from_pdbredo(mut_pdbid,
                 prefix=prefix)
-    except:
-        mut_pose = custom_open(mut_pdbid)
+    '''
 
     mut_pair = MutantPair(mut_pose, wt_pose, focus_mismatch_list, 
             shell=shell, cst=constrain)
