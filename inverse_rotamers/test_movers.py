@@ -52,8 +52,8 @@ if __name__=='__main__':
     denom = 8
     pdbredo_directory = '/wynton/home/kortemme/krivacic/pdb_redo'
     shell=10
-    task_num = int(os.environ['SGE_TASK_ID']) - 1
-    #task_num = 518 # make sure to subtract 1 from SGE TASK ID for the real thing
+    #task_num = int(os.environ['SGE_TASK_ID']) - 1
+    task_num = 518 # make sure to subtract 1 from SGE TASK ID for the real thing
     num_models = 50
 
     mover = sys.argv[3]

@@ -51,7 +51,8 @@ class Alignment(object):
         self.mobile_residues = res_selector_to_size_list(mselect)
         self.set_mobile_sequence()
 
-    def create_shell(self, shell, focus_residue_list, mobile_focus_list=None):
+    def create_shell(self, shell, focus_residue_list,
+            mobile_focus_list=None, protein_only=True):
         print('Creating shell for alignment of size ' + str(shell))
         focus_residues = ''
         for resi in focus_residue_list:
@@ -74,6 +75,16 @@ class Alignment(object):
         mobile_selector = rosetta.core.select.residue_selector.\
                 NeighborhoodResidueSelector(mobile_focus_selector,\
                 shell, include_focus_in_subset=True)
+
+        if protein_only:
+            property_selector = rosetta.core.select.residue_selector.\
+                    ResiduePropertySelector(rosetta.core.chemical.ResidueProperty.PROTEIN)
+            target_selector = rosetta.core.select.residue_selector.\
+                    AndResidueSelector(target_selector,
+                            property_selector)
+            mobile_selector = rosetta.core.select.residue_selector.\
+                    AndResidueSelector(mobile_selector,
+                            property_selector)
 
         self.set_target_residues(target_selector.apply(self.target))
         self.set_mobile_residues(mobile_selector.apply(self.mobile))
