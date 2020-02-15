@@ -94,6 +94,14 @@ if __name__ == "__main__":
                 'median':'Median', 
                 'percent_improved':'Percentage of improved',
                 'structure':'Closest structure '}
+
+        polar_only=False
+        if polar_only:
+            df = df[df['wt_restype_sum'].isin(['N','E','D','Q','K','R'])]
+        big_only=False
+        if big_only:
+            df = df[df['wt_restype_sum'].isin(['F','Y','W','H'])]
+
         if not args['--bin']:
             ind = np.arange(len(labels))
             for label in labels:

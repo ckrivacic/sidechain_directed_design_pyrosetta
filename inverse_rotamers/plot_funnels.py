@@ -19,7 +19,7 @@ if __name__=='__main__':
     if relaxed == 'y':
         cols = ['post_dist_relaxed','post_rmsd_relaxed']
     elif relaxed == 'n':
-        cols = ['post_dist', 'post_rmsd']
+        cols = ['post_dist', 'post_rmsd','elapsed_time']
 
     #difference = 139
 
