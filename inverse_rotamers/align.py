@@ -51,7 +51,8 @@ class Alignment(object):
         self.mobile_residues = res_selector_to_size_list(mselect)
         self.set_mobile_sequence()
 
-    def create_shell(self, shell, focus_residue_list, mobile_focus_list=None):
+    def create_shell(self, shell, focus_residue_list,
+            mobile_focus_list=None, protein_only=True):
         print('Creating shell for alignment of size ' + str(shell))
         focus_residues = ''
         for resi in focus_residue_list:
@@ -75,26 +76,26 @@ class Alignment(object):
                 NeighborhoodResidueSelector(mobile_focus_selector,\
                 shell, include_focus_in_subset=True)
 
+        if protein_only:
+            property_selector = rosetta.core.select.residue_selector.\
+                    ResiduePropertySelector(rosetta.core.chemical.ResidueProperty.PROTEIN)
+            target_selector = rosetta.core.select.residue_selector.\
+                    AndResidueSelector(target_selector,
+                            property_selector)
+            mobile_selector = rosetta.core.select.residue_selector.\
+                    AndResidueSelector(mobile_selector,
+                            property_selector)
+
         self.set_target_residues(target_selector.apply(self.target))
         self.set_mobile_residues(mobile_selector.apply(self.mobile))
 
-    def match_align(self, match_only=True):
-        """
-        Figure out which residue numbers to align based on sequence alignment.
-        """
-
-        print('Running match_align')
+    def align_sequences(self, alignments, ind, match_only=True):
 
         oneletter =\
                 ['A','R','N','D','B','C','E','Q','G','H','I','L','K','M','F','P','S','T','W','Y','V']
-        alignments = pairwise2.align.globalxs(self.target_sequence,\
-                self.mobile_sequence, -0.1, -0.1)
-        #for alignment in alignments:
-        if not alignments:
-            return False
-        print(alignments)
-        tseq = alignments[0][0]
-        mseq = alignments[0][1]
+
+        tseq = alignments[ind][0]
+        mseq = alignments[ind][1]
         tmatch = []
         mmatch = []
         t_iter = self.target_residues.__iter__()
@@ -102,6 +103,7 @@ class Alignment(object):
         target_align_residues = []
         mobile_align_residues = []
         self.mismatches = []
+
         for i in range(len(tseq)):
             t = tseq[i]
             m = mseq[i]
@@ -121,8 +123,35 @@ class Alignment(object):
         superimpose_poses_by_residues(self.mobile, mobile_align_residues,\
                 self.target, target_align_residues)
 
-        self.bb_rmsd = calc_backbone_RMSD(self.mobile, mobile_align_residues,
+        bb_rmsd = calc_backbone_RMSD(self.mobile, mobile_align_residues,
                 self.target, target_align_residues)
+
+        return bb_rmsd
+
+    def match_align(self, match_only=True):
+        """
+        Figure out which residue numbers to align based on sequence alignment.
+        """
+
+        print('Running match_align')
+
+        alignments = pairwise2.align.globalxs(self.target_sequence,\
+                self.mobile_sequence, 0, 0)
+        #for alignment in alignments:
+        if not alignments:
+            return False
+        print(alignments)
+        best_rmsd = 9999
+        i = 0
+        for i in range(0, len(alignments)):
+            bb_rmsd = self.align_sequences(alignments, i,
+                    match_only=match_only)
+            if bb_rmsd < best_rmsd:
+                best_rmsd = bb_rmsd
+                best_i = i
+        self.bb_rmsd = self.align_sequences(alignments, best_i,
+                match_only=match_only)
+
         return True
 
 
