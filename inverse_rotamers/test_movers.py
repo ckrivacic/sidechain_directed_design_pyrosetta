@@ -74,7 +74,9 @@ if __name__=='__main__':
     Going to need to get all focus residues on their own line, so we can calc
     bb rmsd separately.
     '''
-    init('-ignore_unrecognized_res -pdb_gz')
+    init("-ignore_unrecognized_res -ex1 -ex2 " +\
+            "-lh:db_path=/wynton/home/kortemme/krivacic/rosetta/database/loophash_db/ " +\
+            "-lh:loopsizes 6 -pdb_gz")
     row = df.loc[row_num]
 
 

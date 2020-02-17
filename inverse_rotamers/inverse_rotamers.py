@@ -29,11 +29,6 @@ rotamers.
 """
 
 
-init("-ignore_unrecognized_res -extrachi_cutoff 0 -ex1 -ex2 -out:overwrite " +\
-        "-lh:db_path=/home/ckrivacic/rosetta/database/loophash_db/ " +\
-        "-lh:loopsizes 6")
-
-
 class ConstrainToInvRot(object):
 
     def __init__(self):
@@ -356,3 +351,9 @@ def get_backrub_protocol(motif_dict, shell=6, kt=1.6, ntrials=100,
 
 #lhk = lhk_xml(task_factory)
 #lhk.apply(cst_test.pose)
+
+
+if __name__=="__main__":
+    init("-ignore_unrecognized_res -extrachi_cutoff 0 -ex1 -ex2 -out:overwrite " +\
+            "-lh:db_path=/home/ckrivacic/rosetta/database/loophash_db/ " +\
+            "-lh:loopsizes 6")

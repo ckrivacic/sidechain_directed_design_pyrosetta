@@ -160,7 +160,7 @@ def generate_loops_simple(pose, focus_residue, resbuffer=3):
     residue selector).'''
     loop = rosetta.protocols.loops.Loop(max(focus_residue - resbuffer, 1),
             min(focus_residue + resbuffer, pose.size()))
-    loop.set_cut(focus_residue)
+    loop.set_cut(focus_residue-1)
     loops = rosetta.protocols.loops.Loops()
     loops.add_loop(loop)
     print(loops)
