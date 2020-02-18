@@ -12,6 +12,8 @@ Options:
     --fa_temp_cycles=NUM  How many fa temp cycles (for loop modeler
     movers)?  [default:]
     --fast  For loop modelers, turn on test run
+    --task=INT  Choose a specific task to execute (debuggin purposes
+    only)
 """
 import sys
 import docopt
@@ -66,7 +68,10 @@ if __name__=='__main__':
     denom = 8
     pdbredo_directory = '/wynton/home/kortemme/krivacic/pdb_redo'
     shell=10
-    task_num = int(os.environ['SGE_TASK_ID']) - 1
+    if args['--task']:
+        task_num = int(args['--task'])
+    else:
+        task_num = int(os.environ['SGE_TASK_ID']) - 1
     #task_num = 518 # make sure to subtract 1 from SGE TASK ID for the real thing
     num_models = 50
 

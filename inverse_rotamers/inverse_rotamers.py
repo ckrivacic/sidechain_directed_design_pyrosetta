@@ -267,7 +267,7 @@ def get_loop_modeler(pose, designable_selector, repackable_selector,
         '''A note on LHK: You need to mutate focus residues to their motif
         residue before running.'''
         assert(resbuffer >= 4)
-        loopmodeler.setup_loophash_kic_config(True, str(focus_residue))
+        loopmodeler.setup_loophash_kic_config(False, str(focus_residue))
         loops = generate_loops_simple(pose, focus_residue, resbuffer)
 
 
