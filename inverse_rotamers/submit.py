@@ -1,12 +1,14 @@
-import sys, os, subprocess, re
-'''
-Input mover type as first argument
-'''
 '''
 Please put path to pdbredo as $PDBREDO in your bashrc
 Usage:
-    test_movers.py <input_df> <output_dir> <mover> [br]
+    test_movers.py <input_df> <output_dir> <mover> [options]
+
+Options:
+    --fast  For loop modelers, turn on test run
+
 '''
+import sys, os, subprocess, re
+import docopt
 #task_len = 500
 
 def file_len(fname):
@@ -18,23 +20,17 @@ def file_len(fname):
 def submit(alignments, **params):
     from klab import cluster, process
     import json
-    csv_path = sys.argv[1]
+    args = docopt.docopt(__doc__)
+    print(args)
+    csv_path = args['<input_df>']
     #num_tasks = (file_len(alignments) // task_len) + 1
     output_directory = 'logs'
     #error_directory = 'errors'
-    mover = str(sys.argv[3])
-    outdir = str(sys.argv[2])
-    #submit_num = sys.argv[4]
-    if len(sys.argv) > 4:
-        backrub = str(sys.argv[4])
-    else:
-        backrub = ''
-    if backrub=='br':
-        num_tasks = file_len(csv_path) * 8 # Splitting each row into 4
+    mover = args['<mover>']
+    outdir = args['<output_dir>']
+    num_tasks = file_len(csv_path) * 8 # Splitting each row into 8
         #tasks, one for constrained and one for unconstrained, then those
         #into 2 to make the task complete on time
-    else:
-        num_tasks = 14 * 2
 
     max_runtime = params.get('max_runtime','12:00:00')
     max_memory = params.get('max_memory','4G')
@@ -56,8 +52,9 @@ def submit(alignments, **params):
     qsub_command += csv_path,
     qsub_command += outdir,
     qsub_command += mover,
-    #qsub_command += submit_num,
-    qsub_command += backrub,
+    qsub_command += '--br',
+    if args['--fast']:
+        qsub_command += '--fast',
     print(qsub_command)
 
     status = process.check_output(qsub_command, stderr=subprocess.STDOUT).decode('utf-8')

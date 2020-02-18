@@ -2,7 +2,19 @@
 ##$ -S /wynton/home/kortemme/krivacic/software/python38/bin/python3
 #$ -l mem_free=4G
 #$ -cwd
+"""
+Usage: test_movers <input_df> <output_dir> <mover> [options]
+
+Options:
+    --br  Parse the backrub dataframe
+    --cen_temp_cycles=NUM  How many centroid temp cycles (for loop
+    modeler movers)?  [default:]
+    --fa_temp_cycles=NUM  How many fa temp cycles (for loop modeler
+    movers)?  [default:]
+    --fast  For loop modelers, turn on test run
+"""
 import sys
+import docopt
 sys.path.insert(1, "/wynton/home/kortemme/krivacic/intelligent_design/sidechain_directed_design_pyrosetta/inverse_rotamers/")
 from benchmark_utils import *
 from align import Mismatch
@@ -49,6 +61,8 @@ def import_backrub_dataframe(path):
 
 
 if __name__=='__main__':
+    args = docopt.docopt(__doc__)
+    print(args)
     denom = 8
     pdbredo_directory = '/wynton/home/kortemme/krivacic/pdb_redo'
     shell=10
@@ -56,7 +70,7 @@ if __name__=='__main__':
     #task_num = 518 # make sure to subtract 1 from SGE TASK ID for the real thing
     num_models = 50
 
-    mover = sys.argv[3]
+    mover = args['<mover>']
 
     #offset = (int(sys.argv[4]) - 1) * num_models * 100
     #task_num += offset
@@ -64,11 +78,10 @@ if __name__=='__main__':
 
     # backrub variable tells us if we're reading from the backrub
     # benchmark dataframe, NOT whether we're using the backrub mover
-    backrub = True if (len(sys.argv) > 4 and sys.argv[4] == 'br') else False
-    if backrub:
-        df = import_backrub_dataframe(sys.argv[1])
+    if args['--br']:
+        df = import_backrub_dataframe(args['<input_df>'])
     else:
-        df = import_benchmark_dataframe(sys.argv[1])
+        df = import_benchmark_dataframe(args['<input_df>'])
     print(df)
     '''
     Going to need to get all focus residues on their own line, so we can calc
@@ -83,16 +96,9 @@ if __name__=='__main__':
     default_sfxn = create_score_function('ref2015')
     wt_pdbid = row['wt'].lower()
     mut_pdbid = row['mutant'].lower()
-    print('-----------------------------------')
-    print('COMPARING THE FOLLOWING 2 PDBIDs:')
-    print(wt_pdbid)
-    print(mut_pdbid)
-    print('TASK NUMBER IS ' + str(task_num))
-    print('ROW NUMBER IS ' + str(row_num))
-    print('-----------------------------------')
 
     constrain = 'constrained' if (task_num%2 == 0) else 'unconstrained'
-    outdir_final = os.path.join(sys.argv[2], mut_pdbid + '_' + wt_pdbid, constrain)
+    outdir_final = os.path.join(args['<output_dir>'], mut_pdbid + '_' + wt_pdbid, constrain)
     if not os.path.exists(outdir_final):
         os.makedirs(outdir_final, exist_ok=True)
 
@@ -113,7 +119,7 @@ if __name__=='__main__':
             prefix='/wynton/home/kortemme/krivacic/intelligent_design/sidechain_directed_design_pyrosetta/backrub_pointmutant_benchmark/benchmark_pdbs',
             suffix='.pdb')
 
-    if backrub:
+    if args['--br']:
         wtfocus = wt_pose.pdb_info().pdb2pose(row['wt_chain'],
                 row['wt_resnum'])
         mutfocus = mut_pose.pdb_info().pdb2pose(row['mut_chain'],
@@ -122,6 +128,16 @@ if __name__=='__main__':
     else:
         focus = Mismatch(int(row['mut_res']), int(row['wt_res']))
     #mut_pair = MutantPair(mut_pose, wt_pose, [focus], shell=shell)
+
+    print('-----------------------------------')
+    print('COMPARING THE FOLLOWING 2 PDBIDs:')
+    print('{}, resi {} chain {}, rosetta res {}'.format(wt_pdbid,
+        row['wt_resnum'], row['wt_chain'], wtfocus))
+    print('{}, resi {} chain {}, rosetta res {}'.format(mut_pdbid,
+        row['mut_resnum'], row['mut_chain'], mutfocus))
+    print('TASK NUMBER IS ' + str(task_num))
+    print('ROW NUMBER IS ' + str(row_num))
+    print('-----------------------------------')
 
     output_data = []
 
@@ -149,9 +165,14 @@ if __name__=='__main__':
         print(out_dict)
 
 
+        # Get modeler object for corresponding mover type
+        if args['--fast']:
+            fast=True
+        else:
+            fast=False
         if mover == 'ngk':
             modeler = get_loop_modeler(mut_pair.aligner.target, designable, repackable,
-                    focus.target, task_factory=task_factory, fast=False,
+                    focus.target, task_factory=task_factory, fast=fast,
                     mover='ngk', resbuffer=4)
         elif mover == 'ngkf':
             modeler = get_loop_modeler(mut_pair.aligner.target, designable, repackable,
@@ -162,10 +183,12 @@ if __name__=='__main__':
                 aatype = chemical_aa_from_oneletter(mut_pair.motif_dict[key])
                 mut_res = rosetta.protocols.simple_moves.MutateResidue(key,
                         aatype)
+                print('MADE MUT_RES OBJ')
                 mut_res.apply(mut_pair.aligner.target)
+                print('APPLIED MUT_RES')
             modeler = get_loop_modeler(mut_pair.aligner.target,
                     designable, repackable, focus.target,
-                    task_factory=task_factory, fast=False,
+                    task_factory=task_factory, fast=fast,
                     mover='lhk', resbuffer=4)
         elif mover == 'fastdesign':
             modeler = fast_design(mut_pair.aligner.target, designable, repackable,
@@ -175,6 +198,14 @@ if __name__=='__main__':
                     shell=shell, kt=1.6, task_factory=task_factory,
                     ntrials=100, stride=100)
 
+        # Set mover options for loop modelers
+        if mover in ['lhk','ngk','ngkf']:
+            if args['--cen_temp_cycles']:
+                print('0---dfaklfjalsk; HIHI HIHI HI')
+                modeler.centroid_stage().set_temp_cycles(int(args['--cen_etmp_cycles']),True)
+            if args['--fa_temp_cycles']:
+                modeler.fullatom_stage().set_temp_cycles(int(args['--fa_temp_cycles']),True)
+                print(modeler.fullatom_stage().get_temp_cycles())
 
         start_time = time.time()
         modeler.apply(mut_pair.aligner.target)

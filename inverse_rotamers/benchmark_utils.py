@@ -47,7 +47,10 @@ def constraints_from_pose(reference_pose, target_pose, res_dict):
 def constrain_mutant_to_wt(mutant_pose, wt_pose, mut_focus_residues,
         wt_focus_residues, constrain=True, shell=6):
     aligner = Alignment(mutant_pose, wt_pose)
-    aligner.create_shell(shell, mut_focus_residues, mobile_focus_list=wt_focus_residues)
+    aligner.create_shell(shell, mut_focus_residues,
+            mobile_focus_list=wt_focus_residues,
+            tchain=mutant_pose.chain(mut_focus_residues[0]),
+            mchain=wt_pose.chain(wt_focus_residues[0]))
     aligner.match_align()
     if constrain:
         alignment_dict = {}
