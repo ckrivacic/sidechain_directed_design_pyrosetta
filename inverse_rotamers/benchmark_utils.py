@@ -47,10 +47,19 @@ def constraints_from_pose(reference_pose, target_pose, res_dict):
 def constrain_mutant_to_wt(mutant_pose, wt_pose, mut_focus_residues,
         wt_focus_residues, constrain=True, shell=6):
     aligner = Alignment(mutant_pose, wt_pose)
+
+    # Get chain info (this is a roundabout way of getting this and
+    # should probably be refactored at some point.)
+    # Initially this just used the Rosetta chain, but (older?) versions
+    # of PyRosetta do not seem to support that.
+    tchain = mutant_pose.pdb_info().chain(mut_focus_residues[0])
+    mchain = wt_pose.pdb_info().chain(wt_focus_residues[0])
+
+    # Create a selection shell
     aligner.create_shell(shell, mut_focus_residues,
             mobile_focus_list=wt_focus_residues,
-            tchain=mutant_pose.chain(mut_focus_residues[0]),
-            mchain=wt_pose.chain(wt_focus_residues[0]))
+            tchain=tchain,
+            mchain=mchain)
     aligner.match_align()
     if constrain:
         alignment_dict = {}
