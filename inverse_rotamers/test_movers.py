@@ -88,24 +88,32 @@ if __name__=='__main__':
     else:
         df = import_benchmark_dataframe(args['<input_df>'])
     print(df)
+
+    row = df.loc[row_num]
+    wt_pdbid = row['wt'].lower()
+    mut_pdbid = row['mutant'].lower()
+
+    constrain = 'constrained' if (task_num%2 == 0) else 'unconstrained'
+    outdir_final = os.path.join(args['<output_dir>'], mut_pdbid + '_' + wt_pdbid, constrain)
+    pklout = outdir_final + '/results_' + str(task_num%denom) + '.pkl'
+    if os.path.exists(pklout):
+        print('Job already completed. Exiting.')
+        sys.exit()
+
+    if not os.path.exists(outdir_final):
+        os.makedirs(outdir_final, exist_ok=True)
+
     '''
     Going to need to get all focus residues on their own line, so we can calc
     bb rmsd separately.
     '''
     init("-ignore_unrecognized_res -ex1 -ex2 " +\
             "-lh:db_path=/wynton/home/kortemme/krivacic/rosetta/database/loophash_db/ " +\
-            "-lh:loopsizes 6 -pdb_gz")
-    row = df.loc[row_num]
+            "-lh:loopsizes 6 -pdb_gz "+ \
+            "-total_threads 1")
 
 
     default_sfxn = create_score_function('ref2015')
-    wt_pdbid = row['wt'].lower()
-    mut_pdbid = row['mutant'].lower()
-
-    constrain = 'constrained' if (task_num%2 == 0) else 'unconstrained'
-    outdir_final = os.path.join(args['<output_dir>'], mut_pdbid + '_' + wt_pdbid, constrain)
-    if not os.path.exists(outdir_final):
-        os.makedirs(outdir_final, exist_ok=True)
 
     if 'TMPDIR' in os.environ:
         os_tmp = os.environ['TMPDIR']
@@ -261,6 +269,6 @@ if __name__=='__main__':
     df_out = pd.DataFrame.from_records(output_data)
     print(df_out)
     print('Job finished, transferring files...')
-    with open(outdir_final + '/results_' + str(task_num%denom) + '.pkl', 'wb') as f:
+    with open(pklout, 'wb') as f:
         pickle.dump(df_out, f)
     finish_io(outdir_temp, outdir_final, str(task_num%denom))
