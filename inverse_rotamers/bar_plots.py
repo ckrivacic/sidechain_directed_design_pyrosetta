@@ -31,10 +31,10 @@ def row_index_from_pdbs(mut, wt, df):
 if __name__ == "__main__":
     from matplotlib import pyplot as plt
 
-    name_dict = {'fastdesign':'FastRelax ','ngkf':'Next-gen KIC (fast) ',
-            'br':'Backrub (100 trials) '}
+    name_dict = {'fastdesign':'FastRelax ','ngk':'Next-gen KIC (fast) ',
+            'br':'Backrub (100 trials) ', 'lhk':'Loophash KIC (fast)'}
     colors = cycle(['navy', 'cornflowerblue', 'darkgreen',
-            'lightgreen', 'firebrick', 'lightcoral'])
+            'lightgreen', 'firebrick', 'lightcoral', 'purple', 'thistle'])
 
     args = docopt.docopt(__doc__)
     print(args)
@@ -57,10 +57,10 @@ if __name__ == "__main__":
                 '0.1-0.15', '0.15-0.2', '0.2-0.25', '0.25-0.3',
                 '0.3-0.4', '0.4-0.5', '>0.5']
     else:
-        bins = [0, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0,10.0]
-        labels = [0, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0]
+        bins = [0, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0,1.2,1.5,10.0]
+        labels = [0, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.5]
         labels_str = ['0-0.1', '0.1-0.2', '0.2-0.4', '0.4-0.6',
-                '0.6-0.8', '0.8-1.0', '>1.0']
+                '0.6-0.8', '0.8-1.0', '1.0-1.2', '1.2-1.5', '>1.5']
     '''
     else:
         bins = [0, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0, 1.5, 10.0]
