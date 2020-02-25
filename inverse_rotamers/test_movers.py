@@ -179,6 +179,14 @@ if __name__=='__main__':
 
 
         # Get modeler object for corresponding mover type
+        for key in mut_pair.motif_dict:
+            #aatype = chemical_aa_from_oneletter(mut_pair.motif_dict[key])
+            aatype = oneletter_to_threeletter(mut_pair.motif_dict[key]).upper()
+            mut_res = rosetta.protocols.simple_moves.MutateResidue(key,
+                    aatype)
+            print('MADE MUT_RES OBJ')
+            mut_res.apply(mut_pair.aligner.target) # apply() or make_mutation()?
+            print('APPLIED MUT_RES')
         if args['--fast']:
             fast=True
         else:
@@ -192,14 +200,6 @@ if __name__=='__main__':
                     focus.target, task_factory=task_factory, fast=True,
                     mover='ngk', resbuffer=4)
         elif mover == 'lhk':
-            for key in mut_pair.motif_dict:
-                #aatype = chemical_aa_from_oneletter(mut_pair.motif_dict[key])
-                aatype = oneletter_to_threeletter(mut_pair.motif_dict[key]).upper()
-                mut_res = rosetta.protocols.simple_moves.MutateResidue(key,
-                        aatype)
-                print('MADE MUT_RES OBJ')
-                mut_res.apply(mut_pair.aligner.target) # apply() or make_mutation()?
-                print('APPLIED MUT_RES')
             modeler = get_loop_modeler(mut_pair.aligner.target,
                     designable, repackable, focus.target,
                     task_factory=task_factory, fast=fast,
