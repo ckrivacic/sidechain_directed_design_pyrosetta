@@ -3,7 +3,6 @@ import pandas as pd
 from matplotlib import pyplot as plt
 from numeric import euclidean_distance
 
-
 if __name__=='__main__':
     #by = 'final_score'
     #by = 'post_dist_relaxed'
@@ -94,8 +93,10 @@ if __name__=='__main__':
                         data = event.artist.get_offsets()
                         if event.artist.get_label().endswith('unconstrained'):
                             pick_df = df_uncst
+                            cst = 'unconstrained'
                         else:
                             pick_df = df_cst
+                            cst = 'constrained'
 
                         xmouse, ymouse = event.mouseevent.xdata, event.mouseevent.ydata
                         if len(ind) > 1:
@@ -110,11 +111,12 @@ if __name__=='__main__':
                         else:
                             low_index = ind[0]
 
-                        pathlist = pick_df.iloc[low_index]['path'].split('/')
-                        if pathlist[-1] == 'constrained' or pathlist[-1] == 'unconstrained':
-                            pathlist = pathlist[:-1]
-                        path = os.path.abspath('/'.join(pathlist))
-                        print(path)
+                        row = pick_df.iloc[low_index]
+                        pdb_file = row['path'].split('/')[-1]
+                        print(pdb_file)
+                        subfolder = '_'.join(pdb_file.split('_')[0:2])
+                        pdb_path = os.path.join(directory, cst, pdb_file)
+                        print(pdb_path)
 
 
                     fig = plt.figure()
