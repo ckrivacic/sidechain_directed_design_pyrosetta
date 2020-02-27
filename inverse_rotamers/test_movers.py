@@ -117,6 +117,8 @@ if __name__=='__main__':
 
     if 'TMPDIR' in os.environ:
         os_tmp = os.environ['TMPDIR']
+    elif args['--task']:
+        os_tmp = os.path.join(os.environ['HOME'], 'temp')
     else:
         os_tmp = os.path.join('/scratch',os.environ['USER'])
     outdir_temp = os.path.join(os_tmp, str(task_num))
@@ -135,9 +137,17 @@ if __name__=='__main__':
     if args['--br']:
         wtfocus = wt_pose.pdb_info().pdb2pose(row['wt_chain'],
                 row['wt_resnum'])
+        print('WTFOCUS')
+        print(wtfocus)
         mutfocus = mut_pose.pdb_info().pdb2pose(row['mut_chain'],
                 row['mut_resnum'])
+        print('MUTFOCUS')
+        print(mutfocus)
         focus = Mismatch(mutfocus, wtfocus)
+        print('MISMATCH TARGET')
+        print(focus.target)
+        print('MISMATCH MOBILE')
+        print(focus.mobile)
     else:
         focus = Mismatch(int(row['mut_res']), int(row['wt_res']))
     #mut_pair = MutantPair(mut_pose, wt_pose, [focus], shell=shell)
@@ -168,6 +178,9 @@ if __name__=='__main__':
         designable, repackable, task_factory, mut_pair = \
                 prepare_pdbids_for_modeling(wt_pdbid, mut_pdbid, [focus],
                         constrain=cst, shell=shell)
+
+        print('MOTIFS HERE')
+        print(mut_pair.motif_dict)
 
         out_dict['pre_rmsd'] = mut_pair.aligner.bb_rmsd
         out_dict['pre_dist'] = distance_rosetta(mut_pair.aligner.target,

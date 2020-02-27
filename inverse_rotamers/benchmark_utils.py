@@ -137,6 +137,9 @@ def prepare_pdbids_for_modeling(wt_pdbid, mut_pdbid, focus_mismatch_list,
             prefix=prefix)
     '''
 
+    print('FOCUS_MISMATCH_LIST')
+    print(focus_mismatch_list[0].target)
+    print(focus_mismatch_list[0].mobile)
     mut_pair = MutantPair(mut_pose, wt_pose, focus_mismatch_list, 
             shell=shell, cst=constrain)
 
@@ -216,16 +219,17 @@ class MutantPair(object):
 
         target_focus_list = [x.target for x in focus_mismatches]
         mobile_focus_list = [x.mobile for x in focus_mismatches]
+
         self.aligner_ = constrain_mutant_to_wt(self.mut_.pose,
                 self.wt_.pose,
                 target_focus_list, mobile_focus_list, constrain=cst,
                 shell=shell)
 
-        self.mut_.mismatches = self.aligner_.mismatches
-        self.wt_.mismatches = self.aligner_.mismatches
+        #self.mut_.mismatches = self.aligner_.mismatches
+        #self.wt_.mismatches = self.aligner_.mismatches
 
         motif_dict = {}
-        for mismatch in self.aligner_.mismatches:
+        for mismatch in focus_mismatches:
             wt_res_type = self.wt_.pose.residue(mismatch.mobile).name1()
             motif_dict[mismatch.target] = str(wt_res_type)
         self.motif_dict_ = motif_dict

@@ -152,8 +152,14 @@ class Alignment(object):
 
         print('Running match_align')
 
+        # Note about alignment parameters: Used to have a small -0.1
+        # penalty for gap creation & extension. Got rid of this in favor
+        # of getting better alignments, but the downside is that for
+        # cases where you want to know which residues are mutants of
+        # each other, you don't get that info anymore.
         alignments = pairwise2.align.globalxs(self.target_sequence,\
                 self.mobile_sequence, 0, 0)
+
         #for alignment in alignments:
         if not alignments:
             return False
