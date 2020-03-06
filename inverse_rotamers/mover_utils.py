@@ -153,6 +153,17 @@ def setup_task_factory(pose, designable_residue_selector,
     #task_design.restrict_to_residues(residue_selector_output)
 
 
+def generate_loop_simple(pose, focus_residue, resbuffer=3):
+    '''Function to get a loops object for LoopModeler. For now, simply
+    do focus residue +/- 3 residues, but we can make this more
+    sophisticated later (the constructor for Loops can also take a
+    residue selector).'''
+    loop = rosetta.protocols.loops.Loop(max(focus_residue - resbuffer, 1),
+            min(focus_residue + resbuffer, pose.size()))
+    loop.set_cut(focus_residue-1)
+    return loop
+
+
 def generate_loops_simple(pose, focus_residue, resbuffer=3):
     '''Function to get a loops object for LoopModeler. For now, simply
     do focus residue +/- 3 residues, but we can make this more

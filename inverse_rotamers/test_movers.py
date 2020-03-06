@@ -1,5 +1,4 @@
-#! /wynton/home/kortemme/krivacic/software/anaconda3/bin/python3
-##$ -S /wynton/home/kortemme/krivacic/software/python38/bin/python3
+#! /wynton/home/kortemme/krivacic/software/anaconda36/bin/python3
 #$ -l mem_free=4G
 #$ -cwd
 """
@@ -224,6 +223,8 @@ if __name__=='__main__':
             modeler = get_backrub_protocol(mut_pair.motif_dict,
                     shell=shell, kt=1.6, task_factory=task_factory,
                     ntrials=100, stride=100)
+        elif mover == 'jacobi':
+            modeler = get_jacobi_refiner(pose, focus.target, resbuffer=4)
 
         # Set mover options for loop modelers
         if mover in ['lhk','ngk','ngkf']:

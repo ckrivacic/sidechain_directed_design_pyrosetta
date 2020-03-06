@@ -238,6 +238,17 @@ def lhk_xml(task_factory):
 
     return lhk
 
+def get_jacobi_refiner(pose, focus_residue, resbuffer=3):
+    sfxn = setup_restrained_sfxn(['coordinate_constraint'],[1.0])
+
+    loop = generate_loop_simple(pose,
+            focus_residue, resbuffer=resbuffer)
+    jacobi_refiner = \
+            pyrosetta.rosetta.protocols.loops.loop_mover.refine.\
+            LoopMover_Refine_Jacobi(loop, sfxn)
+
+    return jacobi_refiner
+
 
 def get_loop_modeler(pose, designable_selector, repackable_selector,
         focus_residue, movemap=None, task_factory=None, 
