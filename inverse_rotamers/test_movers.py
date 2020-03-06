@@ -224,7 +224,7 @@ if __name__=='__main__':
                     shell=shell, kt=1.6, task_factory=task_factory,
                     ntrials=100, stride=100)
         elif mover == 'jacobi':
-            modeler = get_jacobi_refiner(pose, focus.target, resbuffer=4)
+            modeler = get_jacobi_refiner(mut_pair.aligner.target, focus.target, resbuffer=4)
 
         # Set mover options for loop modelers
         if mover in ['lhk','ngk','ngkf']:
