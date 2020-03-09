@@ -13,6 +13,7 @@ Options:
     --fast  For loop modelers, turn on test run
     --task=INT  Choose a specific task to execute (debuggin purposes
     only)
+    --nomutate  Don't mutate before applying mover (testing only)
 """
 import sys
 import docopt
@@ -190,19 +191,21 @@ if __name__=='__main__':
         print(out_dict)
 
 
-        # Get modeler object for corresponding mover type
-        for key in mut_pair.motif_dict:
-            #aatype = chemical_aa_from_oneletter(mut_pair.motif_dict[key])
-            aatype = oneletter_to_threeletter(mut_pair.motif_dict[key]).upper()
-            mut_res = rosetta.protocols.simple_moves.MutateResidue(key,
-                    aatype)
-            print('MADE MUT_RES OBJ')
-            mut_res.apply(mut_pair.aligner.target) # apply() or make_mutation()?
-            print('APPLIED MUT_RES')
+        if not args['--nomutate']:
+            for key in mut_pair.motif_dict:
+                aatype = oneletter_to_threeletter(mut_pair.motif_dict[key]).upper()
+                mut_res = rosetta.protocols.simple_moves.MutateResidue(key,
+                        aatype)
+                print('MADE MUT_RES OBJ')
+                mut_res.apply(mut_pair.aligner.target) # apply() or make_mutation()?
+                print('APPLIED MUT_RES')
+
         if args['--fast']:
             fast=True
         else:
             fast=False
+
+        # Get modeler object for corresponding mover type
         if mover == 'ngk':
             modeler = get_loop_modeler(mut_pair.aligner.target, designable, repackable,
                     focus.target, task_factory=task_factory, fast=fast,
@@ -224,7 +227,8 @@ if __name__=='__main__':
                     shell=shell, kt=1.6, task_factory=task_factory,
                     ntrials=100, stride=100)
         elif mover == 'jacobi':
-            modeler = get_jacobi_refiner(mut_pair.aligner.target, focus.target, resbuffer=4)
+            modeler = get_jacobi_refiner(mut_pair.aligner.target,
+                    focus.target, resbuffer=4)
 
         # Set mover options for loop modelers
         if mover in ['lhk','ngk','ngkf']:
@@ -236,6 +240,7 @@ if __name__=='__main__':
                 print(modeler.fullatom_stage().get_temp_cycles())
 
         start_time = time.time()
+        mut_pair.aligner.target.dump_pdb('TEST_OUT.pdb')
         modeler.apply(mut_pair.aligner.target)
         elapsed = time.time() - start_time
         out_dict['elapsed_time'] = elapsed

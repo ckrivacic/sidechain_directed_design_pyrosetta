@@ -240,11 +240,14 @@ def lhk_xml(task_factory):
 
 def get_jacobi_refiner(pose, focus_residue, resbuffer=3):
     sfxn = setup_restrained_sfxn(['coordinate_constraint'],[1.0])
+    #sfxn = create_score_function('ref2015')
 
     loop = generate_loop_simple(pose,
             focus_residue, resbuffer=resbuffer)
+    print('____Loop for jacobian:____')
+    print(loop)
     jacobi_refiner = \
-            pyrosetta.rosetta.protocols.loops.loop_mover.refine.\
+            rosetta.protocols.loops.loop_mover.refine.\
             LoopMover_Refine_Jacobi(loop, sfxn)
 
     return jacobi_refiner
