@@ -282,9 +282,7 @@ if __name__=='__main__':
 
         annotate_pdb(pdb_path, out_dict)
         annotate_pdb(pdb_path_rel, out_dict)
-        #except:
-        with open(os.path.join(outdir_temp, 'errors.txt'),'a') as f:
-            f.write('Job number ' + str(jobnum) + ' failed \n')
+
     df_out = pd.DataFrame.from_records(output_data)
     print(df_out)
     print('Job finished, transferring files...')

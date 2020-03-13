@@ -12,6 +12,8 @@ Options:
     --force, -f  Force to re-analyze if analysis pkl file is found.
     --binby=BINBY  What to bin by (distance, rmsd, relsurf)  
     [default:]
+    --restype=1letterAA  Specify a restype or comma-separated list of
+    resypes to analyze.  [default: ]
 
 """
 
@@ -32,7 +34,8 @@ if __name__ == "__main__":
     from matplotlib import pyplot as plt
 
     name_dict = {'fastdesign':'FastRelax ','ngk':'Next-gen KIC (fast) ',
-            'br':'Backrub (100 trials) ', 'lhk':'Loophash KIC (fast)'}
+            'br':'Backrub (100 trials) ', 'lhk':'Loophash KIC (fast)',
+            'jacobi_refine':'Jacobi refinement'}
     colors = cycle(['navy', 'cornflowerblue', 'darkgreen',
             'lightgreen', 'firebrick', 'lightcoral', 'purple', 'thistle'])
 
@@ -111,6 +114,12 @@ if __name__ == "__main__":
         if big_only:
             df = df[df['wt_restype_sum'].isin(['F','Y','W','H'])]
 
+        if args['--restype']:
+            restypes = args['--restype'].split(',')
+            print('Restricting to restype(s) ', args['--restype'])
+            df = df[df['wt_restype_sum'].isin(restypes)]
+            #df_uncst = df_uncst[df_uncst['wt_restype_sum']==args['--restype']]
+
         if not args['--bin']:
             ind = np.arange(len(labels))
             for label in labels:
@@ -144,7 +153,7 @@ if __name__ == "__main__":
             ax.set_xticks(ind + width/(len(args['<folders>'])/2))
             ax.set_xticklabels(labels_str)
 
-        else:
+        elif args['--bin']:
             import random
             num_examples = 10
             label = float(args['--bin'])
@@ -184,7 +193,7 @@ if __name__ == "__main__":
                             yval_uncst = df_uncst.loc[uncst_row, y]
                         yvals_uncst.append(yval_uncst)
                         yvals_cst.append(yval_cst)
-                        ticklabels.append('{} ({}{}),\n{} ({}{})'\
+                        ticklabels.append('{} ({}{}) to \n{} ({}{})'\
                                 .format(mut, mutchain, mutresnum, wt,
                                     wtchain, wtresnum))
                         pdbs.append('_'.join([mut, wt]))

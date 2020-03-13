@@ -174,7 +174,7 @@ if __name__ == '__main__':
 
         relaxed_str = 'y' if relaxed else 'n'
         #cmd = 'python3.7 ' +\
-        cmd = 'python3.8 ' +\
+        cmd = 'python3 ' +\
         os.environ['HOME'] + '/intelligent_design/sidechain_directed_design_pyrosetta/inverse_rotamers/plot_funnels.py '\
         + path + ' ' + relaxed_str
 
