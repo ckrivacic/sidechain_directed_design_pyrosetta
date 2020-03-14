@@ -83,7 +83,7 @@ def summarize(input_dir, summary='mean', force=False, relaxed=False,
                                         if not threshold:
                                             threshold = 0.0
                                         if subname == 'dist' or subname == 'rmsd':
-                                            fraction = df[df[col] < (1 -
+                                            fraction = df[df[col] < (1.0 -
                                                 threshold) * df['pre_' +
                                                 subname]][col].size / df['pre_' +
                                                         subname].size
