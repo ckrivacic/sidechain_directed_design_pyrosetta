@@ -11,9 +11,11 @@ Options:
     --bin=BIN  Plot examples from a particular bin.  [default: ]
     --force, -f  Force to re-analyze if analysis pkl file is found.
     --binby=BINBY  What to bin by (distance, rmsd, relsurf)  
-    [default:]
+    [default: dist]
+    --bins=INT  How many bins  [default: 10]
     --restype=1letterAA  Specify a restype or comma-separated list of
     resypes to analyze.  [default: ]
+    --delta, -d  Report y-values as deltas
 
 """
 
@@ -45,25 +47,13 @@ if __name__ == "__main__":
     summary = args['--sum']
     relaxed = args['--relaxed']
     force = args['--force']
+    delta = args['--delta']
     x = 'pre_' + mid + '_sum'
     if not relaxed:
         y = 'post_' + mid + '_sum'
     if relaxed:
         y = 'post_' + mid + '_relaxed_sum'
 
-    if args['--binby'] == 'relsurf_sum':
-        bins = [0, 0.02, 0.04, 0.06, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5,
-                1.0]
-        labels = [0, 0.02, 0.04, 0.06, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4,
-                0.5]
-        labels_str = ['0-0.02', '0.02-0.04', '0.04-0.06', '0.06-0.1',
-                '0.1-0.15', '0.15-0.2', '0.2-0.25', '0.25-0.3',
-                '0.3-0.4', '0.4-0.5', '>0.5']
-    else:
-        bins = [0, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0,1.2,1.5,10.0]
-        labels = [0, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.5]
-        labels_str = ['0-0.1', '0.1-0.2', '0.2-0.4', '0.4-0.6',
-                '0.6-0.8', '0.8-1.0', '1.0-1.2', '1.2-1.5', '>1.5']
     '''
     else:
         bins = [0, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0, 1.5, 10.0]
@@ -71,7 +61,33 @@ if __name__ == "__main__":
         labels_str = ['0-0.1', '0.1-0.2', '0.2-0.4', '0.4-0.6',
                 '0.6-0.8', '0.8-1.0', '1.0-1.5', '>1.5']
     '''
-    
+    df = summarize(args['<folders>'][0], summary=summary, force=force,
+            relaxed=relaxed, by=mid)
+    if args['--binby'] == 'relsurf_sumaa':
+        bins = [0, 0.005, 0.02, 0.04, 0.06, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5,
+                1.0,10.0]
+        labels = [0,0.005, 0.02, 0.04, 0.06, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4,
+                0.5,1.0]
+        labels_str = ['0-0.005','0.005 - 0.02', '0.02-0.04', '0.04-0.06', '0.06-0.1',
+                '0.1-0.15', '0.15-0.2', '0.2-0.25', '0.25-0.3',
+                '0.3-0.4', '0.4-0.5', '0.5-1.0','>1.0']
+
+    elif args['--binby'] == 'dist':
+        bins = [0, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0,1.2,1.5,10.0]
+        labels = [0, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.5]
+        labels_str = ['0-0.1', '0.1-0.2', '0.2-0.4', '0.4-0.6',
+                '0.6-0.8', '0.8-1.0', '1.0-1.2', '1.2-1.5', '>1.5']
+
+    else:
+        stop = df[args['--binby']].max()
+        start = df[args['--binby']].min()
+        step = (stop - start) / float(args['--bins'])
+        bins = np.arange(start, stop, step)
+        labels = bins[0:-1]
+        labels_str = []
+        for b in range(0, len(bins)-1):
+            labels_str.append('{}-{}'.format(bins[b],bins[b+1]))
+
     ind = np.arange(len(labels))
     width = 0.45
     fig, ax = plt.subplots()
@@ -94,7 +110,7 @@ if __name__ == "__main__":
         stderr_uncst = []
 
         print(df.columns)
-        if args['--binby']:
+        if args['--binby'] and args['--binby']!='dist':
             df['binned'] = pd.cut(df[args['--binby']], bins=bins,
                     labels=labels)
         else:
@@ -123,16 +139,34 @@ if __name__ == "__main__":
         if not args['--bin']:
             ind = np.arange(len(labels))
             for label in labels:
-                cst_mean = df[(df['constrained']==True) &
-                    (df['binned']==label)][y].mean()
-                yvals_cst.append(cst_mean)
-                stderr_cst.append(df[(df['constrained']==True) &
-                    (df['binned']==label)][y].std())
+                if delta:
+                    df_cst_binned = df[(df['constrained']==True) &
+                            (df['binned']==label)]
+                    deltas_cst = df_cst_binned[y] - df_cst_binned[x]
+                    cst_mean = deltas_cst.mean()
+                    stderr_cst_val = deltas_cst.std()
 
-                yvals_uncst.append(df[(df['constrained']==False) &
-                    (df['binned']==label)][y].mean())
-                stderr_uncst.append(df[(df['constrained']==False) &
-                    (df['binned']==label)][y].std())
+                    df_uncst_binned = df[(df['constrained']==False) &
+                            (df['binned']==label)]
+                    deltas_uncst = df_uncst_binned[y] -\
+                        df_uncst_binned[x]
+                    uncst_mean = deltas_uncst.mean()
+                    stderr_uncst_val = deltas_uncst.std()
+                else:
+                    cst_mean = df[(df['constrained']==True) &
+                        (df['binned']==label)][y].mean()
+                    stderr_cst_val = df[(df['constrained']==True) &
+                        (df['binned']==label)][y].std()
+                    uncst_mean = df[(df['constrained']==False) &
+                        (df['binned']==label)][y].mean()
+                    stderr_uncst_val = df[(df['constrained']==False) &
+                        (df['binned']==label)][y].std()
+
+                yvals_cst.append(cst_mean)
+                stderr_cst.append(stderr_cst_val)
+
+                yvals_uncst.append(uncst_mean)
+                stderr_uncst.append(stderr_uncst_val)
 
             if args['--cst'] == 'cst' or args['--cst'] == 'both':
                 ax.bar(ind + (2 * i) * width / (len(args['<folders>'])),

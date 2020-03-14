@@ -17,7 +17,7 @@ For each subdirectory, summarize:
 '''
 
 def summarize(input_dir, summary='mean', force=False, relaxed=False,
-        by='dist'):
+        by='dist', delta=False):
     outpath = os.path.join(input_dir,
             'summary_of_{}_by_{}.pkl'.format(by, summary))
     if not force:
