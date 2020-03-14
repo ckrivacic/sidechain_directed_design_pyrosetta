@@ -16,6 +16,9 @@ Options:
     --restype=1letterAA  Specify a restype or comma-separated list of
     resypes to analyze.  [default: ]
     --delta, -d  Report y-values as deltas
+    --threshold=FLOAT  Between 0 and 1. How much better must a dist or
+    rmsd be before it's considered in the percent_improved metric?
+    [default: 0.0]
 
 """
 
@@ -48,6 +51,7 @@ if __name__ == "__main__":
     relaxed = args['--relaxed']
     force = args['--force']
     delta = args['--delta']
+    threshold = float(args['--threshold'])
     x = 'pre_' + mid + '_sum'
     if not relaxed:
         y = 'post_' + mid + '_sum'
@@ -102,7 +106,7 @@ if __name__ == "__main__":
     for input_dir in args['<folders>']:
         folder_label = name_dict[input_dir.split('/')[-3]]
         df = summarize(input_dir, summary=summary, force=force,
-                relaxed=relaxed, by=mid)
+                relaxed=relaxed, by=mid, threshold=threshold)
 
         yvals_cst = []
         stderr_cst = []
