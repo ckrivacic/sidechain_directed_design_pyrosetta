@@ -179,6 +179,9 @@ if __name__=='__main__':
                 prepare_pdbids_for_modeling(wt_pdbid, mut_pdbid, [focus],
                         constrain=cst, shell=shell)
 
+        out_dict['pre_score_wt'] = default_sfxn(mut_pair.aligner.mobile)
+        out_dict['pre_score_mut'] = default_sfxn(mut_pair.aligner.target)
+
         print('MOTIFS HERE')
         print(mut_pair.motif_dict)
 
