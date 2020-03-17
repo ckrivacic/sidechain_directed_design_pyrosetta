@@ -129,10 +129,12 @@ if __name__=='__main__':
     wt_pose = custom_open(wt_pdbid,
             prefix='/wynton/home/kortemme/krivacic/intelligent_design/sidechain_directed_design_pyrosetta/backrub_pointmutant_benchmark/benchmark_pdbs',
             suffix='.pdb')
+    wt_score = default_sfxn(wt_pose)
 
     mut_pose = custom_open(mut_pdbid,
             prefix='/wynton/home/kortemme/krivacic/intelligent_design/sidechain_directed_design_pyrosetta/backrub_pointmutant_benchmark/benchmark_pdbs',
             suffix='.pdb')
+    mut_score = default_sfxn(mut_pose)
 
     if args['--br']:
         wtfocus = wt_pose.pdb_info().pdb2pose(row['wt_chain'],
@@ -179,8 +181,8 @@ if __name__=='__main__':
                 prepare_pdbids_for_modeling(wt_pdbid, mut_pdbid, [focus],
                         constrain=cst, shell=shell)
 
-        out_dict['pre_score_wt'] = default_sfxn(mut_pair.aligner.mobile)
-        out_dict['pre_score_mut'] = default_sfxn(mut_pair.aligner.target)
+        out_dict['pre_score_wt'] = wt_score
+        out_dict['pre_score_mut'] = mut_score
 
         print('MOTIFS HERE')
         print(mut_pair.motif_dict)
