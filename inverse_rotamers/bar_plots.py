@@ -86,6 +86,11 @@ if __name__ == "__main__":
         labels_str = ['0-0.1', '0.1-0.2', '0.2-0.4', '0.4-0.6',
                 '0.6-0.8', '0.8-1.0', '1.0-1.2', '1.2-1.5', '>1.5']
 
+
+    elif args['--binby'] == 'restype':
+        labels = ['R','H','K','D','E','N','Q','S','T','C','U','G','P','A','I','L','M','F','W','Y','V']
+        labels_str = labels
+
     else:
         stop = df[args['--binby']].max()
         start = df[args['--binby']].min()
@@ -115,13 +120,18 @@ if __name__ == "__main__":
 
         yvals_cst = []
         stderr_cst = []
+        bincount_cst = []
+
         yvals_uncst = []
         stderr_uncst = []
+        bincount_uncst = []
 
         print(df.columns)
-        if args['--binby'] and args['--binby']!='dist':
+        if args['--binby'] and args['--binby']!='dist' and args['--binby']!='restype':
             df['binned'] = pd.cut(df[args['--binby']], bins=bins,
                     labels=labels)
+        elif args['--binby']=='restype':
+            df['binned'] = df['wt_restype_sum']
         else:
             df['binned'] = pd.cut(df[x], bins=bins, labels=labels)
             #df = df[df['binned'] != 1.0]
@@ -146,47 +156,66 @@ if __name__ == "__main__":
             #df_uncst = df_uncst[df_uncst['wt_restype_sum']==args['--restype']]
 
         if not args['--bin']:
+            '''
+            BAR PLOT SUMMARY OF ALL DATA
+            '''
             ind = np.arange(len(labels))
             for label in labels:
+                df_cst_binned = df[(df['constrained']==True) &
+                        (df['binned']==label)]
+                df_uncst_binned = df[(df['constrained']==False) &
+                        (df['binned']==label)]
+
                 if delta:
-                    df_cst_binned = df[(df['constrained']==True) &
-                            (df['binned']==label)]
                     deltas_cst = df_cst_binned[y] - df_cst_binned[x]
                     cst_mean = deltas_cst.mean()
                     stderr_cst_val = deltas_cst.std()
 
-                    df_uncst_binned = df[(df['constrained']==False) &
-                            (df['binned']==label)]
                     deltas_uncst = df_uncst_binned[y] -\
                         df_uncst_binned[x]
                     uncst_mean = deltas_uncst.mean()
                     stderr_uncst_val = deltas_uncst.std()
+
                 else:
-                    cst_mean = df[(df['constrained']==True) &
-                        (df['binned']==label)][y].mean()
-                    stderr_cst_val = df[(df['constrained']==True) &
-                        (df['binned']==label)][y].std()
-                    uncst_mean = df[(df['constrained']==False) &
-                        (df['binned']==label)][y].mean()
-                    stderr_uncst_val = df[(df['constrained']==False) &
-                        (df['binned']==label)][y].std()
+                    cst_mean = df_cst_binned[y].mean()
+                    stderr_cst_val = df_cst_binned[y].std()
+                    uncst_mean = df_uncst_binned[y].mean()
+                    stderr_uncst_val = df_uncst_binned[y].std()
 
                 yvals_cst.append(cst_mean)
                 stderr_cst.append(stderr_cst_val)
+                bincount_cst.append(len(df_cst_binned.index))
 
                 yvals_uncst.append(uncst_mean)
                 stderr_uncst.append(stderr_uncst_val)
+                bincount_uncst.append(len(df_uncst_binned.index))
 
             if args['--cst'] == 'cst' or args['--cst'] == 'both':
                 ax.bar(ind + (2 * i) * width / (len(args['<folders>'])),
                         yvals_cst, width/(len(args['<folders>'])), #yerr=stderr_cst,
                         label=folder_label + '(constrained)',
                         color = next(colors))
+                for j, v in enumerate(yvals_cst):
+                    if np.isnan(v):
+                        v = 0
+                    ax.text(ind[j] + (2*i) * width /
+                            len(args['<folders>']) - (0.5 *
+                                width)/len(args['<folders>']),
+                            v + 0.05,
+                            bincount_cst[j])
             if args['--cst'] == 'uncst' or args['--cst'] == 'both':
                 ax.bar(ind + (2 * i + 1) * width / (len(args['<folders>'])),                
                         yvals_uncst, width/(len(args['<folders>'])), #yerr=stderr_uncst,
                         label=folder_label + '(unconstrained)',
                         color=next(colors))
+                for j, v in enumerate(yvals_uncst):
+                    if np.isnan(v):
+                        v = 0
+                    ax.text(ind[j] + (2*i + 1) * width /
+                            len(args['<folders>']) - (0.5 *
+                                width)/len(args['<folders>']),
+                            v + 0.05,
+                            bincount_uncst[j])
 
             ax.set_ylabel('Mean percentage of improved decoys')
             ax.set_xlabel('Binned {} (Å) of starting structure α-carbon to WT'\
@@ -197,6 +226,9 @@ if __name__ == "__main__":
             ax.set_xticklabels(labels_str)
 
         elif args['--bin']:
+            '''
+            PLOT EXAMPLE PDBS
+            '''
             import random
             num_examples = 10
             label = float(args['--bin'])
