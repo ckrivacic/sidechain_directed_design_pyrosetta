@@ -186,8 +186,24 @@ if __name__=='__main__':
         print('Running job {}'.format(jobnum))
 
         out_dict = deepcopy(row.to_dict())
-        wt_pose_copy = deepcopy(wt_pose)
-        mut_pose_copy = deepcopy(mut_pose)
+        #wt_pose_copy = deepcopy(wt_pose)
+        wt_pose_copy = custom_open(wt_pdbid,
+                prefix='/wynton/home/kortemme/krivacic/intelligent_design/sidechain_directed_design_pyrosetta/backrub_pointmutant_benchmark/benchmark_pdbs',
+                suffix='.pdb')
+        wt_minimizer.apply(wt_pose_copy)
+        if not os.path.exists(os.path.join(outdir_final,
+            wt_pdbid + '_min.pdb.gz')):
+            wt_pose_copy.dump_scored_pdb(os.path.join(outdir_final,
+                wt_pdbid + '_min.pdb.gz'), default_sfxn)
+        #mut_pose_copy = deepcopy(mut_pose)
+        mut_pose_copy = custom_open(mut_pdbid,
+                prefix='/wynton/home/kortemme/krivacic/intelligent_design/sidechain_directed_design_pyrosetta/backrub_pointmutant_benchmark/benchmark_pdbs',
+                suffix='.pdb')
+        mut_minimizer.apply(mut_pose_copy)
+        if not os.path.exists(os.path.join(outdir_final,
+            mut_pdbid + '_min.pdb.gz')):
+            wt_pose_copy.dump_scored_pdb(os.path.join(outdir_final,
+                mut_pdbid + '_min.pdb.gz'), default_sfxn)
         ##focus_res = int(row['mut_res'])
         ##motif_dict = {focus_res:row['wt_restype']}
         if constrain == 'constrained':
