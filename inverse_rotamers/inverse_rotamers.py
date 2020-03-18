@@ -274,9 +274,9 @@ def get_loop_modeler(pose, designable_selector, repackable_selector,
     loopmodeler = rosetta.protocols.loop_modeler.LoopModeler()
     if mover=='ngk':
         loopmodeler.setup_kic_config()
-        loops = generate_loops_from_res_selector(pose, designable_selector,
-                focus_residue, resbuffer=resbuffer)
-        #loops = generate_loops_simple(pose, focus_residue, resbuffer)
+        #loops = generate_loops_from_res_selector(pose, designable_selector,
+        #        focus_residue, resbuffer=resbuffer)
+        loops = generate_loops_simple(pose, focus_residue, resbuffer)
     elif mover=='lhk':
         '''A note on LHK: You need to mutate focus residues to their motif
         residue before running.'''

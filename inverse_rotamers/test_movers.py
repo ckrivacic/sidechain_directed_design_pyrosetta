@@ -240,7 +240,7 @@ if __name__=='__main__':
                 print(modeler.fullatom_stage().get_temp_cycles())
 
         start_time = time.time()
-        mut_pair.aligner.target.dump_pdb('TEST_OUT.pdb')
+        #mut_pair.aligner.target.dump_pdb('TEST_OUT.pdb')
         modeler.apply(mut_pair.aligner.target)
         elapsed = time.time() - start_time
         out_dict['elapsed_time'] = elapsed
