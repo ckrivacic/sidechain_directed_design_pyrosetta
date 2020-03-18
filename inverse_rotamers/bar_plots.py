@@ -71,6 +71,9 @@ if __name__ == "__main__":
     '''
     df = summarize(args['<folders>'][0], summary=summary, force=force,
             relaxed=relaxed, by=mid)
+
+    if args['--binby'] == 'rmsd':
+        args['--binby'] = 'pre_rmsd_sum'
     if args['--binby'] == 'relsurf_sumaa':
         bins = [0, 0.005, 0.02, 0.04, 0.06, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5,
                 1.0,10.0]
@@ -80,7 +83,7 @@ if __name__ == "__main__":
                 '0.1-0.15', '0.15-0.2', '0.2-0.25', '0.25-0.3',
                 '0.3-0.4', '0.4-0.5', '0.5-1.0','>1.0']
 
-    elif args['--binby'] == 'dist':
+    elif args['--binby'] == 'dist' or args['--binby'] == 'pre_rmsd_sum':
         bins = [0, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0,1.2,1.5,10.0]
         labels = [0, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.5]
         labels_str = ['0-0.1', '0.1-0.2', '0.2-0.4', '0.4-0.6',
@@ -88,7 +91,7 @@ if __name__ == "__main__":
 
 
     elif args['--binby'] == 'restype':
-        labels = ['R','H','K','D','E','N','Q','S','T','C','U','G','P','A','I','L','M','F','W','Y','V']
+        labels = ['R','H','K','D','E','N','Q','S','T','C','G','P','A','I','L','M','F','W','Y','V']
         labels_str = labels
 
     else:
@@ -96,10 +99,16 @@ if __name__ == "__main__":
         start = df[args['--binby']].min()
         step = (stop - start) / float(args['--bins'])
         bins = np.arange(start, stop, step)
+        print(bins)
         labels = bins[0:-1]
         labels_str = []
         for b in range(0, len(bins)-1):
-            labels_str.append('{}-{}'.format(bins[b],bins[b+1]))
+            labels_str.append('{0:.3g}-{1:.3g}'.format(bins[b],bins[b+1]))
+            if args['--bin']:
+                if float(args['--bin']) < bins[b+1] and\
+                        float(args['--bin']) > bins[b]:
+                    args['--bin'] = bins[b]
+
 
     ind = np.arange(len(labels))
     width = 0.45
@@ -231,11 +240,14 @@ if __name__ == "__main__":
             '''
             import random
             num_examples = 10
-            label = float(args['--bin'])
+            if args['--binby']=='restype':
+                label = args['--bin']
+            else:
+                label = float(args['--bin'])
             df_cst = df[df['constrained']==True]
             df_uncst = df[df['constrained']==False]
             df_cst = df_cst[df_cst['binned']==label]
-            print('{} examples chosen out of {}'.format(num_examples,
+            print('Choosing {} examples out of {}'.format(num_examples,
                 len(df_cst.index)))
             df_uncst = df_uncst[df_uncst['binned']==label]
 
