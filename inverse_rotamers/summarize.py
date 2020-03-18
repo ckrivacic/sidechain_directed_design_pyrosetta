@@ -17,8 +17,17 @@ For each subdirectory, summarize:
 '''
 
 def summarize(input_dir, summary='mean', force=False, relaxed=False,
-        by='dist'):
-    outpath = os.path.join(input_dir,
+        by='dist', threshold=None, absthresh=None):
+    if threshold and summary=='percent_improved':
+        outpath = os.path.join(input_dir,
+                'summary_of_{}_by_{}_thresh_{}.pkl'\
+                        .format(by, summary, threshold))
+    elif absthresh and summary=='percent_improved':
+        outpath = os.path.join(input_dir,
+                'summary_of_{}_by_{}_thresh_{}A.pkl'\
+                        .format(by, summary, absthresh))
+    else:
+        outpath = os.path.join(input_dir,
             'summary_of_{}_by_{}.pkl'.format(by, summary))
     if not force:
         if os.path.exists(outpath):
@@ -50,7 +59,6 @@ def summarize(input_dir, summary='mean', force=False, relaxed=False,
                     df = pd.concat(data_list, ignore_index=True)
                     for col in df.columns:
                         if not df.dtypes[col] == np.object:
-                        #try:
                             avgs_dict[col + '_std'] = df[col].std
                             if summary == 'mean':
                                 avgs_dict[col + '_sum'] = df[col].mean()
@@ -69,16 +77,26 @@ def summarize(input_dir, summary='mean', force=False, relaxed=False,
                                         df.loc[df['delta_{}'.format(by)].idxmin(),
                                                 col]
                             elif summary == 'percent_improved':
+                                # Columns pre-mover need no change
                                 if col.split('_')[0] == 'pre':
                                     avgs_dict[col + '_sum'] = df[col][0]
                                 else:
                                     splt = col.split('_')
                                     if len(splt) > 1:
                                         subname = col.split('_')[1]
+                                        if not threshold:
+                                            threshold = 0.0
+                                        if not absthresh:
+                                            absthresh = 0.0
                                         if subname == 'dist' or subname == 'rmsd':
-                                            fraction = df[df[col] < df['pre_' +
-                                                subname]][col].size / df['pre_' +
-                                                        subname].size
+                                            fraction = \
+                                                df[(df[col] < (1.0 -
+                                                threshold) * df['pre_' + subname]) 
+                                                & 
+                                                (df[col] < 
+                                                    (df['pre_' + subname] -
+                                                    absthresh))][col].size /\
+                                                            df['pre_' + subname].size
                                             avgs_dict[col + '_sum'] = 100 * fraction
                                         else:
                                             avgs_dict[col + '_sum'] =\
@@ -86,8 +104,6 @@ def summarize(input_dir, summary='mean', force=False, relaxed=False,
                                     else:
                                         avgs_dict[col + '_sum'] =\
                                                 df.loc[0,col]
-                                #avgs_dict[col + '_sum'] = df[df[]]
-                        #except:
                         else:
                             avgs_dict[col + '_sum'] = df[col][0]
 
@@ -174,7 +190,7 @@ if __name__ == '__main__':
 
         relaxed_str = 'y' if relaxed else 'n'
         #cmd = 'python3.7 ' +\
-        cmd = 'python3.8 ' +\
+        cmd = 'python3 ' +\
         os.environ['HOME'] + '/intelligent_design/sidechain_directed_design_pyrosetta/inverse_rotamers/plot_funnels.py '\
         + path + ' ' + relaxed_str
 

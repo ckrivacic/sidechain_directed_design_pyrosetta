@@ -129,10 +129,12 @@ if __name__=='__main__':
     wt_pose = custom_open(wt_pdbid,
             prefix='/wynton/home/kortemme/krivacic/intelligent_design/sidechain_directed_design_pyrosetta/backrub_pointmutant_benchmark/benchmark_pdbs',
             suffix='.pdb')
+    wt_score = default_sfxn(wt_pose)
 
     mut_pose = custom_open(mut_pdbid,
             prefix='/wynton/home/kortemme/krivacic/intelligent_design/sidechain_directed_design_pyrosetta/backrub_pointmutant_benchmark/benchmark_pdbs',
             suffix='.pdb')
+    mut_score = default_sfxn(mut_pose)
 
     if args['--br']:
         wtfocus = wt_pose.pdb_info().pdb2pose(row['wt_chain'],
@@ -178,6 +180,9 @@ if __name__=='__main__':
         designable, repackable, task_factory, mut_pair = \
                 prepare_pdbids_for_modeling(wt_pdbid, mut_pdbid, [focus],
                         constrain=cst, shell=shell)
+
+        out_dict['pre_score_wt'] = wt_score
+        out_dict['pre_score_mut'] = mut_score
 
         print('MOTIFS HERE')
         print(mut_pair.motif_dict)
@@ -282,9 +287,7 @@ if __name__=='__main__':
 
         annotate_pdb(pdb_path, out_dict)
         annotate_pdb(pdb_path_rel, out_dict)
-        #except:
-        with open(os.path.join(outdir_temp, 'errors.txt'),'a') as f:
-            f.write('Job number ' + str(jobnum) + ' failed \n')
+
     df_out = pd.DataFrame.from_records(output_data)
     print(df_out)
     print('Job finished, transferring files...')
