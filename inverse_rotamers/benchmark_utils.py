@@ -114,7 +114,7 @@ def pose_from_pdbredo(pdbid, prefix):
     return pose
 
 
-def prepare_pdbids_for_modeling(wt_pdbid, mut_pdbid, focus_mismatch_list,
+def prepare_pdbids_for_modeling(wt_pose, mut_pose, focus_mismatch_list,
         prefix='/wynton/home/kortemme/krivacic/intelligent_design/sidechain_directed_design_pyrosetta/backrub_pointmutant_benchmark/benchmark_pdbs', constrain=True, shell=6.0):
     '''
     Update info below.
@@ -126,12 +126,12 @@ def prepare_pdbids_for_modeling(wt_pdbid, mut_pdbid, focus_mismatch_list,
     #Ex:
     #{4:'E',5:'V'}
     '''
-    wt_pose = custom_open(wt_pdbid, prefix=prefix)
+    #wt_pose = custom_open(wt_pdbid, prefix=prefix)
     '''
     wt_pose = pose_from_pdbredo(wt_pdbid,
             prefix=prefix)
     '''
-    mut_pose = custom_open(mut_pdbid, prefix=prefix)
+    #mut_pose = custom_open(mut_pdbid, prefix=prefix)
     '''
     mut_pose = pose_from_pdbredo(mut_pdbid,
             prefix=prefix)
