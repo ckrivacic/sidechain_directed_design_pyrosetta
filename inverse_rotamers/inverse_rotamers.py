@@ -176,7 +176,8 @@ def get_minimizer(residues_bb_movable, residues_sc_movable):
     minmover = rosetta.protocols.minimization_packing.MinMover()
     minmover.movemap(mm)
     minmover.min_options(min_opts)
-    minmover.score_function(self.sfxn)
+    sfxn = create_score_function('ref2015_cst')
+    minmover.score_function(sfxn)
 
     return minmover
 

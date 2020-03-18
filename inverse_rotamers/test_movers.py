@@ -168,21 +168,23 @@ if __name__=='__main__':
     mut_chain_selector = rosetta.core.select.residue_selector.ChainSelector(
             row['mut_chain']
     )
-    mut_minimizer = get_minimizer(res_selector_to_size_list(mut_chain_selector),[])
+    mut_minimizer = get_minimizer(res_selector_to_size_list(mut_chain_selector.apply(mut_pose)),[])
+    print('Minimizing mut')
     mut_minimizer.apply(mut_pose)
     mut_score_minimized = default_sfxn(mut_pose)
     wt_chain_selector = rosetta.core.select.residue_selector.ChainSelector(
             row['wt_chain']
     )
-    wt_minimizer = get_minimizer(res_selector_to_size_list(wt_chain_selector), [])
-    wt_minimizer.apply(wt_pose))
+    wt_minimizer = get_minimizer(res_selector_to_size_list(wt_chain_selector.apply(wt_pose)), [])
+    print('Minimizing wt')
+    wt_minimizer.apply(wt_pose)
     wt_score_minimized = default_sfxn(mut_pose)
 
     output_data = []
 
     for jobnum in range(0, num_models):
+        print('Running job {}'.format(jobnum))
 
-        #try:
         out_dict = deepcopy(row.to_dict())
         wt_pose_copy = deepcopy(wt_pose)
         mut_pose_copy = deepcopy(mut_pose)
@@ -222,6 +224,9 @@ if __name__=='__main__':
                 print('MADE MUT_RES OBJ')
                 mut_res.apply(mut_pair.aligner.target) # apply() or make_mutation()?
                 print('APPLIED MUT_RES')
+
+            print('Minimizing mut after mutation')
+            mut_minimizer.apply(mut_pair.aligner.target)
 
         if args['--fast']:
             fast=True
