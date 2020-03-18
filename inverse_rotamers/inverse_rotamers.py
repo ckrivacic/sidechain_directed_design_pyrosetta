@@ -157,7 +157,7 @@ class ConstrainToInvRot(object):
         for constraint in constraints:
             self.pose.add_constraint(constraint)
 
-def minimize_pose(pose, residues_bb_movable, residues_sc_movable):
+def get_minimizer(residues_bb_movable, residues_sc_movable):
     mm = rosetta.core.kinematics.MoveMap()
     mm.set_chi(False)
     mm.set_bb(False)
@@ -178,9 +178,7 @@ def minimize_pose(pose, residues_bb_movable, residues_sc_movable):
     minmover.min_options(min_opts)
     minmover.score_function(self.sfxn)
 
-    minmover.apply(pose)
-    
-    pose.dump_file('out.pdb')
+    return minmover
 
 
 def fast_relax(pose, residues_bb_movable, residues_sc_movable, selectors=True):

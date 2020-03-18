@@ -164,12 +164,28 @@ if __name__=='__main__':
     print('ROW NUMBER IS ' + str(row_num))
     print('-----------------------------------')
 
+    # Minimize poses before going any further
+    mut_chain_selector = rosetta.core.select.residue_selector.ChainSelector(
+            row['mut_chain']
+    )
+    mut_minimizer = get_minimizer(res_selector_to_size_list(mut_chain_selector),[])
+    mut_minimizer.apply(mut_pose)
+    mut_score_minimized = default_sfxn(mut_pose)
+    wt_chain_selector = rosetta.core.select.residue_selector.ChainSelector(
+            row['wt_chain']
+    )
+    wt_minimizer = get_minimizer(res_selector_to_size_list(wt_chain_selector), [])
+    wt_minimizer.apply(wt_pose))
+    wt_score_minimized = default_sfxn(mut_pose)
+
     output_data = []
 
     for jobnum in range(0, num_models):
 
         #try:
         out_dict = deepcopy(row.to_dict())
+        wt_pose_copy = deepcopy(wt_pose)
+        mut_pose_copy = deepcopy(mut_pose)
         ##focus_res = int(row['mut_res'])
         ##motif_dict = {focus_res:row['wt_restype']}
         if constrain == 'constrained':
@@ -178,11 +194,13 @@ if __name__=='__main__':
             cst = False
 
         designable, repackable, task_factory, mut_pair = \
-                prepare_pdbids_for_modeling(wt_pdbid, mut_pdbid, [focus],
+                prepare_pdbids_for_modeling(wt_pose_copy, mut_pose_copy, [focus],
                         constrain=cst, shell=shell)
 
         out_dict['pre_score_wt'] = wt_score
         out_dict['pre_score_mut'] = mut_score
+        out_dict['pre_score_wt_min'] = wt_score_minimized
+        out_dict['pre_score_mut_min'] = mut_score_minimized
 
         print('MOTIFS HERE')
         print(mut_pair.motif_dict)
