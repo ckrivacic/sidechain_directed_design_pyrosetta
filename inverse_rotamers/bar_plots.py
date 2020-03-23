@@ -46,7 +46,7 @@ if __name__ == "__main__":
             'ngk_jacobi':'NGK->Jacobi refine->pack'}
     colors = cycle(['purple', 'thistle', 'navy', 'cornflowerblue', 'darkgreen',
             'lightgreen', 'firebrick', 'lightcoral', 'darkgoldenrod',
-            'gold'])
+            'gold', 'saddlebrown', 'sandybrown'])
 
     args = docopt.docopt(__doc__)
     print(args)
