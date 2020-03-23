@@ -24,9 +24,12 @@ def submit(alignments, **params):
     print(args)
     csv_path = args['<input_df>']
     #num_tasks = (file_len(alignments) // task_len) + 1
-    output_directory = 'logs'
     #error_directory = 'errors'
     mover = args['<mover>']
+    logdir = os.path.join('logs', mover)
+    if not os.path.exists(logdir):
+        os.makedirs(logdir, exist_ok=True)
+
     outdir = args['<output_dir>']
     num_tasks = file_len(csv_path) * 8 # Splitting each row into 8
         #tasks, one for constrained and one for unconstrained, then those
@@ -41,7 +44,7 @@ def submit(alignments, **params):
     qsub_command = 'qsub', '-h', '-cwd',
     qsub_command += '-b',
     qsub_command += 'y',
-    qsub_command += '-o', output_directory,
+    qsub_command += '-o', logdir,
     #qsub_command += '-e', error_directory,
     qsub_command += '-j', 'y',
     qsub_command += '-t', '1-{0}'.format(num_tasks),

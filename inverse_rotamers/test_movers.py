@@ -168,24 +168,42 @@ if __name__=='__main__':
     mut_chain_selector = rosetta.core.select.residue_selector.ChainSelector(
             row['mut_chain']
     )
-    mut_minimizer = get_minimizer(res_selector_to_size_list(mut_chain_selector),[])
+    mut_minimizer = get_minimizer(res_selector_to_size_list(mut_chain_selector.apply(mut_pose)),[])
+    print('Minimizing mut')
     mut_minimizer.apply(mut_pose)
     mut_score_minimized = default_sfxn(mut_pose)
     wt_chain_selector = rosetta.core.select.residue_selector.ChainSelector(
             row['wt_chain']
     )
-    wt_minimizer = get_minimizer(res_selector_to_size_list(wt_chain_selector), [])
-    wt_minimizer.apply(wt_pose))
+    wt_minimizer = get_minimizer(res_selector_to_size_list(wt_chain_selector.apply(wt_pose)), [])
+    print('Minimizing wt')
+    wt_minimizer.apply(wt_pose)
     wt_score_minimized = default_sfxn(mut_pose)
 
     output_data = []
 
     for jobnum in range(0, num_models):
+        print('Running job {}'.format(jobnum))
 
-        #try:
         out_dict = deepcopy(row.to_dict())
-        wt_pose_copy = deepcopy(wt_pose)
-        mut_pose_copy = deepcopy(mut_pose)
+        #wt_pose_copy = deepcopy(wt_pose)
+        wt_pose_copy = custom_open(wt_pdbid,
+                prefix='/wynton/home/kortemme/krivacic/intelligent_design/sidechain_directed_design_pyrosetta/backrub_pointmutant_benchmark/benchmark_pdbs',
+                suffix='.pdb')
+        wt_minimizer.apply(wt_pose_copy)
+        if not os.path.exists(os.path.join(outdir_final,
+            wt_pdbid + '_min.pdb.gz')):
+            wt_pose_copy.dump_scored_pdb(os.path.join(outdir_final,
+                wt_pdbid + '_min.pdb.gz'), default_sfxn)
+        #mut_pose_copy = deepcopy(mut_pose)
+        mut_pose_copy = custom_open(mut_pdbid,
+                prefix='/wynton/home/kortemme/krivacic/intelligent_design/sidechain_directed_design_pyrosetta/backrub_pointmutant_benchmark/benchmark_pdbs',
+                suffix='.pdb')
+        mut_minimizer.apply(mut_pose_copy)
+        if not os.path.exists(os.path.join(outdir_final,
+            mut_pdbid + '_min.pdb.gz')):
+            wt_pose_copy.dump_scored_pdb(os.path.join(outdir_final,
+                mut_pdbid + '_min.pdb.gz'), default_sfxn)
         ##focus_res = int(row['mut_res'])
         ##motif_dict = {focus_res:row['wt_restype']}
         if constrain == 'constrained':
@@ -223,6 +241,9 @@ if __name__=='__main__':
                 mut_res.apply(mut_pair.aligner.target) # apply() or make_mutation()?
                 print('APPLIED MUT_RES')
 
+            print('Minimizing mut after mutation')
+            mut_minimizer.apply(mut_pair.aligner.target)
+
         if args['--fast']:
             fast=True
         else:
@@ -252,6 +273,21 @@ if __name__=='__main__':
         elif mover == 'jacobi':
             modeler = get_jacobi_refiner(mut_pair.aligner.target,
                     focus.target, resbuffer=4)
+        elif mover=='ngk_jacobi' or mover=='lhk_jacobi':
+            modeler = Modeler()
+            loopmodeler = get_loop_modeler(mut_pair.aligner.target, designable, repackable,
+                    focus.target, task_factory=task_factory, fast=fast,
+                    mover=mover.split('_')[0], resbuffer=4)
+            jacobi = get_jacobi_refiner(mut_pair.aligner.target,
+                    focus.target, resbuffer=4)
+            repackable_post_jacobi = [x for x in range(focus.target - 4,
+                focus.target + 5)]
+            pack_mover = get_pack_rotamers(mut_pair.aligner.target,
+                    repackable_post_jacobi, default_sfxn)
+            modeler.add_modeler(loopmodeler)
+            modeler.add_modeler(jacobi)
+            modeler.add_modeler(pack_mover)
+
 
         # Set mover options for loop modelers
         if mover in ['lhk','ngk','ngkf']:
@@ -263,7 +299,7 @@ if __name__=='__main__':
                 print(modeler.fullatom_stage().get_temp_cycles())
 
         start_time = time.time()
-        mut_pair.aligner.target.dump_pdb('TEST_OUT.pdb')
+        #mut_pair.aligner.target.dump_pdb('TEST_OUT.pdb')
         modeler.apply(mut_pair.aligner.target)
         elapsed = time.time() - start_time
         out_dict['elapsed_time'] = elapsed

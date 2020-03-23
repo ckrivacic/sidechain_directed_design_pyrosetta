@@ -176,7 +176,8 @@ def get_minimizer(residues_bb_movable, residues_sc_movable):
     minmover = rosetta.protocols.minimization_packing.MinMover()
     minmover.movemap(mm)
     minmover.min_options(min_opts)
-    minmover.score_function(self.sfxn)
+    sfxn = create_score_function('ref2015_cst')
+    minmover.score_function(sfxn)
 
     return minmover
 
@@ -218,6 +219,17 @@ def fast_design(pose, designable_selector, repackable_selector,
     return fastdesign
 
 
+def get_pack_rotamers(pose, reslist, scorefxn):
+    task_pack = standard_packer_task(pose)
+    task_pack.restrict_to_repacking()
+    task_pack.temporarily_fix_everything()
+    for res in reslist:
+        task_pack.temporarily_set_pack_residue(res, True)
+    print('Created the following packer task: ')
+    print(task_pack)
+
+    pack_mover = rosetta.protocols.minimization_packing.PackRotamersMover(scorefxn, task_pack)
+    return pack_mover
 
 def lhk_xml(task_factory):
     lhk = rosetta.protocols.rosetta_scripts.XmlObjects.static_get_mover(
@@ -272,9 +284,9 @@ def get_loop_modeler(pose, designable_selector, repackable_selector,
     loopmodeler = rosetta.protocols.loop_modeler.LoopModeler()
     if mover=='ngk':
         loopmodeler.setup_kic_config()
-        loops = generate_loops_from_res_selector(pose, designable_selector,
-                focus_residue, resbuffer=resbuffer)
-        #loops = generate_loops_simple(pose, focus_residue, resbuffer)
+        #loops = generate_loops_from_res_selector(pose, designable_selector,
+        #        focus_residue, resbuffer=resbuffer)
+        loops = generate_loops_simple(pose, focus_residue, resbuffer)
     elif mover=='lhk':
         '''A note on LHK: You need to mutate focus residues to their motif
         residue before running.'''
