@@ -219,6 +219,17 @@ def fast_design(pose, designable_selector, repackable_selector,
     return fastdesign
 
 
+def get_pack_rotamers(pose, reslist, scorefxn):
+    task_pack = standard_packer_task(pose)
+    task_pack.restrict_to_repacking()
+    task_pack.temporarily_fix_everything()
+    for res in reslist:
+        task_pack.temporarily_set_pack_residue(res, True)
+    print('Created the following packer task: ')
+    print(task_pack)
+
+    pack_mover = rosetta.protocols.minimization_packing.PackRotamersMover(scorefxn, task_pack)
+    return pack_mover
 
 def lhk_xml(task_factory):
     lhk = rosetta.protocols.rosetta_scripts.XmlObjects.static_get_mover(

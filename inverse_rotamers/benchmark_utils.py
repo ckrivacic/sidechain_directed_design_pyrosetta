@@ -279,3 +279,43 @@ def finish_io(temp, final, suffix=''):
             os.path.join(final, pdbfile))
 # For testing use the following command
 # stuff = prepare_pdbids_for_modeling('8cho','1qj4',mm, prefix='/home/ckrivacic/pdb-redo')
+
+
+# Forget this for now. Eventually want a general way of getting movers.
+def get_mover(mover, pose, designable, repackable, focus, task_factory=None,
+        fast=False, resbuffer=4):
+    # Get modeler object for corresponding mover type
+    if mover == 'ngk':
+        modeler = get_loop_modeler(mut_pair.aligner.target, designable, repackable,
+                focus.target, task_factory=task_factory, fast=fast,
+                mover='ngk', resbuffer=4)
+    elif mover == 'ngkf':
+        modeler = get_loop_modeler(mut_pair.aligner.target, designable, repackable,
+                focus.target, task_factory=task_factory, fast=True,
+                mover='ngk', resbuffer=4)
+    elif mover == 'lhk':
+        modeler = get_loop_modeler(mut_pair.aligner.target,
+                designable, repackable, focus.target,
+                task_factory=task_factory, fast=fast,
+                mover='lhk', resbuffer=4)
+    elif mover == 'fastdesign':
+        modeler = fast_design(mut_pair.aligner.target, designable, repackable,
+                task_factory=task_factory)    
+    elif mover == 'br':
+        modeler = get_backrub_protocol(mut_pair.motif_dict,
+                shell=shell, kt=1.6, task_factory=task_factory,
+                ntrials=100, stride=100)
+    elif mover == 'jacobi':
+        modeler = get_jacobi_refiner(mut_pair.aligner.target,
+                focus.target, resbuffer=4)
+
+class Modeler(object):
+    def __init__(self):
+        self.modelers = []
+
+    def add_modeler(self, modeler):
+        self.modelers.append(modeler)
+
+    def apply(self, pose):
+        for modeler in self.modelers:
+            modeler.apply(pose)

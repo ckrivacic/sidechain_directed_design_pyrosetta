@@ -273,6 +273,21 @@ if __name__=='__main__':
         elif mover == 'jacobi':
             modeler = get_jacobi_refiner(mut_pair.aligner.target,
                     focus.target, resbuffer=4)
+        elif mover=='ngk_jacobi' or mover=='lhk_jacobi':
+            modeler = Modeler()
+            loopmodeler = get_loop_modeler(mut_pair.aligner.target, designable, repackable,
+                    focus.target, task_factory=task_factory, fast=fast,
+                    mover=mover.split('_')[0], resbuffer=4)
+            jacobi = get_jacobi_refiner(mut_pair.aligner.target,
+                    focus.target, resbuffer=4)
+            repackable_post_jacobi = [x for x in range(focus.target - 4,
+                focus.target + 5)]
+            pack_mover = get_pack_rotamers(mut_pair.aligner.target,
+                    repackable_post_jacobi, default_sfxn)
+            modeler.add_modeler(loopmodeler)
+            modeler.add_modeler(jacobi)
+            modeler.add_modeler(pack_mover)
+
 
         # Set mover options for loop modelers
         if mover in ['lhk','ngk','ngkf']:
