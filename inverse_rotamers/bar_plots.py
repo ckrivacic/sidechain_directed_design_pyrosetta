@@ -42,7 +42,8 @@ if __name__ == "__main__":
 
     name_dict = {'fastdesign':'FastRelax ','ngk':'Next-gen KIC (fast) ',
             'br':'Backrub (100 trials) ', 'lhk':'Loophash KIC (fast)',
-            'jacobi_refine':'Jacobi refinement'}
+            'jacobi_refine':'Jacobi refinement',
+            'ngk_jacobi':'NGK->Jacobi refine->pack'}
     colors = cycle(['purple', 'thistle', 'navy', 'cornflowerblue', 'darkgreen',
             'lightgreen', 'firebrick', 'lightcoral', 'darkgoldenrod',
             'gold'])
