@@ -95,6 +95,15 @@ if __name__ == "__main__":
         labels = ['R','H','K','D','E','N','Q','S','T','C','G','P','A','I','L','M','F','W','Y','V']
         labels_str = labels
 
+    elif args['--binby'] == 'resgroup':
+        label_dict = {'R':'Charged','H':'Aro','K':'Charged','D':'Charged','E':'Charged',
+        'N':'Polar','Q':'Polar','S':'Polar','T':'Polar',
+        'C':'P, G, C', 'G':'P, G, C', 'P': 'P, G, C', 
+        'A':'Hydrophobic', 'I':'Hydrophobic',
+        'L':'Hydrophobic','M':'Hydrophobic','F':'Aro','W':'Aro','Y':'Aro','V':'Hydrophobic'}
+        labels = ['Charged', 'Polar', 'P, G, C', 'Hydrophobic', 'Aro']
+        labels_str = labels
+
     else:
         stop = df[args['--binby']].max()
         start = df[args['--binby']].min()
@@ -137,11 +146,14 @@ if __name__ == "__main__":
         bincount_uncst = []
 
         print(df.columns)
-        if args['--binby'] and args['--binby']!='dist' and args['--binby']!='restype':
+        if args['--binby'] and args['--binby']!='dist' and\
+                args['--binby']!='restype' and args['--binby'] != 'resgroup':
             df['binned'] = pd.cut(df[args['--binby']], bins=bins,
                     labels=labels)
         elif args['--binby']=='restype':
             df['binned'] = df['wt_restype_sum']
+        elif args['--binby']=='resgroup':
+            df['binned'] = df['wt_restype_sum'].map(label_dict)
         else:
             df['binned'] = pd.cut(df[x], bins=bins, labels=labels)
             #df = df[df['binned'] != 1.0]
