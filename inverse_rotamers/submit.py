@@ -1,10 +1,12 @@
 '''
 Please put path to pdbredo as $PDBREDO in your bashrc
 Usage:
-    test_movers.py <input_df> <output_dir> <mover> [options]
+    submit.py <input_df> <output_dir> <mover> [options]
 
 Options:
     --fast  For loop modelers, turn on test run
+    --cen_temp_cycles=NUM  set number of centroid temp cycles
+    --fa_temp_cycles=NUM  set number of fa temp cycles
 
 '''
 import sys, os, subprocess, re
@@ -58,6 +60,10 @@ def submit(alignments, **params):
     qsub_command += '--br',
     if args['--fast']:
         qsub_command += '--fast',
+    if args['--cen_temp_cycles']:
+        qsub_command += '--cen_temp_cycles=' + args['--cen_temp_cycles'],
+    if args['--fa_temp_cycles']:
+        qsub_command += '--fa_temp_cycles=' + args['--fa_temp_cycles'],
     print(qsub_command)
 
     status = process.check_output(qsub_command, stderr=subprocess.STDOUT).decode('utf-8')

@@ -202,7 +202,7 @@ if __name__=='__main__':
         mut_minimizer.apply(mut_pose_copy)
         if not os.path.exists(os.path.join(outdir_final,
             mut_pdbid + '_min.pdb.gz')):
-            wt_pose_copy.dump_scored_pdb(os.path.join(outdir_final,
+            mut_pose_copy.dump_scored_pdb(os.path.join(outdir_final,
                 mut_pdbid + '_min.pdb.gz'), default_sfxn)
         ##focus_res = int(row['mut_res'])
         ##motif_dict = {focus_res:row['wt_restype']}
@@ -280,8 +280,10 @@ if __name__=='__main__':
                     mover=mover.split('_')[0], resbuffer=4)
             jacobi = get_jacobi_refiner(mut_pair.aligner.target,
                     focus.target, resbuffer=4)
+            # Originally designable and repackable were not part of
+            # repackable_post_jacobi
             repackable_post_jacobi = [x for x in range(focus.target - 4,
-                focus.target + 5)]
+                focus.target + 5)] + designable + repackable
             pack_mover = get_pack_rotamers(mut_pair.aligner.target,
                     repackable_post_jacobi, default_sfxn)
             modeler.add_modeler(loopmodeler)
@@ -292,10 +294,12 @@ if __name__=='__main__':
         # Set mover options for loop modelers
         if mover in ['lhk','ngk','ngkf']:
             if args['--cen_temp_cycles']:
-                print('0---dfaklfjalsk; HIHI HIHI HI')
-                modeler.centroid_stage().set_temp_cycles(int(args['--cen_etmp_cycles']),True)
+                modeler.centroid_stage().set_temp_cycles(int(args['--cen_temp_cycles']),True)
+                print('setting centroid cycles to:')
+                print(modeler.centroid_stage().get_temp_cycles())
             if args['--fa_temp_cycles']:
                 modeler.fullatom_stage().set_temp_cycles(int(args['--fa_temp_cycles']),True)
+                print('setting fullatom cycles to:')
                 print(modeler.fullatom_stage().get_temp_cycles())
 
         start_time = time.time()
