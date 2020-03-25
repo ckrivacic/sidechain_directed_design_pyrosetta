@@ -44,7 +44,7 @@ if __name__ == "__main__":
             'br':'Backrub (100 trials) ', 'lhk':'Loophash KIC (fast)',
             'jacobi_refine':'Jacobi refinement',
             'ngk_jacobi':'NGK->Jacobi refine->pack'}
-    colors = cycle(['purple', 'thistle', 'navy', 'cornflowerblue', 'darkgreen',
+    colors = cycle(['dimgray','darkgray', 'purple', 'thistle', 'navy', 'cornflowerblue', 'darkgreen',
             'lightgreen', 'firebrick', 'lightcoral', 'darkgoldenrod',
             'gold', 'saddlebrown', 'sandybrown'])
 
@@ -108,6 +108,16 @@ if __name__ == "__main__":
         'L':'Hydrophobic','M':'Hydrophobic','F':'Aro','W':'Aro','Y':'Aro','V':'Hydrophobic'}
         labels = ['Charged', 'Polar', 'P, G, C', 'Hydrophobic', 'Aro']
         labels_str = labels
+    elif args['--binby'] == 'ss':
+        label_dict = {'G': 'Helix', 'H': 'Helix', 'I': 'Helix','T': 'Helix', 
+                'E':'β-sheet', 'B':'β-sheet', 
+                'S': 'Loop', 'C': 'Loop', '_':'Loop'}
+        labels = ['Helix', 'β-sheet', 'Loop']
+        labels_str = labels
+
+    elif args['--binby'] == 'dssp':
+        labels = ['G', 'H', 'I', 'T', 'E', 'B', 'S', 'C']
+        labels_str = labels
 
     else:
         stop = df[args['--binby']].max()
@@ -152,13 +162,20 @@ if __name__ == "__main__":
 
         print(df.columns)
         if args['--binby'] and args['--binby']!='dist' and\
-                args['--binby']!='restype' and args['--binby'] != 'resgroup':
+                args['--binby']!='restype' and args['--binby'] !=\
+                'resgroup' and args['--binby'] != 'dssp' and\
+                args['--binby'] != 'ss':
             df['binned'] = pd.cut(df[args['--binby']], bins=bins,
                     labels=labels)
         elif args['--binby']=='restype':
             df['binned'] = df['wt_restype_sum']
         elif args['--binby']=='resgroup':
             df['binned'] = df['wt_restype_sum'].map(label_dict)
+        elif args['--binby']=='dssp':
+            df['binned'] = df['ss_sum']
+        elif args['--binby']=='ss':
+            print(df['ss_sum'].unique())
+            df['binned'] = df['ss_sum'].map(label_dict)
         else:
             df['binned'] = pd.cut(df[x], bins=bins, labels=labels)
             #df = df[df['binned'] != 1.0]
