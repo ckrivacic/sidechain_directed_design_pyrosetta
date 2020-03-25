@@ -42,10 +42,11 @@ if __name__ == "__main__":
 
     name_dict = {'fastdesign':'FastRelax ','ngk':'Next-gen KIC (fast) ',
             'br':'Backrub (100 trials) ', 'lhk':'Loophash KIC (fast)',
-            'jacobi_refine':'Jacobi refinement'}
+            'jacobi_refine':'Jacobi refinement',
+            'ngk_jacobi':'NGK->Jacobi refine->pack'}
     colors = cycle(['purple', 'thistle', 'navy', 'cornflowerblue', 'darkgreen',
             'lightgreen', 'firebrick', 'lightcoral', 'darkgoldenrod',
-            'gold'])
+            'gold', 'saddlebrown', 'sandybrown'])
 
     args = docopt.docopt(__doc__)
     print(args)
@@ -83,15 +84,29 @@ if __name__ == "__main__":
                 '0.1-0.15', '0.15-0.2', '0.2-0.25', '0.25-0.3',
                 '0.3-0.4', '0.4-0.5', '0.5-1.0','>1.0']
 
-    elif args['--binby'] == 'dist' or args['--binby'] == 'pre_rmsd_sum':
+    elif args['--binby'] == 'dist':
         bins = [0, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0,1.2,1.5,10.0]
         labels = [0, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.5]
         labels_str = ['0-0.1', '0.1-0.2', '0.2-0.4', '0.4-0.6',
                 '0.6-0.8', '0.8-1.0', '1.0-1.2', '1.2-1.5', '>1.5']
 
+    elif args['--binby'] == 'pre_rmsd_sum':
+        print('dsaklfjaslk;fdsjakl;a ahahahasweh ah')
+        bins = [0, 0.1, 0.2, 0.4, 0.6, 10]
+        labels = [0, 0.1, 0.2, 0.4, 0.6]
+        labels_str = ['0-0.1', '0.1-0.2', '0.2-0.4', '0.4-0.6', '>0.6']
 
     elif args['--binby'] == 'restype':
         labels = ['R','H','K','D','E','N','Q','S','T','C','G','P','A','I','L','M','F','W','Y','V']
+        labels_str = labels
+
+    elif args['--binby'] == 'resgroup':
+        label_dict = {'R':'Charged','H':'Aro','K':'Charged','D':'Charged','E':'Charged',
+        'N':'Polar','Q':'Polar','S':'Polar','T':'Polar',
+        'C':'P, G, C', 'G':'P, G, C', 'P': 'P, G, C', 
+        'A':'Hydrophobic', 'I':'Hydrophobic',
+        'L':'Hydrophobic','M':'Hydrophobic','F':'Aro','W':'Aro','Y':'Aro','V':'Hydrophobic'}
+        labels = ['Charged', 'Polar', 'P, G, C', 'Hydrophobic', 'Aro']
         labels_str = labels
 
     else:
@@ -136,11 +151,14 @@ if __name__ == "__main__":
         bincount_uncst = []
 
         print(df.columns)
-        if args['--binby'] and args['--binby']!='dist' and args['--binby']!='restype':
+        if args['--binby'] and args['--binby']!='dist' and\
+                args['--binby']!='restype' and args['--binby'] != 'resgroup':
             df['binned'] = pd.cut(df[args['--binby']], bins=bins,
                     labels=labels)
         elif args['--binby']=='restype':
             df['binned'] = df['wt_restype_sum']
+        elif args['--binby']=='resgroup':
+            df['binned'] = df['wt_restype_sum'].map(label_dict)
         else:
             df['binned'] = pd.cut(df[x], bins=bins, labels=labels)
             #df = df[df['binned'] != 1.0]
