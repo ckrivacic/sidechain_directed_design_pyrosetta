@@ -318,7 +318,7 @@ if __name__=='__main__':
         #aligner.target.dump_scored_pdb(outdir + '/ngk/' + mut_pdbid +
         #        '_' + str(task_num) + '_ngk.pdb', default_sfxn)
         pdb_path = os.path.join(outdir_temp, wt_pdbid + '_' + mut_pdbid + '_' +
-                str(jobnum) + '_' + mover + '.pdb.gz')
+                str((tasknum%denom)*jobnum) + '_' + mover + '.pdb.gz')
         out_dict['path'] = pdb_path
         mut_pair.aligner.target.dump_scored_pdb(pdb_path, default_sfxn)
         
@@ -332,7 +332,7 @@ if __name__=='__main__':
             focus.target, mut_pair.aligner.mobile, focus.mobile)
 
         pdb_path_rel = os.path.join(outdir_temp, wt_pdbid + '_' + mut_pdbid + '_' +
-                str(jobnum) + '_' + mover + '_relaxed.pdb.gz')
+                str((tasknum%denom)*jobnum) + '_' + mover + '_relaxed.pdb.gz')
         out_dict['path_relaxed'] = pdb_path_rel
         mut_pair.aligner.target.dump_scored_pdb(pdb_path_rel, default_sfxn)
         out_dict['final_score'] = default_sfxn(mut_pair.aligner.target)
