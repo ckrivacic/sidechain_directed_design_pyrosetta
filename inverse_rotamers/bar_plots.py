@@ -87,10 +87,13 @@ if __name__ == "__main__":
                 '0.3-0.4', '0.4-0.5', '0.5-1.0','>1.0']
 
     elif args['--binby'] == 'dist':
-        bins = [0, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0,1.2,1.5,10.0]
-        labels = [0, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.5]
+        bins = [0, 0.1, 0.2, 0.4, 0.6,10.0]
+        labels = [0, 0.1, 0.2, 0.4, 0.6]
+        '''
         labels_str = ['0-0.1', '0.1-0.2', '0.2-0.4', '0.4-0.6',
                 '0.6-0.8', '0.8-1.0', '1.0-1.2', '1.2-1.5', '>1.5']
+        '''
+        labels_str = ['0-0.1','0.1-0.2','0.2-0.4','0.4-0.6','>0.6']
 
     elif args['--binby'] == 'pre_rmsd_sum':
         print('dsaklfjaslk;fdsjakl;a ahahahasweh ah')
@@ -339,12 +342,24 @@ if __name__ == "__main__":
                 df_uncst_binned = df[(df['constrained']==False) &
                         (df['binned']==label)]
 
-                yvals_cst.append(df_cst_binned[y].values)
-                bincount_cst.append(len(df_cst_binned.index))
-                yvals_uncst.append(df_uncst_binned[y].values)
-                bincount_uncst.append(len(df_uncst_binned.index))
+                nans = [float('nan'), float('nan')]
 
-            widthlist = 0.15*len(args['<folders>']) * width/(len(args['<folders>']))
+                cst_vals = df_cst_binned[y].values
+                if len(cst_vals)==0:
+                    yvals_cst.append(nans)
+                else:
+                    yvals_cst.append(cst_vals)
+                bincount_cst.append(len(cst_vals))
+
+                uncst_vals = df_uncst_binned[y].values
+                if len(uncst_vals)==0:
+                    yvals_uncst.append(nans)
+                else:
+                    yvals_uncst.append(uncst_vals)
+                bincount_uncst.append(len(uncst_vals))
+
+            widthmodifier = 0.15 if args['--cst']=='both' else 0.3
+            widthlist = widthmodifier*len(args['<folders>']) * width/(len(args['<folders>']))
             if args['--cst']=='cst' or args['--cst']=='both':
                 vplt = ax.violinplot(yvals_cst, ind + (2*i)*width /
                         (len(args['<folders>'])),
