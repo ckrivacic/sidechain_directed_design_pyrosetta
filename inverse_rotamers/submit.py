@@ -28,7 +28,7 @@ def submit(alignments, **params):
     #num_tasks = (file_len(alignments) // task_len) + 1
     #error_directory = 'errors'
     mover = args['<mover>']
-    logdir = os.path.join('logs', mover, 'temp_cycles_6')
+    logdir = os.path.join('logs', mover, 'cycles_6_2')
     if not os.path.exists(logdir):
         os.makedirs(logdir, exist_ok=True)
 

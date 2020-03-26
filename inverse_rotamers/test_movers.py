@@ -14,6 +14,7 @@ Options:
     --task=INT  Choose a specific task to execute (debuggin purposes
     only)
     --nomutate  Don't mutate before applying mover (testing only)
+    --min  Minimize poses before running alignment and movers
 """
 import sys
 import docopt
@@ -165,20 +166,21 @@ if __name__=='__main__':
     print('-----------------------------------')
 
     # Minimize poses before going any further
-    mut_chain_selector = rosetta.core.select.residue_selector.ChainSelector(
-            row['mut_chain']
-    )
-    mut_minimizer = get_minimizer(res_selector_to_size_list(mut_chain_selector.apply(mut_pose)),[])
-    print('Minimizing mut')
-    mut_minimizer.apply(mut_pose)
-    mut_score_minimized = default_sfxn(mut_pose)
-    wt_chain_selector = rosetta.core.select.residue_selector.ChainSelector(
-            row['wt_chain']
-    )
-    wt_minimizer = get_minimizer(res_selector_to_size_list(wt_chain_selector.apply(wt_pose)), [])
-    print('Minimizing wt')
-    wt_minimizer.apply(wt_pose)
-    wt_score_minimized = default_sfxn(mut_pose)
+    if args['--min']:
+        mut_chain_selector = rosetta.core.select.residue_selector.ChainSelector(
+                row['mut_chain']
+        )
+        mut_minimizer = get_minimizer(res_selector_to_size_list(mut_chain_selector.apply(mut_pose)),[])
+        print('Minimizing mut')
+        mut_minimizer.apply(mut_pose)
+        mut_score_minimized = default_sfxn(mut_pose)
+        wt_chain_selector = rosetta.core.select.residue_selector.ChainSelector(
+                row['wt_chain']
+        )
+        wt_minimizer = get_minimizer(res_selector_to_size_list(wt_chain_selector.apply(wt_pose)), [])
+        print('Minimizing wt')
+        wt_minimizer.apply(wt_pose)
+        wt_score_minimized = default_sfxn(mut_pose)
 
     output_data = []
 
@@ -190,20 +192,21 @@ if __name__=='__main__':
         wt_pose_copy = custom_open(wt_pdbid,
                 prefix='/wynton/home/kortemme/krivacic/intelligent_design/sidechain_directed_design_pyrosetta/backrub_pointmutant_benchmark/benchmark_pdbs',
                 suffix='.pdb')
-        wt_minimizer.apply(wt_pose_copy)
-        if not os.path.exists(os.path.join(outdir_final,
-            wt_pdbid + '_min.pdb.gz')):
-            wt_pose_copy.dump_scored_pdb(os.path.join(outdir_final,
-                wt_pdbid + '_min.pdb.gz'), default_sfxn)
-        #mut_pose_copy = deepcopy(mut_pose)
         mut_pose_copy = custom_open(mut_pdbid,
                 prefix='/wynton/home/kortemme/krivacic/intelligent_design/sidechain_directed_design_pyrosetta/backrub_pointmutant_benchmark/benchmark_pdbs',
                 suffix='.pdb')
-        mut_minimizer.apply(mut_pose_copy)
-        if not os.path.exists(os.path.join(outdir_final,
-            mut_pdbid + '_min.pdb.gz')):
-            mut_pose_copy.dump_scored_pdb(os.path.join(outdir_final,
-                mut_pdbid + '_min.pdb.gz'), default_sfxn)
+        if args['--min']:
+            wt_minimizer.apply(wt_pose_copy)
+            if not os.path.exists(os.path.join(outdir_final,
+                wt_pdbid + '_min.pdb.gz')):
+                wt_pose_copy.dump_scored_pdb(os.path.join(outdir_final,
+                    wt_pdbid + '_min.pdb.gz'), default_sfxn)
+            #mut_pose_copy = deepcopy(mut_pose)
+            mut_minimizer.apply(mut_pose_copy)
+            if not os.path.exists(os.path.join(outdir_final,
+                mut_pdbid + '_min.pdb.gz')):
+                mut_pose_copy.dump_scored_pdb(os.path.join(outdir_final,
+                    mut_pdbid + '_min.pdb.gz'), default_sfxn)
         ##focus_res = int(row['mut_res'])
         ##motif_dict = {focus_res:row['wt_restype']}
         if constrain == 'constrained':
@@ -217,8 +220,9 @@ if __name__=='__main__':
 
         out_dict['pre_score_wt'] = wt_score
         out_dict['pre_score_mut'] = mut_score
-        out_dict['pre_score_wt_min'] = wt_score_minimized
-        out_dict['pre_score_mut_min'] = mut_score_minimized
+        if args['--min']:
+            out_dict['pre_score_wt_min'] = wt_score_minimized
+            out_dict['pre_score_mut_min'] = mut_score_minimized
 
         print('MOTIFS HERE')
         print(mut_pair.motif_dict)
@@ -242,7 +246,8 @@ if __name__=='__main__':
                 print('APPLIED MUT_RES')
 
             print('Minimizing mut after mutation')
-            mut_minimizer.apply(mut_pair.aligner.target)
+            if args['--min']:
+                mut_minimizer.apply(mut_pair.aligner.target)
 
         if args['--fast']:
             fast=True
@@ -318,7 +323,7 @@ if __name__=='__main__':
         #aligner.target.dump_scored_pdb(outdir + '/ngk/' + mut_pdbid +
         #        '_' + str(task_num) + '_ngk.pdb', default_sfxn)
         pdb_path = os.path.join(outdir_temp, wt_pdbid + '_' + mut_pdbid + '_' +
-                str((tasknum%denom)*jobnum) + '_' + mover + '.pdb.gz')
+                str((task_num%denom)*jobnum) + '_' + mover + '.pdb.gz')
         out_dict['path'] = pdb_path
         mut_pair.aligner.target.dump_scored_pdb(pdb_path, default_sfxn)
         
@@ -332,7 +337,7 @@ if __name__=='__main__':
             focus.target, mut_pair.aligner.mobile, focus.mobile)
 
         pdb_path_rel = os.path.join(outdir_temp, wt_pdbid + '_' + mut_pdbid + '_' +
-                str((tasknum%denom)*jobnum) + '_' + mover + '_relaxed.pdb.gz')
+                str((task_num%denom)*jobnum) + '_' + mover + '_relaxed.pdb.gz')
         out_dict['path_relaxed'] = pdb_path_rel
         mut_pair.aligner.target.dump_scored_pdb(pdb_path_rel, default_sfxn)
         out_dict['final_score'] = default_sfxn(mut_pair.aligner.target)
