@@ -21,11 +21,13 @@ Options:
     [default: 0.0]
     --absthresh=FLOAT  Absolute threshold for considering percent
     improvement  [default: 0.0]
+    --violin, -v  Make a violin plot instead of a bar plot
 
 """
 
 
 from summarize import summarize
+import matplotlib.patches as mpatches
 import docopt
 import pandas as pd
 import numpy as np
@@ -146,6 +148,12 @@ if __name__ == "__main__":
     pdbs = []
     #pdbs = ['1a6g_1a6m','1b9k_1kyf','1bu7_1jme','1ffr_1edq','1hvf_1hve','1i4o_1kmc','1qop_1k8y','1qul_1quj']
     #pdbs = ['1ccp_3ccp','1ec0_1hvs','5eaa_1qit','7pti_1aal']
+
+    violin_labels = []
+    def add_label(violin, label):
+        color = violin["bodies"][0].get_facecolor().flatten()
+        violin_labels.append((mpatches.Patch(color=color), label))
+
     for input_dir in args['<folders>']:
         folder_label = name_dict[input_dir.split('/')[-3]]
         df = summarize(input_dir, summary=summary, force=force,
@@ -199,77 +207,8 @@ if __name__ == "__main__":
             df = df[df['wt_restype_sum'].isin(restypes)]
             #df_uncst = df_uncst[df_uncst['wt_restype_sum']==args['--restype']]
 
-        if not args['--bin']:
-            '''
-            BAR PLOT SUMMARY OF ALL DATA
-            '''
-            ind = np.arange(len(labels))
-            for label in labels:
-                df_cst_binned = df[(df['constrained']==True) &
-                        (df['binned']==label)]
-                df_uncst_binned = df[(df['constrained']==False) &
-                        (df['binned']==label)]
 
-                if delta:
-                    deltas_cst = df_cst_binned[y] - df_cst_binned[x]
-                    cst_mean = deltas_cst.mean()
-                    stderr_cst_val = deltas_cst.std()
-
-                    deltas_uncst = df_uncst_binned[y] -\
-                        df_uncst_binned[x]
-                    uncst_mean = deltas_uncst.mean()
-                    stderr_uncst_val = deltas_uncst.std()
-
-                else:
-                    cst_mean = df_cst_binned[y].mean()
-                    stderr_cst_val = df_cst_binned[y].std()
-                    uncst_mean = df_uncst_binned[y].mean()
-                    stderr_uncst_val = df_uncst_binned[y].std()
-
-                yvals_cst.append(cst_mean)
-                stderr_cst.append(stderr_cst_val)
-                bincount_cst.append(len(df_cst_binned.index))
-
-                yvals_uncst.append(uncst_mean)
-                stderr_uncst.append(stderr_uncst_val)
-                bincount_uncst.append(len(df_uncst_binned.index))
-
-            if args['--cst'] == 'cst' or args['--cst'] == 'both':
-                ax.bar(ind + (2 * i) * width / (len(args['<folders>'])),
-                        yvals_cst, width/(len(args['<folders>'])), #yerr=stderr_cst,
-                        label=folder_label + '(constrained)',
-                        color = next(colors))
-                for j, v in enumerate(yvals_cst):
-                    if np.isnan(v):
-                        v = 0
-                    ax.text(ind[j] + (2*i) * width /
-                            len(args['<folders>']) - (0.5 *
-                                width)/len(args['<folders>']),
-                            v + 0.05,
-                            bincount_cst[j])
-            if args['--cst'] == 'uncst' or args['--cst'] == 'both':
-                ax.bar(ind + (2 * i + 1) * width / (len(args['<folders>'])),                
-                        yvals_uncst, width/(len(args['<folders>'])), #yerr=stderr_uncst,
-                        label=folder_label + '(unconstrained)',
-                        color=next(colors))
-                for j, v in enumerate(yvals_uncst):
-                    if np.isnan(v):
-                        v = 0
-                    ax.text(ind[j] + (2*i + 1) * width /
-                            len(args['<folders>']) - (0.5 *
-                                width)/len(args['<folders>']),
-                            v + 0.05,
-                            bincount_uncst[j])
-
-            ax.set_ylabel('Mean percentage of improved decoys')
-            ax.set_xlabel('Binned {} (Å) of starting structure α-carbon to WT'\
-                     .format(by_dict[args['--by']]))
-            ax.set_title('Sampling methods broken down by {} of point mutant to WT'\
-                    .format(by_dict[args['--by']]))
-            ax.set_xticks(ind + width/(len(args['<folders>'])/2))
-            ax.set_xticklabels(labels_str)
-
-        elif args['--bin']:
+        if args['--bin']:
             '''
             PLOT EXAMPLE PDBS
             '''
@@ -390,10 +329,170 @@ if __name__ == "__main__":
             plt.xticks(rotation=70)
 
 
+        elif args['--violin']:
+            '''
+            VIOLIN PLOT OF SUMMARY DATA
+            '''
+            for label in labels:
+                df_cst_binned = df[(df['constrained']==True) &
+                        (df['binned']==label)]
+                df_uncst_binned = df[(df['constrained']==False) &
+                        (df['binned']==label)]
+
+                yvals_cst.append(df_cst_binned[y].values)
+                bincount_cst.append(len(df_cst_binned.index))
+                yvals_uncst.append(df_uncst_binned[y].values)
+                bincount_uncst.append(len(df_uncst_binned.index))
+
+            widthlist = 0.15*len(args['<folders>']) * width/(len(args['<folders>']))
+            if args['--cst']=='cst' or args['--cst']=='both':
+                vplt = ax.violinplot(yvals_cst, ind + (2*i)*width /
+                        (len(args['<folders>'])),
+                        widths=widthlist, 
+                        showmedians=True,
+                        showmeans=True)
+                # Coloring
+                edgecolor = next(colors)
+                for pc in vplt['bodies']:
+                    pc.set_edgecolor(edgecolor)
+                for partname in ('cbars','cmins','cmaxes','cmeans','cmedians'):
+                    vp = vplt[partname]
+                    vp.set_edgecolor(edgecolor)
+                if args['--cst']=='both':
+                    facecolor = edgecolor
+                else:
+                    facecolor = next(colors)
+                for pc in vplt['bodies']:
+                    pc.set_facecolor(facecolor)
+
+                vplt['cmedians'].set_linestyles('dashed')
+
+                add_label(vplt, folder_label + ' (constrained)')
+
+                # Label number of bins
+                for j, v in enumerate(yvals_cst):
+                    ax.text(ind[j] + (2*i) * width /
+                            len(args['<folders>']) - (0.5 *
+                                width)/len(args['<folders>']),
+                            0,
+                            bincount_cst[j])
+
+            if args['--cst']=='uncst' or args['--cst']=='both':
+                vplt = ax.violinplot(yvals_uncst, ind + (2*i + 1)*width /
+                        (len(args['<folders>'])),
+                        widths=widthlist, 
+                        showmedians=True,
+                        showmeans=True)
+                # Coloring
+                edgecolor = next(colors)
+                for pc in vplt['bodies']:
+                    pc.set_edgecolor(edgecolor)
+                for partname in ('cbars','cmins','cmaxes','cmeans','cmedians'):
+                    vp = vplt[partname]
+                    vp.set_edgecolor(edgecolor)
+                if args['--cst']=='both':
+                    facecolor = edgecolor
+                else:
+                    facecolor = next(colors)
+                for pc in vplt['bodies']:
+                    pc.set_facecolor(facecolor)
+
+                vplt['cmedians'].set_linestyles('dashed')
+
+                add_label(vplt, folder_label + ' (unconstrained)')
+
+                # Label number of bins
+                for j, v in enumerate(yvals_cst):
+                    ax.text(ind[j] + (2*i + 1) * width /
+                            len(args['<folders>']) - (0.5 *
+                                width)/len(args['<folders>']),
+                            0,
+                            bincount_cst[j])
+            ax.set_ylabel('Mean percentage of improved decoys')
+            ax.set_xlabel('Binned {} (Å) of starting structure α-carbon to WT'\
+                     .format(by_dict[args['--by']]))
+            ax.set_title('Sampling methods broken down by {} of point mutant to WT'\
+                    .format(by_dict[args['--by']]))
+            ax.set_xticks(ind + width)
+            ax.set_xticklabels(labels_str)
+
+        else:
+            '''
+            BAR PLOT SUMMARY OF ALL DATA
+            '''
+            for label in labels:
+                df_cst_binned = df[(df['constrained']==True) &
+                        (df['binned']==label)]
+                df_uncst_binned = df[(df['constrained']==False) &
+                        (df['binned']==label)]
+
+                if delta:
+                    deltas_cst = df_cst_binned[y] - df_cst_binned[x]
+                    deltas_uncst = df_uncst_binned[y] -\
+                        df_uncst_binned[x]
+
+                    cst_mean = deltas_cst.mean()
+                    stderr_cst_val = deltas_cst.std()
+                    uncst_mean = deltas_uncst.mean()
+                    stderr_uncst_val = deltas_uncst.std()
+
+
+                else:
+                    cst_mean = df_cst_binned[y].mean()
+                    stderr_cst_val = df_cst_binned[y].std()
+                    uncst_mean = df_uncst_binned[y].mean()
+                    stderr_uncst_val = df_uncst_binned[y].std()
+
+                yvals_cst.append(cst_mean)
+                stderr_cst.append(stderr_cst_val)
+                bincount_cst.append(len(df_cst_binned.index))
+
+                yvals_uncst.append(uncst_mean)
+                stderr_uncst.append(stderr_uncst_val)
+                bincount_uncst.append(len(df_uncst_binned.index))
+
+            if args['--cst'] == 'cst' or args['--cst'] == 'both':
+                ax.bar(ind + (2 * i) * width / (len(args['<folders>'])),
+                        yvals_cst, width/(len(args['<folders>'])), #yerr=stderr_cst,
+                        label=folder_label + '(constrained)',
+                        color = next(colors))
+                for j, v in enumerate(yvals_cst):
+                    if np.isnan(v):
+                        v = 0
+                    ax.text(ind[j] + (2*i) * width /
+                            len(args['<folders>']) - (0.5 *
+                                width)/len(args['<folders>']),
+                            v + 0.05,
+                            bincount_cst[j])
+            if args['--cst'] == 'uncst' or args['--cst'] == 'both':
+                ax.bar(ind + (2 * i + 1) * width / (len(args['<folders>'])),                
+                        yvals_uncst, width/(len(args['<folders>'])), #yerr=stderr_uncst,
+                        label=folder_label + '(unconstrained)',
+                        color=next(colors))
+                for j, v in enumerate(yvals_uncst):
+                    if np.isnan(v):
+                        v = 0
+                    ax.text(ind[j] + (2*i + 1) * width /
+                            len(args['<folders>']) - (0.5 *
+                                width)/len(args['<folders>']),
+                            v + 0.05,
+                            bincount_uncst[j])
+
+            ax.set_ylabel('Mean percentage of improved decoys')
+            ax.set_xlabel('Binned {} (Å) of starting structure α-carbon to WT'\
+                     .format(by_dict[args['--by']]))
+            ax.set_title('Sampling methods broken down by {} of point mutant to WT'\
+                    .format(by_dict[args['--by']]))
+            ax.set_xticks(ind + width)
+            ax.set_xticklabels(labels_str)
+
 
         i += 1
 
+    if args['--violin']:
+        ax.legend(*zip(*violin_labels),loc=2)
+    else:
+        ax.legend()
 
-    ax.legend()
     fig.tight_layout()
     plt.show()
