@@ -77,14 +77,10 @@ if __name__ == "__main__":
 
     if args['--binby'] == 'rmsd':
         args['--binby'] = 'pre_rmsd_sum'
-    if args['--binby'] == 'relsurf_sumaa':
-        bins = [0, 0.005, 0.02, 0.04, 0.06, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5,
-                1.0,10.0]
-        labels = [0,0.005, 0.02, 0.04, 0.06, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4,
-                0.5,1.0]
-        labels_str = ['0-0.005','0.005 - 0.02', '0.02-0.04', '0.04-0.06', '0.06-0.1',
-                '0.1-0.15', '0.15-0.2', '0.2-0.25', '0.25-0.3',
-                '0.3-0.4', '0.4-0.5', '0.5-1.0','>1.0']
+    if args['--binby'] == 'relsurf_sum':
+        bins = [0, 0.05,10.0]
+        labels = [0,0.05]
+        labels_str = ['Buried','Exposed']
 
     elif args['--binby'] == 'dist':
         bins = [0, 0.1, 0.2, 0.4, 0.6,10.0]
@@ -96,7 +92,6 @@ if __name__ == "__main__":
         labels_str = ['0-0.1','0.1-0.2','0.2-0.4','0.4-0.6','>0.6']
 
     elif args['--binby'] == 'pre_rmsd_sum':
-        print('dsaklfjaslk;fdsjakl;a ahahahasweh ah')
         bins = [0, 0.1, 0.2, 0.4, 0.6, 10]
         labels = [0, 0.1, 0.2, 0.4, 0.6]
         labels_str = ['0-0.1', '0.1-0.2', '0.2-0.4', '0.4-0.6', '>0.6']
@@ -123,6 +118,9 @@ if __name__ == "__main__":
     elif args['--binby'] == 'dssp':
         labels = ['G', 'H', 'I', 'T', 'E', 'B', 'S', 'C']
         labels_str = labels
+    elif args['--binby'] == 'none':
+        labels=[0]
+        labels_str = [0]
 
     else:
         stop = df[args['--binby']].max()
@@ -143,6 +141,7 @@ if __name__ == "__main__":
     ind = np.arange(len(labels))
     width = 0.45
     fig, ax = plt.subplots()
+    fig.set_size_inches(10,6)
     #fig = plt.figure(figsize=(10,4.8))
 
     # i keeps track of which folder we're on for formatting purposes
@@ -151,6 +150,7 @@ if __name__ == "__main__":
     pdbs = []
     #pdbs = ['1a6g_1a6m','1b9k_1kyf','1bu7_1jme','1ffr_1edq','1hvf_1hve','1i4o_1kmc','1qop_1k8y','1qul_1quj']
     #pdbs = ['1ccp_3ccp','1ec0_1hvs','5eaa_1qit','7pti_1aal']
+    pdbs=['1bri_1a2p', '1djc_3blm', '1kjh_1mt7']
 
     violin_labels = []
     def add_label(violin, label):
@@ -172,7 +172,10 @@ if __name__ == "__main__":
         bincount_uncst = []
 
         print(df.columns)
-        if args['--binby'] and args['--binby']!='dist' and\
+
+        if args['--binby']=='none':
+            df['binned']=0
+        elif args['--binby'] and args['--binby']!='dist' and\
                 args['--binby']!='restype' and args['--binby'] !=\
                 'resgroup' and args['--binby'] != 'dssp' and\
                 args['--binby'] != 'ss':
@@ -262,6 +265,7 @@ if __name__ == "__main__":
                                     wtchain, wtresnum))
                         pdbs.append('_'.join([mut, wt]))
                 print(ticklabels)
+
             else:
                 for tick in pdbs:
                     mut = tick.split('_')[0]
@@ -274,7 +278,6 @@ if __name__ == "__main__":
                         cst_row = cst_row[0]
 
                         # Block only relevant when custom pdbs are used
-                        '''
                         wt = df_cst.loc[cst_row, 'wt_sum']
                         wtchain = df_cst.loc[cst_row, 'wt_chain_sum']
                         wtresnum = df_cst.loc[cst_row, 'wt_resnum_sum']
@@ -284,7 +287,6 @@ if __name__ == "__main__":
                         ticklabels.append('{} ({}{}),\n{} ({}{})'\
                                 .format(mut, mutchain, mutresnum, wt,
                                     wtchain, wtresnum))
-                        '''
                         
                         if not args['--sum'] == 'percent_improved':
                             yval_cst = df_cst.loc[cst_row, y] - df_cst.loc[cst_row, x]
@@ -325,7 +327,8 @@ if __name__ == "__main__":
             ax.set_ylabel('{} Δ-{}'.format(sum_dict[args['--sum']],
                 by_dict[args['--by']]))
             ax.set_xlabel('Mutant-wildtype pair')
-            ax.set_xticks(ind + width/(len(args['<folders>'])/2))
+            width_split = 2 if args['--cst']=='both' else 1
+            ax.set_xticks(ind + (width/width_split))
             ax.set_xticklabels(ticklabels)
             ax.set_title('{} examples from bin {}'.format(num_examples,
                 label))
@@ -359,6 +362,7 @@ if __name__ == "__main__":
                 bincount_uncst.append(len(uncst_vals))
 
             widthmodifier = 0.15 if args['--cst']=='both' else 0.3
+            widthmodifier=0.3
             widthlist = widthmodifier*len(args['<folders>']) * width/(len(args['<folders>']))
             if args['--cst']=='cst' or args['--cst']=='both':
                 vplt = ax.violinplot(yvals_cst, ind + (2*i)*width /
@@ -428,7 +432,8 @@ if __name__ == "__main__":
                      .format(by_dict[args['--by']]))
             ax.set_title('Sampling methods broken down by {} of point mutant to WT'\
                     .format(by_dict[args['--by']]))
-            ax.set_xticks(ind + width)
+            width_split = 2 if args['--cst']=='both' else 1
+            ax.set_xticks(ind + (width/width_split))
             ax.set_xticklabels(labels_str)
 
         else:
@@ -446,9 +451,11 @@ if __name__ == "__main__":
                     deltas_uncst = df_uncst_binned[y] -\
                         df_uncst_binned[x]
 
-                    cst_mean = deltas_cst.mean()
+                    #cst_mean = deltas_cst.mean()
+                    cst_mean = deltas_cst.median()
                     stderr_cst_val = deltas_cst.std()
-                    uncst_mean = deltas_uncst.mean()
+                    #uncst_mean = deltas_uncst.mean()
+                    uncst_mean = deltas_uncst.median()
                     stderr_uncst_val = deltas_uncst.std()
 
 
@@ -474,10 +481,12 @@ if __name__ == "__main__":
                 for j, v in enumerate(yvals_cst):
                     if np.isnan(v):
                         v = 0
+                    if args['--sum']=='percent_improved':
+                        v += 0.05
                     ax.text(ind[j] + (2*i) * width /
                             len(args['<folders>']) - (0.5 *
                                 width)/len(args['<folders>']),
-                            v + 0.05,
+                            v ,
                             bincount_cst[j])
             if args['--cst'] == 'uncst' or args['--cst'] == 'both':
                 ax.bar(ind + (2 * i + 1) * width / (len(args['<folders>'])),                
@@ -487,10 +496,12 @@ if __name__ == "__main__":
                 for j, v in enumerate(yvals_uncst):
                     if np.isnan(v):
                         v = 0
+                    if args['--sum']=='percent_improved':
+                        v += 0.05
                     ax.text(ind[j] + (2*i + 1) * width /
                             len(args['<folders>']) - (0.5 *
                                 width)/len(args['<folders>']),
-                            v + 0.05,
+                            v,
                             bincount_uncst[j])
 
             ax.set_ylabel('Mean percentage of improved decoys')
@@ -498,14 +509,16 @@ if __name__ == "__main__":
                      .format(by_dict[args['--by']]))
             ax.set_title('Sampling methods broken down by {} of point mutant to WT'\
                     .format(by_dict[args['--by']]))
-            ax.set_xticks(ind + width)
+            width_split = 2 if args['--cst']=='both' else 1
+            ax.set_xticks(ind + (width/width_split))
             ax.set_xticklabels(labels_str)
 
 
         i += 1
 
     if args['--violin']:
-        ax.legend(*zip(*violin_labels),loc=2)
+        #ax.legend(*zip(*violin_labels),loc=2)
+        pass
     else:
         ax.legend()
 

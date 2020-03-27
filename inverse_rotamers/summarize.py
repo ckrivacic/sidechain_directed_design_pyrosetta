@@ -153,9 +153,17 @@ if __name__ == '__main__':
         unitline = True
     else:
         unitline = False
-    title = mid + ' comparison summarized by ' + summary
-    plt, fig, ax = plot(data, groups=groups, xlabel=x,
-            ylabel=y, title=title, unitline=unitline, markersize=4)
+    title_dict = {'dist':'Decoy distance', 'rmsd':'Decoy RMSD'}
+    sum_dict = {'percent_improved':'percentage of improved decoys'}
+    x_dict = {'pre_dist_sum':'Initial Cα distance', 
+            'pre_rmsd_sum':'Initial RMSD'}
+    y_dict = {'post_dist_sum':'Cα distance after mover',
+            'post_rmsd_sum':'RMSD after mover'}
+    #title = title_dict[mid] + ' comparison summarized by ' + sum_dict[summary]
+    title=''
+    plt, fig, ax = plot(data, groups=groups, xlabel=x_dict[x],
+            ylabel=y_dict[y], title=title, 
+            unitline=unitline, markersize=5)
 
 
     def on_pick(event):
