@@ -265,25 +265,32 @@ def get_jacobi_refiner(pose, focus_residue, resbuffer=3):
 
 def get_jacobi_loopmodeler(pose, focus_residue, resbuffer=3,
         control=False):
-    from rosetta.protocols.loop_modeler import *
-    LM_jacobi = LoopModeler()
-    LM_jacobi.set_loop(loop)
-    LM_jacobi.centroid_stage().add_mover(KicMover())
-    if not control:
-        LM_jacobi.centroid_stage().add_refiner(JacobiRefiner())
-    LM_jacobi.centroid_stage().add_refiner(MinimizationRefiner())
-    LM_jacobi.centroid_stage().mark_as_test_run()
-    LM_jacobi.fullatom_stage().add_mover(KicMover())
-    if not control:
-        LM_jacobi.fullatom_stage().add_refiner(JacobiRefiner())
-    LM_jacobi.fullatom_stage().add_refiner(RotamerTrialsRefiner())
-    LM_jacobi.fullatom_stage().add_refiner(RepackingRefiner(40))
-    LM_jacobi.fullatom_stage().add_refiner(MinimizationRefiner())
+    from rosetta.protocols.loop_modeler import LoopModeler
+    from rosetta.protocols.kinematic_closure import KicMover
+    #from rosetta.protocols.loops.loop_mover.refine import LoopMover_Refine_Jacobi
+    from rosetta.protocols.loop_modeling.refiners import JacobiRefiner
+    from rosetta.protocols.loop_modeling.refiners import MinimizationRefiner
+    from rosetta.protocols.loop_modeling.refiners import RotamerTrialsRefiner
+    from rosetta.protocols.loop_modeling.refiners import RepackingRefiner
+
+    lm = LoopModeler()
 
     loops = generate_loops_simple(pose, focus_residue, resbuffer=resbuffer)
-    LM_jacobi.set_loops(loops)
+    lm.set_loops(loops)
 
-    returnLM_jacobi
+    lm.centroid_stage().add_mover(KicMover())
+    if not control:
+        lm.centroid_stage().add_refiner(JacobiRefiner())
+    lm.centroid_stage().add_refiner(MinimizationRefiner())
+    lm.centroid_stage().mark_as_test_run()
+    lm.fullatom_stage().add_mover(KicMover())
+    if not control:
+        lm.fullatom_stage().add_refiner(JacobiRefiner())
+    lm.fullatom_stage().add_refiner(RotamerTrialsRefiner())
+    lm.fullatom_stage().add_refiner(RepackingRefiner(40))
+    lm.fullatom_stage().add_refiner(MinimizationRefiner())
+
+    return lm
 
 def get_loop_modeler(pose, designable_selector, repackable_selector,
         focus_residue, movemap=None, task_factory=None, 

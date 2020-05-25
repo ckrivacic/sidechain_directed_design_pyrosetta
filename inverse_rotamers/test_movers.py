@@ -297,7 +297,8 @@ if __name__=='__main__':
             modeler.add_modeler(jacobi)
             modeler.add_modeler(pack_mover)
         elif mover=='jacobi_loopmodeler':
-            modeler = get_jacobi_loopmodeler(pose, focus_residue,
+            modeler = get_jacobi_loopmodeler(mut_pair.aligner.target,
+                    focus.target,
                     resbuffer=4, control=control)
 
 
