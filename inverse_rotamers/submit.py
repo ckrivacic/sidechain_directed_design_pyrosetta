@@ -7,6 +7,7 @@ Options:
     --fast  For loop modelers, turn on test run
     --cen_temp_cycles=NUM  set number of centroid temp cycles
     --fa_temp_cycles=NUM  set number of fa temp cycles
+    --control  Option for jacobi refiner
 
 '''
 import sys, os, subprocess, re
@@ -28,7 +29,7 @@ def submit(alignments, **params):
     #num_tasks = (file_len(alignments) // task_len) + 1
     #error_directory = 'errors'
     mover = args['<mover>']
-    logdir = os.path.join('logs', mover, 'cycles_6_2')
+    logdir = os.path.join('logs', mover, 'jacobi_may_2020')
     if not os.path.exists(logdir):
         os.makedirs(logdir, exist_ok=True)
 
@@ -64,6 +65,8 @@ def submit(alignments, **params):
         qsub_command += '--cen_temp_cycles=' + args['--cen_temp_cycles'],
     if args['--fa_temp_cycles']:
         qsub_command += '--fa_temp_cycles=' + args['--fa_temp_cycles'],
+    if args['--control']:
+        qsub_command += '--control',
     print(qsub_command)
 
     status = process.check_output(qsub_command, stderr=subprocess.STDOUT).decode('utf-8')

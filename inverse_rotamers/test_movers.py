@@ -15,6 +15,7 @@ Options:
     only)
     --nomutate  Don't mutate before applying mover (testing only)
     --min  Minimize poses before running alignment and movers
+    --control  Option for testing jacobi refiner
 """
 import sys
 import docopt
@@ -66,6 +67,7 @@ def import_backrub_dataframe(path):
 if __name__=='__main__':
     args = docopt.docopt(__doc__)
     print(args)
+    control = args['--control']
     denom = 8
     pdbredo_directory = '/wynton/home/kortemme/krivacic/pdb_redo'
     shell=10
@@ -294,6 +296,9 @@ if __name__=='__main__':
             modeler.add_modeler(loopmodeler)
             modeler.add_modeler(jacobi)
             modeler.add_modeler(pack_mover)
+        elif mover=='jacobi_loopmodeler':
+            modeler = get_jacobi_loopmodeler(pose, focus_residue,
+                    resbuffer=4, control=control)
 
 
         # Set mover options for loop modelers
